@@ -20,6 +20,9 @@ pub struct SourceStats {
     pub got_data: AtomicBool,
     /// Samples lost because the ring buffer was full.
     pub dropped: AtomicU64,
+    /// Buffer under/overruns the stream reported. Non-fatal glitches: the
+    /// stream keeps running, so they are only counted.
+    pub xruns: AtomicU64,
 }
 
 /// Real-time side: owned by the stream callback.

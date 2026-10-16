@@ -189,6 +189,9 @@ struct Track {
     /// endpoint loopback instead.
     #[cfg_attr(not(target_os = "windows"), allow(dead_code))]
     process_loopback_failed: bool,
+    /// Xruns of the inputs already detached, so `finish` reports the
+    /// track's total across reopens.
+    xruns: u64,
 }
 
 impl Track {
@@ -201,6 +204,7 @@ impl Track {
             last_data: now,
             next_reopen: now,
             process_loopback_failed: false,
+            xruns: 0,
         };
         track.attach(input);
         track
@@ -214,7 +218,8 @@ impl Track {
     }
 
     fn detach(&mut self, why: &str, shared: &Shared) {
-        if self.input.take().is_some() {
+        if let Some(input) = self.input.take() {
+            self.xruns += input.feed.stats.xruns.load(Ordering::Relaxed);
             log::warn!(
                 "meeting capture: {:?} track lost its device ({why}); reopening",
                 self.kind
@@ -317,6 +322,17 @@ impl Track {
     }
 }
 
+/// Whether a stream error means the stream is dead and must be reopened.
+/// The rest leave it running: an xrun is a glitch, `DeviceChanged` means cpal
+/// already rerouted the stream, and `RealtimeDenied` only costs latency.
+/// Reopening on those made each new stream xrun again, in a loop.
+fn is_fatal(kind: cpal::ErrorKind) -> bool {
+    !matches!(
+        kind,
+        cpal::ErrorKind::Xrun | cpal::ErrorKind::DeviceChanged | cpal::ErrorKind::RealtimeDenied
+    )
+}
+
 /// Build an input stream on `device` whose callback only copies samples
 /// into a ring buffer.
 fn build_input(
@@ -327,9 +343,16 @@ fn build_input(
     let stream_config: cpal::StreamConfig = config.config();
     let (tap, feed) = source::channel(stream_config.channels, stream_config.sample_rate);
     let stats = tap.stats().clone();
-    let err_fn = move |e: cpal::Error| {
-        log::warn!("meeting capture: {label} stream error: {e}");
-        stats.failed.store(true, Ordering::Relaxed);
+    let err_fn = move |e: cpal::Error| match e.kind() {
+        // Can fire on every buffer: counted, and reported once by `finish`.
+        cpal::ErrorKind::Xrun => {
+            stats.xruns.fetch_add(1, Ordering::Relaxed);
+        }
+        kind if is_fatal(kind) => {
+            log::warn!("meeting capture: {label} stream error: {e}");
+            stats.failed.store(true, Ordering::Relaxed);
+        }
+        _ => log::info!("meeting capture: {label} stream notice: {e}"),
     };
 
     macro_rules! build_for {
@@ -670,6 +693,7 @@ fn finish(mut tracks: Vec<Track>, started: Instant, shared: &Shared) -> Result<C
                 mut feed, _stream, ..
             } = input;
             drop(_stream);
+            track.xruns += feed.stats.xruns.load(Ordering::Relaxed);
             let dropped = feed.stats.dropped.load(Ordering::Relaxed);
             if dropped > 0 {
                 log::warn!(
@@ -682,6 +706,13 @@ fn finish(mut tracks: Vec<Track>, started: Instant, shared: &Shared) -> Result<C
             if let Err(e) = track.writer.push_interleaved(&scratch) {
                 log::error!("meeting capture: final write failed: {e}");
             }
+        }
+        if track.xruns > 0 {
+            log::warn!(
+                "meeting capture: {:?} track had {} buffer under/overruns",
+                track.kind,
+                track.xruns
+            );
         }
     }
 
@@ -720,4 +751,29 @@ fn finish(mut tracks: Vec<Track>, started: Instant, shared: &Shared) -> Result<C
         system_mode: shared.system_mode(),
         warnings: shared.warnings(),
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn glitches_and_reroutes_keep_the_stream() {
+        assert!(!is_fatal(cpal::ErrorKind::Xrun));
+        assert!(!is_fatal(cpal::ErrorKind::DeviceChanged));
+        assert!(!is_fatal(cpal::ErrorKind::RealtimeDenied));
+    }
+
+    #[test]
+    fn lost_or_broken_streams_are_reopened() {
+        for kind in [
+            cpal::ErrorKind::DeviceNotAvailable,
+            cpal::ErrorKind::StreamInvalidated,
+            cpal::ErrorKind::BackendError,
+            cpal::ErrorKind::DeviceBusy,
+            cpal::ErrorKind::Other,
+        ] {
+            assert!(is_fatal(kind), "{kind:?} should be fatal");
+        }
+    }
 }
