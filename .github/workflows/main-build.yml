@@ -20,19 +20,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # Only Windows x64 and Apple Silicon macOS are built (no Linux, Windows ARM or Intel Mac).
           - platform: "macos-26"
             args: "--target aarch64-apple-darwin"
             target: "aarch64-apple-darwin"
-          - platform: "macos-latest"
-            args: "--target x86_64-apple-darwin"
-            target: "x86_64-apple-darwin"
-          # No Linux builds: Trigo Whispr ships for Windows and macOS only.
           - platform: "windows-latest"
             args: ""
             target: "x86_64-pc-windows-msvc"
-          - platform: "windows-11-arm"
-            args: "--target aarch64-pc-windows-msvc"
-            target: "aarch64-pc-windows-msvc"
 
     uses: ./.github/workflows/build.yml
     with:
