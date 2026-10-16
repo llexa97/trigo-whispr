@@ -579,6 +579,20 @@
         "verdictNoEvents": "Không ghi nhận sự kiện nào — bạn có bấm phím nào trong lúc kiểm tra không?",
         "failed": "Chẩn đoán thất bại: {{error}}"
       },
+      "meetingCaptureTest": {
+        "title": "Kiểm tra ghi âm cuộc họp",
+        "description": "Ghi 10 giây micro và âm thanh hệ thống vào một thư mục tạm, giống như khi ghi cuộc họp.",
+        "run": "Chạy ghi 10 giây",
+        "running": "Đang ghi… hãy nói và phát một chút âm thanh",
+        "outDir": "Thư mục",
+        "mic": "Rãnh micro",
+        "system": "Rãnh hệ thống",
+        "duration": "Thời lượng (ms)",
+        "mode": "Chế độ ghi hệ thống",
+        "warnings": "Cảnh báo",
+        "none": "không có",
+        "failed": "Ghi thất bại: {{error}}"
+      },
       "whatsNewPreview": {
         "title": "Xem trước điểm mới",
         "description": "Mở ghi chú phát hành mới nhất được đóng gói mà không đánh dấu là đã xem",

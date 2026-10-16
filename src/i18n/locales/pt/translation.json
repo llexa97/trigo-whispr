@@ -579,6 +579,20 @@
         "verdictNoEvents": "Nenhum evento capturado — você pressionou alguma tecla durante o teste?",
         "failed": "Falha no diagnóstico: {{error}}"
       },
+      "meetingCaptureTest": {
+        "title": "Teste de captura de reunião",
+        "description": "Grava 10 s do microfone e do áudio do sistema numa pasta temporária, como numa reunião.",
+        "run": "Iniciar captura de 10 s",
+        "running": "Gravando… fale e reproduza algum áudio",
+        "outDir": "Pasta",
+        "mic": "Faixa do microfone",
+        "system": "Faixa do sistema",
+        "duration": "Duração (ms)",
+        "mode": "Modo de captura do sistema",
+        "warnings": "Avisos",
+        "none": "nenhum",
+        "failed": "A captura falhou: {{error}}"
+      },
       "whatsNewPreview": {
         "title": "Pré-visualizar novidades",
         "description": "Abrir a nota de versão incorporada mais recente sem marcá-la como vista",
