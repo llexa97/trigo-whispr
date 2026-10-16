@@ -7,7 +7,12 @@
     "model": "Mô hình",
     "quit": "Thoát",
     "cancel": "Hủy",
-    "secureInputWarning": "⚠ Phím tắt bị Secure Input chặn"
+    "secureInputWarning": "⚠ Phím tắt bị Secure Input chặn",
+    "meetingTitleDetected": "Cuộc họp {{app}} — {{date}}",
+    "meetingTitleManual": "Cuộc họp — {{date}}",
+    "quitMeetingTitle": "Đang họp",
+    "quitMeetingMessage": "Cuộc họp đang được ghi âm. Dừng ghi âm và thoát?",
+    "quitMeetingConfirm": "Dừng và thoát"
   },
   "sidebar": {
     "general": "Chung",
@@ -706,5 +711,8 @@
     "learnMore": "Cách khắc phục",
     "recorderBlocked": "Hiện không thể ghi phím tắt — Secure Input của macOS đang chặn các sự kiện phím. Hãy xử lý cảnh báo Secure Input trước.",
     "dismiss": "Bỏ qua"
+  },
+  "meetings": {
+    "recoveredNotice": "Đã khôi phục {{total}} cuộc họp sau khi tắt đột ngột"
   }
 }

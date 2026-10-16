@@ -7,7 +7,12 @@
     "model": "Model",
     "quit": "Ukončit",
     "cancel": "Zrušit",
-    "secureInputWarning": "⚠ Zkratky blokuje Secure Input"
+    "secureInputWarning": "⚠ Zkratky blokuje Secure Input",
+    "meetingTitleDetected": "Schůzka {{app}} — {{date}}",
+    "meetingTitleManual": "Schůzka — {{date}}",
+    "quitMeetingTitle": "Probíhá schůzka",
+    "quitMeetingMessage": "Probíhá nahrávání schůzky. Zastavit nahrávání a ukončit?",
+    "quitMeetingConfirm": "Zastavit a ukončit"
   },
   "sidebar": {
     "general": "Obecné",
@@ -706,5 +711,8 @@
     "learnMore": "Jak to vyřešit",
     "recorderBlocked": "Zkratky teď nelze nahrát — Secure Input v macOS blokuje události kláves. Nejprve vyřešte upozornění na Secure Input.",
     "dismiss": "Zavřít"
+  },
+  "meetings": {
+    "recoveredNotice": "Obnovené schůzky po neočekávaném ukončení: {{total}}"
   }
 }

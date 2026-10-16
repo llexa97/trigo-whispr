@@ -7,7 +7,12 @@
     "model": "मोडेल",
     "quit": "बाहिर निस्कनुहोस्",
     "cancel": "रद्द गर्नुहोस्",
-    "secureInputWarning": "⚠ Secure Input ले सर्टकटहरू रोकेको छ"
+    "secureInputWarning": "⚠ Secure Input ले सर्टकटहरू रोकेको छ",
+    "meetingTitleDetected": "बैठक {{app}} — {{date}}",
+    "meetingTitleManual": "बैठक — {{date}}",
+    "quitMeetingTitle": "बैठक जारी छ",
+    "quitMeetingMessage": "बैठक रेकर्ड हुँदैछ। रेकर्डिङ रोकेर बाहिरिने?",
+    "quitMeetingConfirm": "रोक्नुहोस् र बाहिरिनुहोस्"
   },
   "sidebar": {
     "general": "सामान्य",
@@ -706,5 +711,8 @@
     "learnMore": "यसलाई कसरी ठिक गर्ने",
     "recorderBlocked": "अहिले सर्टकट रेकर्ड गर्न सकिँदैन — macOS Secure Input ले कुञ्जी इभेन्टहरू रोकिरहेको छ। पहिले Secure Input चेतावनी समाधान गर्नुहोस्।",
     "dismiss": "हटाउनुहोस्"
+  },
+  "meetings": {
+    "recoveredNotice": "अनपेक्षित बन्द भएपछि पुनःप्राप्त बैठक: {{total}}"
   }
 }

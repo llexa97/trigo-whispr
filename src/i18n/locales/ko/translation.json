@@ -7,7 +7,12 @@
     "model": "모델",
     "quit": "종료",
     "cancel": "취소",
-    "secureInputWarning": "⚠ Secure Input으로 단축키가 차단됨"
+    "secureInputWarning": "⚠ Secure Input으로 단축키가 차단됨",
+    "meetingTitleDetected": "회의 {{app}} — {{date}}",
+    "meetingTitleManual": "회의 — {{date}}",
+    "quitMeetingTitle": "회의 진행 중",
+    "quitMeetingMessage": "회의를 녹음하고 있습니다. 녹음을 중지하고 종료할까요?",
+    "quitMeetingConfirm": "중지 후 종료"
   },
   "sidebar": {
     "general": "일반",
@@ -706,5 +711,8 @@
     "learnMore": "해결 방법",
     "recorderBlocked": "지금은 단축키를 등록할 수 없습니다. macOS Secure Input이 키 이벤트를 차단하고 있습니다. Secure Input 경고를 먼저 해결하세요.",
     "dismiss": "닫기"
+  },
+  "meetings": {
+    "recoveredNotice": "예기치 않은 종료 후 회의 {{total}}개를 복구했습니다"
   }
 }

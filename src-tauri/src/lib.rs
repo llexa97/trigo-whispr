@@ -14,6 +14,7 @@ mod helpers;
 mod input;
 mod llm_client;
 mod managers;
+mod meeting;
 mod memory;
 mod overlay;
 mod paste_tx;
@@ -36,6 +37,7 @@ pub use utils::env_flag_enabled;
 use env_filter::Builder as EnvFilterBuilder;
 use managers::audio::AudioRecordingManager;
 use managers::history::HistoryManager;
+use managers::meeting::MeetingManager;
 use managers::model::ModelManager;
 use managers::transcription::TranscriptionManager;
 use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
@@ -185,6 +187,61 @@ fn should_force_show_permissions_window(app: &AppHandle) -> bool {
     false
 }
 
+fn stop_meeting_for_exit(app: &AppHandle) {
+    let Some(meeting_manager) = app.try_state::<Arc<MeetingManager>>() else {
+        return;
+    };
+    if meeting_manager.is_recording() {
+        if let Err(e) = meeting_manager.stop() {
+            log::error!("Failed to stop meeting before exit: {e}");
+        }
+    }
+}
+
+/// Quits the app, asking for confirmation first while a meeting is being
+/// recorded. On confirmation the meeting is stopped cleanly before exiting.
+fn request_quit(app: &AppHandle) {
+    let recording = app
+        .try_state::<Arc<MeetingManager>>()
+        .is_some_and(|m| m.is_recording());
+    if !recording {
+        app.exit(0);
+        return;
+    }
+
+    let app = app.clone();
+    // The dialog blocks: keep it off the event loop thread.
+    std::thread::spawn(move || {
+        use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
+
+        let locale = settings::get_settings(&app).app_language;
+        let strings = tray_i18n::get_tray_translations(Some(locale));
+        let english = tray_i18n::get_tray_translations(Some("en".to_string()));
+        let or_en = |s: String, en: String| if s.is_empty() { en } else { s };
+
+        let confirmed = app
+            .dialog()
+            .message(or_en(
+                strings.quit_meeting_message,
+                english.quit_meeting_message,
+            ))
+            .title(or_en(
+                strings.quit_meeting_title,
+                english.quit_meeting_title,
+            ))
+            .kind(MessageDialogKind::Warning)
+            .buttons(MessageDialogButtons::OkCancelCustom(
+                or_en(strings.quit_meeting_confirm, english.quit_meeting_confirm),
+                or_en(strings.cancel, english.cancel),
+            ))
+            .blocking_show();
+        if confirmed {
+            stop_meeting_for_exit(&app);
+            app.exit(0);
+        }
+    });
+}
+
 fn initialize_core_logic(app_handle: &AppHandle) {
     // Note: Enigo (keyboard/mouse simulation) is NOT initialized here.
     // The frontend is responsible for calling the `initialize_enigo` command
@@ -206,12 +263,17 @@ fn initialize_core_logic(app_handle: &AppHandle) {
     );
     let history_manager =
         Arc::new(HistoryManager::new(app_handle).expect("Failed to initialize history manager"));
+    // Runs crash recovery (`self_heal`) before anything can start a meeting.
+    let meeting_manager =
+        Arc::new(MeetingManager::new(app_handle).expect("Failed to initialize meeting manager"));
 
     // Add managers to Tauri's managed state
     app_handle.manage(recording_manager.clone());
     app_handle.manage(model_manager.clone());
     app_handle.manage(transcription_manager.clone());
     app_handle.manage(history_manager.clone());
+    app_handle.manage(meeting_manager.clone());
+    meeting_manager.start_retention_timer();
     app_handle.manage(tray::TrayState::new());
 
     // Note: Shortcuts are NOT initialized here.
@@ -313,7 +375,7 @@ fn initialize_core_logic(app_handle: &AppHandle) {
                 cancel_current_operation(app);
             }
             "quit" => {
-                app.exit(0);
+                request_quit(app);
             }
             id if id.starts_with("model_select:") => {
                 let model_id = id.strip_prefix("model_select:").unwrap().to_string();
@@ -619,34 +681,9 @@ fn run_headless_transcription(app: &AppHandle, args: &CliArgs) -> i32 {
     0
 }
 
-#[cfg_attr(mobile, tauri::mobile_entry_point)]
-pub fn run(cli_args: CliArgs) {
-    // Avoid ggml-metal residency-set teardown assertions when a native engine
-    // outlives the Tauri shutdown sequence (#1902). This must happen before
-    // transcribe-cpp initializes its Metal device. Advanced users can restore
-    // upstream residency behavior with TRIGO_WHISPR_METAL_RESIDENCY=1.
-    #[cfg(target_os = "macos")]
-    if std::env::var("TRIGO_WHISPR_METAL_RESIDENCY").as_deref() == Ok("1") {
-        // ggml treats GGML_METAL_NO_RESIDENCY as presence-based, so remove an
-        // inherited value as well when explicitly opting back in.
-        std::env::remove_var("GGML_METAL_NO_RESIDENCY");
-    } else {
-        std::env::set_var("GGML_METAL_NO_RESIDENCY", "1");
-    }
-
-    // Pin glibc's dynamic mmap threshold before the first large allocation,
-    // so per-dictation transient buffers are returned to the OS on free
-    // instead of accumulating in malloc arenas (#1792). No-op off Linux/glibc.
-    memory::init_allocator();
-
-    // Detect portable mode before anything else
-    portable::init();
-
-    // Parse console logging directives from RUST_LOG, falling back to info-level logging
-    // when the variable is unset
-    let console_filter = build_console_filter();
-
-    let specta_builder = Builder::<tauri::Wry>::new()
+/// Commands and events exposed to the frontend (exported to `src/bindings.ts`).
+fn specta_builder() -> Builder<tauri::Wry> {
+    Builder::<tauri::Wry>::new()
         .commands(collect_commands![
             shortcut::change_binding,
             shortcut::reset_binding,
@@ -767,13 +804,58 @@ pub fn run(cli_args: CliArgs) {
             commands::history::retry_history_entry_transcription,
             commands::history::update_history_limit,
             commands::history::update_recording_retention_period,
+            commands::meeting::start_meeting,
+            commands::meeting::stop_meeting,
+            commands::meeting::cancel_meeting,
+            commands::meeting::get_meeting_state,
+            commands::meeting::list_meetings,
+            commands::meeting::get_meeting,
+            commands::meeting::rename_meeting,
+            commands::meeting::delete_meeting,
+            commands::meeting::get_meeting_audio_paths,
+            commands::meeting::retry_meeting_transcription,
+            commands::meeting::take_meeting_recovery_notice,
+            commands::meeting::update_meeting_audio_retention,
             helpers::clamshell::is_laptop,
         ])
         .events(collect_events![
             managers::history::HistoryUpdatePayload,
+            managers::meeting::MeetingStateChanged,
+            managers::meeting::MeetingsUpdated,
+            managers::meeting::MeetingsRecovered,
             managers::transcription::StreamTextEvent,
             managers::transcription::StreamPhaseEvent,
-        ]);
+        ])
+}
+
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
+pub fn run(cli_args: CliArgs) {
+    // Avoid ggml-metal residency-set teardown assertions when a native engine
+    // outlives the Tauri shutdown sequence (#1902). This must happen before
+    // transcribe-cpp initializes its Metal device. Advanced users can restore
+    // upstream residency behavior with TRIGO_WHISPR_METAL_RESIDENCY=1.
+    #[cfg(target_os = "macos")]
+    if std::env::var("TRIGO_WHISPR_METAL_RESIDENCY").as_deref() == Ok("1") {
+        // ggml treats GGML_METAL_NO_RESIDENCY as presence-based, so remove an
+        // inherited value as well when explicitly opting back in.
+        std::env::remove_var("GGML_METAL_NO_RESIDENCY");
+    } else {
+        std::env::set_var("GGML_METAL_NO_RESIDENCY", "1");
+    }
+
+    // Pin glibc's dynamic mmap threshold before the first large allocation,
+    // so per-dictation transient buffers are returned to the OS on free
+    // instead of accumulating in malloc arenas (#1792). No-op off Linux/glibc.
+    memory::init_allocator();
+
+    // Detect portable mode before anything else
+    portable::init();
+
+    // Parse console logging directives from RUST_LOG, falling back to info-level logging
+    // when the variable is unset
+    let console_filter = build_console_filter();
+
+    let specta_builder = specta_builder();
 
     #[cfg(debug_assertions)] // <- Only export on non-release builds
     specta_builder
@@ -1118,10 +1200,33 @@ pub fn run(cli_args: CliArgs) {
             }
             show_main_window(app);
         }
+        // Covers exits that bypass `request_quit` (Cmd+Q, updater restart):
+        // finalize the meeting so its files and row are consistent.
+        tauri::RunEvent::ExitRequested { .. } => {
+            stop_meeting_for_exit(app);
+        }
         // No transcription teardown on exit: transcribe.cpp runs only in the
         // worker process, which exits by itself as soon as this process's end
         // of its stdin closes, even if it is hung. Waiting on an unload here
         // could block quitting behind a hung model load.
         _ => {}
     });
+}
+
+#[cfg(test)]
+mod bindings_export {
+    use specta_typescript::{BigIntExportBehavior, Typescript};
+
+    /// Regenerates `src/bindings.ts` without launching the app:
+    /// `cargo test export_bindings -- --ignored`.
+    #[test]
+    #[ignore = "writes src/bindings.ts"]
+    fn export_bindings() {
+        super::specta_builder()
+            .export(
+                Typescript::default().bigint(BigIntExportBehavior::Number),
+                "../src/bindings.ts",
+            )
+            .expect("Failed to export typescript bindings");
+    }
 }

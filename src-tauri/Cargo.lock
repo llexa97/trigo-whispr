@@ -7310,6 +7310,7 @@ dependencies = [
  "tempfile",
  "tokio",
  "transcribe-cpp",
+ "uuid",
  "webview2-com",
  "whatlang",
  "windows 0.61.3",

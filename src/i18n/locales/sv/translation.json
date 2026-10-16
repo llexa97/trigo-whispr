@@ -7,7 +7,12 @@
     "model": "Modell",
     "quit": "Avsluta",
     "cancel": "Avbryt",
-    "secureInputWarning": "⚠ Kortkommandon blockeras av Secure Input"
+    "secureInputWarning": "⚠ Kortkommandon blockeras av Secure Input",
+    "meetingTitleDetected": "Möte {{app}} — {{date}}",
+    "meetingTitleManual": "Möte — {{date}}",
+    "quitMeetingTitle": "Möte pågår",
+    "quitMeetingMessage": "Ett möte spelas in. Stoppa inspelningen och avsluta?",
+    "quitMeetingConfirm": "Stoppa och avsluta"
   },
   "sidebar": {
     "general": "Allmänt",
@@ -706,5 +711,8 @@
     "learnMore": "Så här löser du det",
     "recorderBlocked": "Det går inte att spela in kortkommandon just nu — macOS Secure Input blockerar tangenthändelser. Lös varningen om Secure Input först.",
     "dismiss": "Avfärda"
+  },
+  "meetings": {
+    "recoveredNotice": "{{total}} möte(n) återställda efter en oväntad avstängning"
   }
 }

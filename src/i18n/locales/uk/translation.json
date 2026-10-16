@@ -7,7 +7,12 @@
     "model": "Модель",
     "quit": "Вийти",
     "cancel": "Скасувати",
-    "secureInputWarning": "⚠ Комбінації клавіш заблоковано Secure Input"
+    "secureInputWarning": "⚠ Комбінації клавіш заблоковано Secure Input",
+    "meetingTitleDetected": "Зустріч {{app}} — {{date}}",
+    "meetingTitleManual": "Зустріч — {{date}}",
+    "quitMeetingTitle": "Триває зустріч",
+    "quitMeetingMessage": "Триває запис зустрічі. Зупинити запис і вийти?",
+    "quitMeetingConfirm": "Зупинити й вийти"
   },
   "sidebar": {
     "general": "Загальні",
@@ -706,5 +711,8 @@
     "learnMore": "Як це виправити",
     "recorderBlocked": "Зараз неможливо записати комбінацію — Secure Input у macOS блокує події клавіш. Спершу усуньте попередження про Secure Input.",
     "dismiss": "Приховати"
+  },
+  "meetings": {
+    "recoveredNotice": "Відновлено зустрічей після неочікуваного завершення: {{total}}"
   }
 }

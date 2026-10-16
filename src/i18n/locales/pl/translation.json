@@ -7,7 +7,12 @@
     "model": "Model",
     "quit": "Zamknij",
     "cancel": "Anuluj",
-    "secureInputWarning": "⚠ Skróty zablokowane przez Secure Input"
+    "secureInputWarning": "⚠ Skróty zablokowane przez Secure Input",
+    "meetingTitleDetected": "Spotkanie {{app}} — {{date}}",
+    "meetingTitleManual": "Spotkanie — {{date}}",
+    "quitMeetingTitle": "Trwa spotkanie",
+    "quitMeetingMessage": "Trwa nagrywanie spotkania. Zatrzymać nagrywanie i zakończyć?",
+    "quitMeetingConfirm": "Zatrzymaj i zakończ"
   },
   "sidebar": {
     "general": "Ogólne",
@@ -706,5 +711,8 @@
     "learnMore": "Jak to naprawić",
     "recorderBlocked": "Nie można teraz nagrać skrótu — Secure Input w macOS blokuje zdarzenia klawiszy. Najpierw rozwiąż ostrzeżenie o Secure Input.",
     "dismiss": "Odrzuć"
+  },
+  "meetings": {
+    "recoveredNotice": "Odzyskano spotkania po nieoczekiwanym zamknięciu: {{total}}"
   }
 }

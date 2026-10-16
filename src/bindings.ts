@@ -934,11 +934,98 @@ async updateRecordingRetentionPeriod(period: string) : Promise<Result<null, stri
     else return { status: "error", error: e  as any };
 }
 },
+async startMeeting(source: MeetingSource | null) : Promise<Result<string, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("start_meeting", { source }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async stopMeeting() : Promise<Result<string, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("stop_meeting") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async cancelMeeting() : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("cancel_meeting") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async getMeetingState() : Promise<MeetingStateChanged> {
+    return await TAURI_INVOKE("get_meeting_state");
+},
+async listMeetings(offset: number | null, limit: number | null) : Promise<Result<PaginatedMeetings, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("list_meetings", { offset, limit }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async getMeeting(id: string) : Promise<Result<MeetingDetail | null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_meeting", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async renameMeeting(id: string, title: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("rename_meeting", { id, title }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async deleteMeeting(id: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("delete_meeting", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async getMeetingAudioPaths(id: string) : Promise<Result<MeetingAudioPaths, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_meeting_audio_paths", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async retryMeetingTranscription(id: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("retry_meeting_transcription", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 /**
- * Checks if the Mac is a laptop by detecting battery presence
- * 
- * This uses pmset to check for battery information.
- * Returns true if a battery is detected (laptop), false otherwise (desktop)
+ * Report of the meetings recovered at startup, returned only once.
+ */
+async takeMeetingRecoveryNotice() : Promise<RecoveryReport | null> {
+    return await TAURI_INVOKE("take_meeting_recovery_notice");
+},
+async updateMeetingAudioRetention(retention: MeetingAudioRetention) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("update_meeting_audio_retention", { retention }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Stub implementation for non-macOS platforms
+ * Always returns false since laptop detection is macOS-specific
  */
 async isLaptop() : Promise<Result<boolean, string>> {
     try {
@@ -955,10 +1042,16 @@ async isLaptop() : Promise<Result<boolean, string>> {
 
 export const events = __makeEvents__<{
 historyUpdatePayload: HistoryUpdatePayload,
+meetingStateChanged: MeetingStateChanged,
+meetingsRecovered: MeetingsRecovered,
+meetingsUpdated: MeetingsUpdated,
 streamPhaseEvent: StreamPhaseEvent,
 streamTextEvent: StreamTextEvent
 }>({
 historyUpdatePayload: "history-update-payload",
+meetingStateChanged: "meeting-state-changed",
+meetingsRecovered: "meetings-recovered",
+meetingsUpdated: "meetings-updated",
 streamPhaseEvent: "stream-phase-event",
 streamTextEvent: "stream-text-event"
 })
@@ -1009,7 +1102,7 @@ whats_new_last_seen_version?: string; selected_model?: string; onboarding_comple
  * Which input channel to use on the selected microphone device.
  * None means "average all channels" (original behavior).
  */
-selected_channel?: number | null; clamshell_microphone?: string | null; selected_output_device?: string | null; translate_to_english?: boolean; selected_language?: string; overlay_position?: OverlayPosition; debug_mode?: boolean; log_level?: LogLevel; custom_words?: string[]; model_unload_timeout?: ModelUnloadTimeout; word_correction_threshold?: number; history_limit?: number; recording_retention_period?: RecordingRetentionPeriod; paste_method?: PasteMethod; clipboard_handling?: ClipboardHandling; auto_submit?: boolean; auto_submit_key?: AutoSubmitKey; post_process_enabled?: boolean; post_process_provider_id?: string; post_process_providers?: PostProcessProvider[]; post_process_api_keys?: SecretMap; post_process_models?: Partial<{ [key in string]: string }>; post_process_prompts?: LLMPrompt[]; post_process_selected_prompt_id?: string | null; mute_while_recording?: boolean; append_trailing_space?: boolean; app_language?: string; theme?: Theme; experimental_enabled?: boolean; lazy_stream_close?: boolean; keyboard_implementation?: KeyboardImplementation; show_tray_icon?: boolean; paste_delay_ms?: number; paste_delay_after_ms?: number; 
+selected_channel?: number | null; clamshell_microphone?: string | null; selected_output_device?: string | null; translate_to_english?: boolean; selected_language?: string; overlay_position?: OverlayPosition; debug_mode?: boolean; log_level?: LogLevel; custom_words?: string[]; model_unload_timeout?: ModelUnloadTimeout; word_correction_threshold?: number; history_limit?: number; recording_retention_period?: RecordingRetentionPeriod; meeting_audio_retention?: MeetingAudioRetention; paste_method?: PasteMethod; clipboard_handling?: ClipboardHandling; auto_submit?: boolean; auto_submit_key?: AutoSubmitKey; post_process_enabled?: boolean; post_process_provider_id?: string; post_process_providers?: PostProcessProvider[]; post_process_api_keys?: SecretMap; post_process_models?: Partial<{ [key in string]: string }>; post_process_prompts?: LLMPrompt[]; post_process_selected_prompt_id?: string | null; mute_while_recording?: boolean; append_trailing_space?: boolean; app_language?: string; theme?: Theme; experimental_enabled?: boolean; lazy_stream_close?: boolean; keyboard_implementation?: KeyboardImplementation; show_tray_icon?: boolean; paste_delay_ms?: number; paste_delay_after_ms?: number; 
 /**
  * Debug-gated ("beta") receipt-sequenced paste: restore the clipboard only
  * after the target app actually reads the transcript, instead of after a
@@ -1047,6 +1140,7 @@ export type AudioDevice = { index: string; name: string; is_default: boolean }
 export type AutoSubmitKey = "enter" | "ctrl_enter" | "cmd_enter"
 export type AvailableAccelerators = { transcribe: string[]; gpu_devices: GpuDeviceOption[] }
 export type BindingResponse = { success: boolean; binding: ShortcutBinding | null; error: string | null }
+export type CaptureWarning = "system_audio_unavailable" | "system_audio_silent" | "output_muted" | "device_changed" | "mic_unavailable"
 /**
  * Script applied to Mandarin and Cantonese output. Other languages are never
  * converted.
@@ -1077,6 +1171,50 @@ key_down: number; key_up: number; flags_changed: number; mouse: number; duration
 export type KeyboardImplementation = "tauri" | "trigo_whispr_keys"
 export type LLMPrompt = { id: string; name: string; prompt: string }
 export type LogLevel = "trace" | "debug" | "info" | "warn" | "error"
+export type Meeting = { id: string; title: string; 
+/**
+ * Folder name, relative to `<app_data_dir>/meetings/`.
+ */
+folder: string; 
+/**
+ * Epoch milliseconds.
+ */
+started_at: number; ended_at: number | null; duration_ms: number | null; source: MeetingSourceKind; source_app: string | null; has_system_audio: boolean; 
+/**
+ * False once the WAV files were removed by the retention policy.
+ */
+has_audio: boolean; status: MeetingStatus; error: string | null; model_id: string | null; created_at: number }
+export type MeetingAudioPaths = { mic: string | null; system: string | null }
+/**
+ * How long meeting WAV files are kept. Only the audio is deleted: the
+ * transcript and the meeting itself stay.
+ */
+export type MeetingAudioRetention = "forever" | "days_7" | "days_30" | "days_90" | "delete_after_transcription"
+export type MeetingDetail = { meeting: Meeting; segments: MeetingSegment[] }
+export type MeetingPhase = "idle" | "recording" | "stopping"
+export type MeetingSegment = { idx: number; speaker: Speaker; start_ms: number; end_ms: number; text: string }
+export type MeetingSource = { kind: "manual" } | { kind: "detected"; app_id: string; app_name: string }
+export type MeetingSourceKind = "manual" | "detected"
+/**
+ * Emitted on every state change and every second while recording (timer
+ * and level meters).
+ */
+export type MeetingStateChanged = { state: MeetingPhase; meeting_id: string | null; elapsed_ms: number; warnings: CaptureWarning[]; mic_level: number; system_level: number }
+export type MeetingStatus = "recording" | "pending" | "transcribing" | "done" | "failed" | 
+/**
+ * Recovered after a crash; queued for transcription like `Pending`.
+ */
+"recovered"
+/**
+ * Emitted when meetings were recovered after a crash or rebuilt from their
+ * folders. Also available through `take_meeting_recovery_notice` for the
+ * startup case, where it fires before the UI listens.
+ */
+export type MeetingsRecovered = { report: RecoveryReport }
+/**
+ * Same model as `HistoryUpdatePayload`.
+ */
+export type MeetingsUpdated = { action: "added"; meeting: Meeting } | { action: "updated"; meeting: Meeting } | { action: "deleted"; id: string }
 export type ModelInfo = { id: string; name: string; description: string; filename: string; source: ModelSource; size_mb: number; is_downloaded: boolean; is_downloading: boolean; partial_size: number; accuracy_score: number; speed_score: number; supports_translation: boolean; is_recommended: boolean; supported_languages: string[]; supports_language_selection: boolean; is_custom: boolean; supports_streaming: boolean; supports_language_detection: boolean }
 export type ModelLoadStatus = { is_loaded: boolean; current_model: string | null }
 /**
@@ -1113,6 +1251,7 @@ export type OverlayPosition = "top" | "bottom"
  */
 export type OverlayStyle = "none" | "minimal" | "live"
 export type PaginatedHistory = { entries: HistoryEntry[]; has_more: boolean }
+export type PaginatedMeetings = { meetings: Meeting[]; has_more: boolean }
 export type PasteMethod = "ctrl_v" | "direct" | "none" | "shift_insert" | "ctrl_shift_v" | "external_script"
 export type PermissionAccess = "allowed" | "denied" | "unknown"
 /**
@@ -1130,6 +1269,23 @@ export type PostProcessApiFormat =
 "anthropic"
 export type PostProcessProvider = { id: string; label: string; base_url: string; allow_base_url_edit?: boolean; models_endpoint?: string | null; supports_structured_output?: boolean; api_format?: PostProcessApiFormat }
 export type RecordingRetentionPeriod = "never" | "preserve_limit" | "days_3" | "weeks_2" | "months_3"
+export type RecoveryReport = { 
+/**
+ * Meetings interrupted while recording, now `recovered`.
+ */
+recovered: string[]; 
+/**
+ * Meetings missing from the database, rebuilt from their folder.
+ */
+rebuilt: string[]; 
+/**
+ * Meetings left `transcribing` by a crash, put back to `pending`.
+ */
+requeued: string[]; 
+/**
+ * Meetings whose audio could not be found.
+ */
+failed: string[] }
 /**
  * A retired ONNX model found on disk.
  */
@@ -1187,6 +1343,7 @@ export type ShortcutActivation =
 "hold_or_toggle"
 export type ShortcutBinding = { id: string; name: string; description: string; default_binding: string; current_binding: string }
 export type SoundTheme = "marimba" | "pop" | "custom"
+export type Speaker = "me" | "others"
 /**
  * Phase of the streaming overlay card, emitted to drive its UI state.
  */

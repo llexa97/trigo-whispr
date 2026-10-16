@@ -7,7 +7,12 @@
     "model": "モデル",
     "quit": "終了",
     "cancel": "キャンセル",
-    "secureInputWarning": "⚠ Secure Input でショートカットがブロック中"
+    "secureInputWarning": "⚠ Secure Input でショートカットがブロック中",
+    "meetingTitleDetected": "会議 {{app}} — {{date}}",
+    "meetingTitleManual": "会議 — {{date}}",
+    "quitMeetingTitle": "会議を録音中",
+    "quitMeetingMessage": "会議を録音しています。録音を停止して終了しますか？",
+    "quitMeetingConfirm": "停止して終了"
   },
   "sidebar": {
     "general": "一般",
@@ -706,5 +711,8 @@
     "learnMore": "解決方法",
     "recorderBlocked": "現在ショートカットを記録できません。macOS の Secure Input がキーイベントをブロックしています。先に Secure Input の警告を解消してください。",
     "dismiss": "閉じる"
+  },
+  "meetings": {
+    "recoveredNotice": "予期しない終了の後に {{total}} 件の会議を復元しました"
   }
 }

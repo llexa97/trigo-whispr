@@ -7,7 +7,12 @@
     "model": "Модел",
     "quit": "Изход",
     "cancel": "Отказ",
-    "secureInputWarning": "⚠ Бързите клавиши са блокирани от Secure Input"
+    "secureInputWarning": "⚠ Бързите клавиши са блокирани от Secure Input",
+    "meetingTitleDetected": "Среща {{app}} — {{date}}",
+    "meetingTitleManual": "Среща — {{date}}",
+    "quitMeetingTitle": "Тече среща",
+    "quitMeetingMessage": "Записва се среща. Да се спре записът и да се излезе?",
+    "quitMeetingConfirm": "Спри и излез"
   },
   "sidebar": {
     "general": "Общи",
@@ -706,5 +711,8 @@
     "learnMore": "Как да поправите това",
     "recorderBlocked": "В момента не могат да се записват бързи клавиши — Secure Input на macOS блокира клавишните събития. Първо отстранете предупреждението за Secure Input.",
     "dismiss": "Отхвърляне"
+  },
+  "meetings": {
+    "recoveredNotice": "Възстановени срещи след неочаквано спиране: {{total}}"
   }
 }
