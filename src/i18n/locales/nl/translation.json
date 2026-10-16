@@ -16,7 +16,7 @@
     "postProcessing": "Naverwerking",
     "history": "Geschiedenis",
     "debug": "Probleemoplossing",
-    "about": "Over Handy"
+    "about": "Over Trigo Whispr"
   },
   "onboarding": {
     "subtitle": "Kies een transcriptiemodel om aan de slag te gaan",
@@ -28,7 +28,7 @@
     "customModelDescription": "Niet officieel ondersteund",
     "migration": {
       "title": "Je modellen moeten worden bijgewerkt",
-      "description": "Handy gebruikt nu een nieuwer soort model. Download de nieuwe versie om te blijven transcriberen. Oude versies worden verwijderd.",
+      "description": "Trigo Whispr gebruikt nu een nieuwer soort model. Download de nieuwe versie om te blijven transcriberen. Oude versies worden verwijderd.",
       "replaces": "Vervangt {{name}}",
       "oldFormat": "Oud formaat",
       "failed": "Downloaden mislukt",
@@ -69,7 +69,7 @@
     },
     "permissions": {
       "title": "Machtigingen vereist",
-      "description": "Handy heeft een aantal machtigingen nodig om goed te kunnen werken.",
+      "description": "Trigo Whispr heeft een aantal machtigingen nodig om goed te kunnen werken.",
       "microphone": {
         "title": "Microfoontoegang",
         "description": "Vereist om je stem op te nemen voor transcriptie."
@@ -184,7 +184,7 @@
       "deleteActiveConfirm": "{{modelName}} is je actieve model. Als je dit verwijdert, stoppen de transcripties totdat je een nieuw model selecteert. Weet je het zeker?",
       "deleteTitle": "Model verwijderen",
       "retiredNotice": {
-        "title": "Oude modellen werken niet meer met Handy",
+        "title": "Oude modellen werken niet meer met Trigo Whispr",
         "description": "Ze nemen {{size}} in beslag op je computer.",
         "delete": "Modellen verwijderen",
         "deleted": "Oude modellen verwijderd",
@@ -197,7 +197,7 @@
       },
       "rescan": {
         "label": "Opnieuw scannen",
-        "tooltip": "Scannen naar modellen die buiten Handy om zijn toegevoegd aan de modellenmap of Hugging Face-cache"
+        "tooltip": "Scannen naar modellen die buiten Trigo Whispr om zijn toegevoegd aan de modellenmap of Hugging Face-cache"
       },
       "noModelsMatch": "Geen modellen voldoen aan dit filter."
     },
@@ -261,11 +261,11 @@
       },
       "autostart": {
         "label": "Starten bij opstarten",
-        "description": "Handy automatisch starten zodra je inlogt op je computer."
+        "description": "Trigo Whispr automatisch starten zodra je inlogt op je computer."
       },
       "showTrayIcon": {
         "label": "Pictogram in systeemvak tonen",
-        "description": "Toon het Handy-pictogram in het systeemvak."
+        "description": "Toon het Trigo Whispr-pictogram in het systeemvak."
       },
       "overlay": {
         "style": {
@@ -483,8 +483,8 @@
       },
       "updateChecks": {
         "label": "Controleren op updates",
-        "description": "Automatisch controleren op nieuwe versies van Handy",
-        "lockedDescription": "Uitgeschakeld door systeemconfiguratie (HANDY_DISABLE_UPDATER)"
+        "description": "Automatisch controleren op nieuwe versies van Trigo Whispr",
+        "lockedDescription": "Uitgeschakeld door systeemconfiguratie (TRIGO_WHISPR_DISABLE_UPDATER)"
       },
       "whatsNewPreview": {
         "title": "Voorbeeld van release-notes",
@@ -575,7 +575,7 @@
       },
       "keyboardDiagnostic": {
         "title": "Toetsenborddiagnose",
-        "description": "Controleert of toetsenbordgebeurtenissen Handy bereiken. Alleen het aantal gebeurtenissen wordt vastgelegd — nooit welke toetsen je indrukt.",
+        "description": "Controleert of toetsenbordgebeurtenissen Trigo Whispr bereiken. Alleen het aantal gebeurtenissen wordt vastgelegd — nooit welke toetsen je indrukt.",
         "run": "Diagnose van 10 s uitvoeren",
         "running": "Luisteren… druk je sneltoets een paar keer in (bijv. Option+Space)",
         "secureInputLabel": "Secure Input",
@@ -589,24 +589,24 @@
         "mouse": "Muis",
         "verdictBlocked": "Secure Input blokkeert toetsgebeurtenissen — sneltoetsen met een gewone toets kunnen pas weer werken als dit is opgelost.",
         "verdictSuspicious": "Er kwamen wel modificatiegebeurtenissen binnen, maar geen toetsgebeurtenissen — iets onderdrukt toetsen terwijl Secure Input als uitgeschakeld wordt gemeld. Meld dit op GitHub.",
-        "verdictOk": "Toetsgebeurtenissen bereiken Handy normaal.",
+        "verdictOk": "Toetsgebeurtenissen bereiken Trigo Whispr normaal.",
         "verdictNoEvents": "Geen gebeurtenissen vastgelegd — heb je tijdens de test toetsen ingedrukt?",
         "failed": "Diagnose mislukt: {{error}}"
       }
     },
     "about": {
-      "title": "Over Handy",
+      "title": "Over Trigo Whispr",
       "version": {
         "title": "Versie",
-        "description": "Huidige versie van Handy"
+        "description": "Huidige versie van Trigo Whispr"
       },
       "whatsNewUpdates": {
         "label": "Toon 'Wat is er nieuw'",
-        "description": "Release-notes tonen nadat Handy is bijgewerkt"
+        "description": "Release-notes tonen nadat Trigo Whispr is bijgewerkt"
       },
       "appDataDirectory": {
         "title": "App-datamap",
-        "description": "Locatie waar Handy de gegevens opslaat"
+        "description": "Locatie waar Trigo Whispr de gegevens opslaat"
       },
       "sourceCode": {
         "title": "Broncode",
@@ -615,7 +615,7 @@
       },
       "supportDevelopment": {
         "title": "Ontwikkeling ondersteunen",
-        "description": "Help ons om te blijven bouwen aan Handy",
+        "description": "Help ons om te blijven bouwen aan Trigo Whispr",
         "button": "Doneren"
       },
       "acknowledgments": {
@@ -623,7 +623,7 @@
         "ggml": {
           "title": "ggml",
           "description": "Krachtige tensorbibliotheek voor lokale AI-verwerking",
-          "details": "Handy's lokale spraak-naar-tekst is gebouwd op transcribe.cpp en ggml. Met dank aan het geweldige werk van Georgi Gerganov en alle bijdragers."
+          "details": "Trigo Whispr's lokale spraak-naar-tekst is gebouwd op transcribe.cpp en ggml. Met dank aan het geweldige werk van Georgi Gerganov en alle bijdragers."
         }
       }
     }
@@ -644,7 +644,7 @@
     "portableUpdateBrowseButton": "GitHub Releases openen"
   },
   "whatsNew": {
-    "title": "Nieuw in Handy v{{version}}"
+    "title": "Nieuw in Trigo Whispr v{{version}}"
   },
   "common": {
     "loading": "Laden...",
@@ -657,7 +657,7 @@
     "noOptionsFound": "Geen opties gevonden"
   },
   "accessibility": {
-    "permissionsDescription": "Handy heeft toegankelijkheidsmachtigingen nodig om getranscribeerde tekst te kunnen typen.",
+    "permissionsDescription": "Trigo Whispr heeft toegankelijkheidsmachtigingen nodig om getranscribeerde tekst te kunnen typen.",
     "openSettings": "Systeeminstellingen openen"
   },
   "errors": {
@@ -680,11 +680,11 @@
   },
   "appLanguage": {
     "title": "Interfacetaal",
-    "description": "Wijzig de taal van de Handy-interface"
+    "description": "Wijzig de taal van de Trigo Whispr-interface"
   },
   "theme": {
     "title": "App-thema",
-    "description": "Kies of Handy het systeemthema volgt of licht of donker blijft",
+    "description": "Kies of Trigo Whispr het systeemthema volgt of licht of donker blijft",
     "options": {
       "system": "Systeem",
       "light": "Licht",
