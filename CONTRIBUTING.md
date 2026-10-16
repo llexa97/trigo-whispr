@@ -41,7 +41,7 @@ Before you begin, ensure you have the following installed:
 3. **Add upstream remote**:
 
    ```bash
-   git remote add upstream git@github.com:llexa97/trigo-whispr.git
+   git remote add upstream git@github.com:cjpais/Handy.git
    ```
 
 4. **Install dependencies**:
