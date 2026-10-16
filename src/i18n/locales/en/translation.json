@@ -7,7 +7,12 @@
     "model": "Model",
     "quit": "Quit",
     "cancel": "Cancel",
-    "secureInputWarning": "⚠ Shortcuts blocked by Secure Input"
+    "secureInputWarning": "⚠ Shortcuts blocked by Secure Input",
+    "meetingTitleDetected": "Meeting {{app}} — {{date}}",
+    "meetingTitleManual": "Meeting — {{date}}",
+    "quitMeetingTitle": "Meeting in progress",
+    "quitMeetingMessage": "A meeting is being recorded. Stop the recording and quit?",
+    "quitMeetingConfirm": "Stop and Quit"
   },
   "sidebar": {
     "general": "General",
@@ -720,5 +725,8 @@
     "learnMore": "How to fix",
     "recorderBlocked": "Can't record shortcuts right now — macOS Secure Input is blocking key events. Resolve the Secure Input warning first.",
     "dismiss": "Dismiss"
+  },
+  "meetings": {
+    "recoveredNotice": "{{total}} meeting(s) recovered after an unexpected shutdown"
   }
 }

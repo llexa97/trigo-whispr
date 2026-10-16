@@ -7,7 +7,12 @@
     "model": "Modelo",
     "quit": "Salir",
     "cancel": "Cancelar",
-    "secureInputWarning": "⚠ Atajos bloqueados por Secure Input"
+    "secureInputWarning": "⚠ Atajos bloqueados por Secure Input",
+    "meetingTitleDetected": "Reunión {{app}} — {{date}}",
+    "meetingTitleManual": "Reunión — {{date}}",
+    "quitMeetingTitle": "Reunión en curso",
+    "quitMeetingMessage": "Se está grabando una reunión. ¿Detener la grabación y salir?",
+    "quitMeetingConfirm": "Detener y salir"
   },
   "sidebar": {
     "general": "General",
@@ -720,5 +725,8 @@
     "learnMore": "Cómo solucionarlo",
     "recorderBlocked": "Ahora mismo no se pueden grabar atajos: Secure Input de macOS está bloqueando los eventos de teclado. Resuelve primero el aviso de Secure Input.",
     "dismiss": "Descartar"
+  },
+  "meetings": {
+    "recoveredNotice": "{{total}} reunión(es) recuperada(s) tras un cierre inesperado"
   }
 }

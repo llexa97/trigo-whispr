@@ -7,7 +7,12 @@
     "model": "Modelo",
     "quit": "Sair",
     "cancel": "Cancelar",
-    "secureInputWarning": "⚠ Atalhos bloqueados pelo Secure Input"
+    "secureInputWarning": "⚠ Atalhos bloqueados pelo Secure Input",
+    "meetingTitleDetected": "Reunião {{app}} — {{date}}",
+    "meetingTitleManual": "Reunião — {{date}}",
+    "quitMeetingTitle": "Reunião em andamento",
+    "quitMeetingMessage": "Uma reunião está sendo gravada. Parar a gravação e sair?",
+    "quitMeetingConfirm": "Parar e sair"
   },
   "sidebar": {
     "general": "Geral",
@@ -720,5 +725,8 @@
     "learnMore": "Como resolver isso",
     "recorderBlocked": "Não é possível gravar atalhos agora — o Secure Input do macOS está bloqueando os eventos de tecla. Resolva primeiro o aviso do Secure Input.",
     "dismiss": "Dispensar"
+  },
+  "meetings": {
+    "recoveredNotice": "{{total}} reunião(ões) recuperada(s) após um encerramento inesperado"
   }
 }

@@ -61,6 +61,8 @@ Trigo Whispr is a cross-platform desktop speech-to-text application built with T
   - `model.rs` - Model downloading and management
   - `transcription.rs` - Speech-to-text processing pipeline
   - `history.rs` - Transcription history storage
+  - `meeting.rs` - Meeting recording lifecycle, `meetings.db` + per-meeting folders, crash recovery (`self_heal`), audio retention
+- `meeting/power.rs` - Keeps the system awake while a meeting is recorded
 - `audio_toolkit/` - Low-level audio processing:
   - `audio/` - Recording sink (VAD, levels, live streaming feed), output devices, WAV I/O
   - `vad/` - Voice Activity Detection (Silero VAD)

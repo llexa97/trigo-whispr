@@ -224,6 +224,22 @@ pub enum RecordingRetentionPeriod {
     Months3,
 }
 
+/// How long meeting WAV files are kept. Only the audio is deleted: the
+/// transcript and the meeting itself stay.
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Default, Type)]
+#[serde(rename_all = "snake_case")]
+pub enum MeetingAudioRetention {
+    Forever,
+    #[serde(rename = "days_7")]
+    Days7,
+    #[default]
+    #[serde(rename = "days_30")]
+    Days30,
+    #[serde(rename = "days_90")]
+    Days90,
+    DeleteAfterTranscription,
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Type)]
 #[serde(rename_all = "snake_case")]
 pub enum KeyboardImplementation {
@@ -449,6 +465,8 @@ pub struct AppSettings {
     pub history_limit: usize,
     #[serde(default = "default_recording_retention_period")]
     pub recording_retention_period: RecordingRetentionPeriod,
+    #[serde(default)]
+    pub meeting_audio_retention: MeetingAudioRetention,
     #[serde(default)]
     pub paste_method: PasteMethod,
     #[serde(default)]
@@ -988,6 +1006,7 @@ pub fn get_default_settings() -> AppSettings {
         word_correction_threshold: default_word_correction_threshold(),
         history_limit: default_history_limit(),
         recording_retention_period: default_recording_retention_period(),
+        meeting_audio_retention: MeetingAudioRetention::default(),
         paste_method: PasteMethod::default(),
         clipboard_handling: ClipboardHandling::default(),
         auto_submit: default_auto_submit(),

@@ -71,6 +71,7 @@ regex = "1"
 whatlang = "0.16"
 isolang = "2"
 chrono = "0.4"
+uuid = { version = "1", features = ["v4"] }
 rusqlite = { version = "0.37", features = ["bundled"] }
 sha2 = "0.10"
 libc = "0.2"
@@ -115,6 +116,7 @@ windows = { version = "0.61.3", features = [
   "Win32_System_DataExchange",
   "Win32_System_LibraryLoader",
   "Win32_System_Ole",
+  "Win32_System_Power",
   "Win32_System_Memory",
   "Win32_Security",
   "Win32_System_SystemInformation",

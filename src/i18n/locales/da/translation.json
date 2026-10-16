@@ -7,7 +7,12 @@
     "model": "Model",
     "quit": "Afslut",
     "cancel": "Annuller",
-    "secureInputWarning": "⚠ Genveje blokeret af Secure Input"
+    "secureInputWarning": "⚠ Genveje blokeret af Secure Input",
+    "meetingTitleDetected": "Møde {{app}} — {{date}}",
+    "meetingTitleManual": "Møde — {{date}}",
+    "quitMeetingTitle": "Møde i gang",
+    "quitMeetingMessage": "Et møde optages. Stop optagelsen og afslut?",
+    "quitMeetingConfirm": "Stop og afslut"
   },
   "sidebar": {
     "general": "Generelt",
@@ -720,5 +725,8 @@
     "learnMore": "Sådan løser du det",
     "recorderBlocked": "Genveje kan ikke optages lige nu — macOS Secure Input blokerer tastehændelser. Løs advarslen om Secure Input først.",
     "dismiss": "Afvis"
+  },
+  "meetings": {
+    "recoveredNotice": "{{total}} møde(r) gendannet efter en uventet lukning"
   }
 }

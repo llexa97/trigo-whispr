@@ -7,7 +7,12 @@
     "model": "模型",
     "quit": "結束",
     "cancel": "取消",
-    "secureInputWarning": "⚠ 快捷鍵被 Secure Input 阻擋"
+    "secureInputWarning": "⚠ 快捷鍵被 Secure Input 阻擋",
+    "meetingTitleDetected": "會議 {{app}} — {{date}}",
+    "meetingTitleManual": "會議 — {{date}}",
+    "quitMeetingTitle": "會議進行中",
+    "quitMeetingMessage": "正在錄製會議。要停止錄製並結束嗎？",
+    "quitMeetingConfirm": "停止並結束"
   },
   "sidebar": {
     "general": "一般",
@@ -720,5 +725,8 @@
     "learnMore": "如何解決",
     "recorderBlocked": "目前無法錄製快捷鍵——macOS 的 Secure Input 正在阻擋按鍵事件。請先解決 Secure Input 警告。",
     "dismiss": "關閉"
+  },
+  "meetings": {
+    "recoveredNotice": "意外關閉後已復原 {{total}} 個會議"
   }
 }

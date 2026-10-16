@@ -7,7 +7,12 @@
     "model": "Model",
     "quit": "Keluar",
     "cancel": "Batal",
-    "secureInputWarning": "⚠ Pintasan diblokir oleh Secure Input"
+    "secureInputWarning": "⚠ Pintasan diblokir oleh Secure Input",
+    "meetingTitleDetected": "Rapat {{app}} — {{date}}",
+    "meetingTitleManual": "Rapat — {{date}}",
+    "quitMeetingTitle": "Rapat sedang berlangsung",
+    "quitMeetingMessage": "Rapat sedang direkam. Hentikan perekaman dan keluar?",
+    "quitMeetingConfirm": "Hentikan dan keluar"
   },
   "sidebar": {
     "general": "Umum",
@@ -720,5 +725,8 @@
     "learnMore": "Cara memperbaiki",
     "recorderBlocked": "Pintasan tidak dapat direkam saat ini — macOS Secure Input memblokir peristiwa tombol. Selesaikan peringatan Secure Input terlebih dahulu.",
     "dismiss": "Tutup"
+  },
+  "meetings": {
+    "recoveredNotice": "{{total}} rapat dipulihkan setelah penutupan tak terduga"
   }
 }

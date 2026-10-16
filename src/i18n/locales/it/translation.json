@@ -7,7 +7,12 @@
     "model": "Modello",
     "quit": "Esci",
     "cancel": "Annulla",
-    "secureInputWarning": "⚠ Scorciatoie bloccate da Secure Input"
+    "secureInputWarning": "⚠ Scorciatoie bloccate da Secure Input",
+    "meetingTitleDetected": "Riunione {{app}} — {{date}}",
+    "meetingTitleManual": "Riunione — {{date}}",
+    "quitMeetingTitle": "Riunione in corso",
+    "quitMeetingMessage": "È in corso la registrazione di una riunione. Interrompere la registrazione e uscire?",
+    "quitMeetingConfirm": "Interrompi ed esci"
   },
   "sidebar": {
     "general": "Generale",
@@ -720,5 +725,8 @@
     "learnMore": "Come risolvere",
     "recorderBlocked": "Non è possibile registrare scorciatoie in questo momento: Secure Input di macOS sta bloccando gli eventi dei tasti. Risolvi prima l'avviso di Secure Input.",
     "dismiss": "Ignora"
+  },
+  "meetings": {
+    "recoveredNotice": "{{total}} riunione/i recuperata/e dopo una chiusura imprevista"
   }
 }

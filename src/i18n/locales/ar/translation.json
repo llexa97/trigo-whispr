@@ -7,7 +7,12 @@
     "model": "النموذج",
     "quit": "إنهاء",
     "cancel": "إلغاء",
-    "secureInputWarning": "⚠ الاختصارات محجوبة بواسطة Secure Input"
+    "secureInputWarning": "⚠ الاختصارات محجوبة بواسطة Secure Input",
+    "meetingTitleDetected": "اجتماع {{app}} — {{date}}",
+    "meetingTitleManual": "اجتماع — {{date}}",
+    "quitMeetingTitle": "اجتماع قيد التقدم",
+    "quitMeetingMessage": "يجري تسجيل اجتماع. هل تريد إيقاف التسجيل والخروج؟",
+    "quitMeetingConfirm": "إيقاف وخروج"
   },
   "sidebar": {
     "general": "عام",
@@ -720,5 +725,8 @@
     "learnMore": "كيفية الإصلاح",
     "recorderBlocked": "لا يمكن تسجيل الاختصارات الآن — يحجب Secure Input في macOS أحداث المفاتيح. عالج تحذير Secure Input أولاً.",
     "dismiss": "تجاهل"
+  },
+  "meetings": {
+    "recoveredNotice": "تم استرداد اجتماعات بعد إيقاف غير متوقع: {{total}}"
   }
 }

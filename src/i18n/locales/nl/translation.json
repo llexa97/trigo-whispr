@@ -7,7 +7,12 @@
     "model": "Model",
     "quit": "Afsluiten",
     "cancel": "Annuleren",
-    "secureInputWarning": "⚠ Sneltoetsen geblokkeerd door Secure Input"
+    "secureInputWarning": "⚠ Sneltoetsen geblokkeerd door Secure Input",
+    "meetingTitleDetected": "Vergadering {{app}} — {{date}}",
+    "meetingTitleManual": "Vergadering — {{date}}",
+    "quitMeetingTitle": "Vergadering bezig",
+    "quitMeetingMessage": "Er wordt een vergadering opgenomen. Opname stoppen en afsluiten?",
+    "quitMeetingConfirm": "Stoppen en afsluiten"
   },
   "sidebar": {
     "general": "Algemeen",
@@ -720,5 +725,8 @@
     "learnMore": "Hoe je dit oplost",
     "recorderBlocked": "Sneltoetsen kunnen nu niet worden opgenomen — Secure Input van macOS blokkeert toetsgebeurtenissen. Los eerst de Secure Input-waarschuwing op.",
     "dismiss": "Sluiten"
+  },
+  "meetings": {
+    "recoveredNotice": "{{total}} vergadering(en) hersteld na een onverwachte afsluiting"
   }
 }

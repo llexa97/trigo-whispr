@@ -746,6 +746,16 @@ impl AudioRecordingManager {
         if !settings.mute_while_recording {
             return;
         }
+        // Muting during a meeting would silence the system track and the
+        // meeting itself for the user.
+        if self
+            .app_handle
+            .try_state::<Arc<crate::managers::meeting::MeetingManager>>()
+            .is_some_and(|m| m.is_recording())
+        {
+            debug!("Mute skipped: a meeting is being recorded");
+            return;
+        }
 
         // Lock order: is_open before mute_state (matches stop_microphone_stream).
         let is_open = self.is_open.lock().unwrap();
