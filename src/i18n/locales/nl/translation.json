@@ -592,6 +592,20 @@
         "verdictOk": "Toetsgebeurtenissen bereiken Trigo Whispr normaal.",
         "verdictNoEvents": "Geen gebeurtenissen vastgelegd — heb je tijdens de test toetsen ingedrukt?",
         "failed": "Diagnose mislukt: {{error}}"
+      },
+      "meetingCaptureTest": {
+        "title": "Test vergaderopname",
+        "description": "Neemt 10 s microfoon- en systeemaudio op in een tijdelijke map, zoals bij een vergadering.",
+        "run": "Opname van 10 s starten",
+        "running": "Opnemen… spreek en speel wat audio af",
+        "outDir": "Map",
+        "mic": "Microfoonspoor",
+        "system": "Systeemspoor",
+        "duration": "Duur (ms)",
+        "mode": "Systeemopnamemodus",
+        "warnings": "Waarschuwingen",
+        "none": "geen",
+        "failed": "Opname mislukt: {{error}}"
       }
     },
     "about": {

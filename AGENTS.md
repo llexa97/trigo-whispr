@@ -64,6 +64,7 @@ Trigo Whispr is a cross-platform desktop speech-to-text application built with T
 - `audio_toolkit/` - Low-level audio processing:
   - `audio/` - Recording sink (VAD, levels, live streaming feed), output devices, WAV I/O
   - `vad/` - Voice Activity Detection (Silero VAD)
+- `meeting/capture/` - Meeting recording: mic + system audio (Windows WASAPI process/endpoint loopback) as two aligned 16 kHz WAV tracks streamed to disk; separate from the dictation pipeline (adapted from fly-on-the-wall, see `THIRD_PARTY_LICENSES.md`)
 - `commands/` - Tauri command handlers for frontend communication
 - `cli.rs` - CLI argument definitions (clap derive)
 - `shortcut.rs` - Global keyboard shortcut handling

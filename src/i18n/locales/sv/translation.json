@@ -579,6 +579,20 @@
         "verdictNoEvents": "Inga händelser fångades — tryckte du på några tangenter under testet?",
         "failed": "Diagnostiken misslyckades: {{error}}"
       },
+      "meetingCaptureTest": {
+        "title": "Test av mötesinspelning",
+        "description": "Spelar in 10 s mikrofon- och systemljud i en tillfällig mapp, som vid ett möte.",
+        "run": "Starta 10 s inspelning",
+        "running": "Spelar in… prata och spela upp lite ljud",
+        "outDir": "Mapp",
+        "mic": "Mikrofonspår",
+        "system": "Systemspår",
+        "duration": "Längd (ms)",
+        "mode": "Läge för systeminspelning",
+        "warnings": "Varningar",
+        "none": "inga",
+        "failed": "Inspelningen misslyckades: {{error}}"
+      },
       "whatsNewPreview": {
         "title": "Förhandsvisa nyheter",
         "description": "Öppna den senaste medföljande versionsinformationen utan att markera den som visad",

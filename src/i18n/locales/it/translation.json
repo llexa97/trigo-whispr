@@ -579,6 +579,20 @@
         "verdictNoEvents": "Nessun evento rilevato: hai premuto qualche tasto durante il test?",
         "failed": "Diagnostica non riuscita: {{error}}"
       },
+      "meetingCaptureTest": {
+        "title": "Test di acquisizione riunione",
+        "description": "Registra 10 s di microfono e audio di sistema in una cartella temporanea, come per una riunione.",
+        "run": "Avvia acquisizione di 10 s",
+        "running": "Registrazione… parla e riproduci dell'audio",
+        "outDir": "Cartella",
+        "mic": "Traccia microfono",
+        "system": "Traccia di sistema",
+        "duration": "Durata (ms)",
+        "mode": "Modalità di acquisizione di sistema",
+        "warnings": "Avvisi",
+        "none": "nessuno",
+        "failed": "Acquisizione non riuscita: {{error}}"
+      },
       "whatsNewPreview": {
         "title": "Anteprima delle novità",
         "description": "Apri le note di rilascio incluse più recenti senza segnarle come viste",
