@@ -1,6 +1,6 @@
-# Handy on Ubuntu 26.04 GNOME Wayland
+# Trigo Whispr on Ubuntu 26.04 GNOME Wayland
 
-Tested on Ubuntu 26.04.1 LTS, GNOME Wayland, Handy 0.9.8.
+Tested on Ubuntu 26.04.1 LTS, GNOME Wayland, Trigo Whispr 0.9.8.
 
 The fix is to use `ydotool` for typing and `handy_keys` for shortcuts.
 
@@ -36,30 +36,30 @@ ydotool type "HELLO FROM YDOTOOL"
 
 The service should show `active (running)` and the test should type into the focused application.
 
-## 3. Configure Handy
+## 3. Configure Trigo Whispr
 
-Edit Handy's settings with:
-
-```bash
-sed -i 's/"typing_tool": "auto"/"typing_tool": "ydotool"/' ~/.local/share/com.pais.handy/settings_store.json
-sed -i 's/"keyboard_implementation": "tauri"/"keyboard_implementation": "handy_keys"/' ~/.local/share/com.pais.handy/settings_store.json
-```
-
-Restart Handy:
+Edit Trigo Whispr's settings with:
 
 ```bash
-pkill handy
-handy --start-hidden &
+sed -i 's/"typing_tool": "auto"/"typing_tool": "ydotool"/' ~/.local/share/com.trigo.trigo-whispr/settings_store.json
+sed -i 's/"keyboard_implementation": "tauri"/"keyboard_implementation": "trigo_whispr_keys"/' ~/.local/share/com.trigo.trigo-whispr/settings_store.json
 ```
 
-Check the Handy log for:
+Restart Trigo Whispr:
+
+```bash
+pkill trigo-whispr
+trigo-whispr --start-hidden &
+```
+
+Check the Trigo Whispr log for:
 
 ```text
 handy-keys manager thread started
 handy-keys shortcuts initialized
 ```
 
-Then use your existing Handy shortcut and test dictation.
+Then use your existing Trigo Whispr shortcut and test dictation.
 
 ## 4. Hide the overlay
 
@@ -67,7 +67,7 @@ On GNOME, the overlay is a regular window that can take the focus, so nothing is
 
 ## 5. Install wl-clipboard
 
-Handy uses `wl-copy` on Wayland when it is installed:
+Trigo Whispr uses `wl-copy` on Wayland when it is installed:
 
 ```bash
 sudo apt install wl-clipboard

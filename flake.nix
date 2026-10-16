@@ -1,5 +1,5 @@
 {
-  description = "Handy - A free, open source, and extensible speech-to-text application that works completely offline";
+  description = "Trigo Whispr - A free, open source, and extensible speech-to-text application that works completely offline";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -83,8 +83,8 @@
           };
         in
         {
-          handy = pkgs.rustPlatform.buildRustPackage {
-            pname = "handy";
+          trigo-whispr = pkgs.rustPlatform.buildRustPackage {
+            pname = "trigo-whispr";
             inherit version;
             src = self;
 
@@ -169,7 +169,7 @@
                 # Self-update can't work against an immutable /nix/store install
                 # (downloadAndInstall would try to overwrite the store path), so
                 # the Nix-built package always disables the updater.
-                --set HANDY_DISABLE_UPDATER 1
+                --set TRIGO_WHISPR_DISABLE_UPDATER 1
               )
             '';
 
@@ -177,12 +177,12 @@
               description = "A free, open source, and extensible speech-to-text application that works completely offline";
               homepage = "https://github.com/cjpais/Handy";
               license = lib.licenses.mit;
-              mainProgram = "handy";
+              mainProgram = "trigo-whispr";
               platforms = supportedSystems;
             };
           };
 
-          default = self.packages.${system}.handy;
+          default = self.packages.${system}.trigo-whispr;
         }
       );
 
@@ -191,7 +191,7 @@
         { lib, pkgs, ... }:
         {
           imports = [ ./nix/module.nix ];
-          programs.handy.package = lib.mkDefault self.packages.${pkgs.stdenv.hostPlatform.system}.handy;
+          programs.trigo-whispr.package = lib.mkDefault self.packages.${pkgs.stdenv.hostPlatform.system}.trigo-whispr;
         };
 
       # Home-manager module for per-user service
@@ -199,7 +199,7 @@
         { lib, pkgs, ... }:
         {
           imports = [ ./nix/hm-module.nix ];
-          services.handy.package = lib.mkDefault self.packages.${pkgs.stdenv.hostPlatform.system}.handy;
+          services.trigo-whispr.package = lib.mkDefault self.packages.${pkgs.stdenv.hostPlatform.system}.trigo-whispr;
         };
 
       # Development shell for building from source
@@ -237,7 +237,7 @@
             XDG_DATA_DIRS = "${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name}:${pkgs.gtk3}/share/gsettings-schemas/${pkgs.gtk3.name}:${pkgs.hicolor-icon-theme}/share";
 
             shellHook = ''
-              echo "Handy development environment"
+              echo "Trigo Whispr development environment"
               bun install
               echo "Run 'bun run tauri dev' to start"
             '';

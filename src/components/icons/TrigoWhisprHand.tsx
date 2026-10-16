@@ -1,4 +1,4 @@
-const HandyHand = ({
+const TrigoWhisprHand = ({
   width,
   height,
 }: {
@@ -21,4 +21,4 @@ const HandyHand = ({
   </svg>
 );
 
-export default HandyHand;
+export default TrigoWhisprHand;
