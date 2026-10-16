@@ -210,7 +210,7 @@ See the [Troubleshooting](README.md#troubleshooting) section in README.md.
 
 - **Opening a PR:** Read [`.github/PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md). Every section listed there is mandatory.
 - **Opening an issue:** Read [`.github/ISSUE_TEMPLATE/`](.github/ISSUE_TEMPLATE/). Use `bug_report.md` for bugs; feature requests can be opened as plain issues.
-- **Proposing a feature:** Trigo Whispr is under a feature freeze. New features should be proposed in an issue before any PR is opened — see the PR template's "Community Feedback" section.
+- **Proposing a feature:** describe it in an issue first, then link it from the PR's "Community Feedback" section.
 - **Translations:** Follow [CONTRIBUTING_TRANSLATIONS.md](CONTRIBUTING_TRANSLATIONS.md).
 - **Full contributor workflow:** [CONTRIBUTING.md](CONTRIBUTING.md).
 
