@@ -34,7 +34,7 @@ The process is entirely local:
 
 ### Installation
 
-1. Download the latest release from the [releases page](https://github.com/cjpais/Handy/releases) or the [website](https://handy.computer)
+1. Download the latest release from the [releases page](https://github.com/llexa97/trigo-whispr/releases) or the [website](https://handy.computer)
    - **macOS**: Also available via [Homebrew cask](https://formulae.brew.sh/cask/trigo-whispr): `brew install --cask trigo-whispr`
    - **Windows**: Also available via [winget](https://github.com/microsoft/winget-pkgs): `winget install cjpais.Handy` \
      **Note:** The Homebrew cask and winget package are not maintained by the Trigo Whispr developers.
@@ -124,7 +124,7 @@ trigo-whispr --start-hidden --no-tray
 
 ## Known Issues & Current Limitations
 
-This project is actively being developed and has some [known issues](https://github.com/cjpais/Handy/issues). We believe in transparency about the current state:
+This project is actively being developed and has some [known issues](https://github.com/llexa97/trigo-whispr/issues). We believe in transparency about the current state:
 
 ### Bluetooth Headset Microphones (macOS)
 
@@ -426,7 +426,7 @@ Exec=env TRIGO_WHISPR_NO_GTK_LAYER_SHELL=1 trigo-whispr
 
 Trigo Whispr's built-in autostart rewrites its generated desktop entry, so editing that entry is not a durable workaround. For autostart, use an appropriate session/service environment, or disable Trigo Whispr's built-in autostart and manage your own startup entry with the required variable.
 
-If a workaround helps you, please [open an issue](https://github.com/cjpais/Handy/issues) describing your distro, desktop environment, and session type — that information helps us narrow down the underlying bug.
+If a workaround helps you, please [open an issue](https://github.com/llexa97/trigo-whispr/issues) describing your distro, desktop environment, and session type — that information helps us narrow down the underlying bug.
 
 ### Empty recording overlay on Hyprland / Omarchy
 
@@ -455,7 +455,7 @@ Adjust the executable path if needed. This override only applies to apps launche
 
 ### How to Contribute
 
-1. **Check existing issues** at [github.com/cjpais/Handy/issues](https://github.com/cjpais/Handy/issues)
+1. **Check existing issues** at [github.com/llexa97/trigo-whispr/issues](https://github.com/llexa97/trigo-whispr/issues)
 2. **Fork the repository** and create a feature branch
 3. **Test thoroughly** on your target platform
 4. **Submit a pull request** with clear description of changes

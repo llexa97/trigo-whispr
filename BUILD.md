@@ -77,7 +77,7 @@ This guide covers how to set up the development environment and build Trigo Whis
 ### 1. Clone the Repository
 
 ```bash
-git clone git@github.com:cjpais/Handy.git
+git clone git@github.com:llexa97/trigo-whispr.git
 cd Trigo Whispr
 ```
 

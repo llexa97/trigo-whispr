@@ -7,7 +7,7 @@
 #
 # Usage in your flake:
 #
-#   inputs.trigo-whispr.url = "github:cjpais/Handy";
+#   inputs.trigo-whispr.url = "github:llexa97/trigo-whispr";
 #
 #   nixosConfigurations.myhost = nixpkgs.lib.nixosSystem {
 #     modules = [
