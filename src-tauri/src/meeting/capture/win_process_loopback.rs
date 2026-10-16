@@ -14,6 +14,7 @@
 //! build, and any activation failure makes the caller fall back to endpoint
 //! loopback.
 
+use std::mem::ManuallyDrop;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
@@ -183,34 +184,57 @@ fn capture_thread(
     unsafe { CoUninitialize() };
 }
 
-unsafe fn activate_and_start() -> Result<Started, String> {
-    let mut params = AUDIOCLIENT_ACTIVATION_PARAMS {
-        ActivationType: AUDIOCLIENT_ACTIVATION_TYPE_PROCESS_LOOPBACK,
-        Anonymous: AUDIOCLIENT_ACTIVATION_PARAMS_0 {
-            ProcessLoopbackParams: AUDIOCLIENT_PROCESS_LOOPBACK_PARAMS {
-                TargetProcessId: std::process::id(),
-                ProcessLoopbackMode: PROCESS_LOOPBACK_MODE_EXCLUDE_TARGET_PROCESS_TREE,
-            },
-        },
-    };
-    // A VT_BLOB pointing at `params`, which outlives the activation call. The
-    // PROPVARIANT does not own the blob, so it must not be PropVariantClear'd.
-    let prop = PROPVARIANT {
-        Anonymous: PROPVARIANT_0 {
-            Anonymous: std::mem::ManuallyDrop::new(PROPVARIANT_0_0 {
-                vt: VT_BLOB,
-                wReserved1: 0,
-                wReserved2: 0,
-                wReserved3: 0,
-                Anonymous: PROPVARIANT_0_0_0 {
-                    blob: BLOB {
-                        cbSize: std::mem::size_of::<AUDIOCLIENT_ACTIVATION_PARAMS>() as u32,
-                        pBlobData: &mut params as *mut _ as *mut u8,
+/// What `ActivateAudioInterfaceAsync` reads: the activation params and the
+/// VT_BLOB PROPVARIANT pointing at them. Boxed so the blob pointer stays valid
+/// for as long as the asynchronous activation may still read it.
+struct ActivationArgs {
+    params: AUDIOCLIENT_ACTIVATION_PARAMS,
+    /// windows-rs implements `Drop for PROPVARIANT` with `PropVariantClear`,
+    /// which `CoTaskMemFree`s a VT_BLOB's data. Here the blob is `params`,
+    /// memory COM never allocated, so that Drop must never run: freeing it
+    /// corrupts the heap (APPCRASH 0xc0000374).
+    prop: ManuallyDrop<PROPVARIANT>,
+}
+
+impl ActivationArgs {
+    fn new() -> Box<Self> {
+        let mut args = Box::new(Self {
+            params: AUDIOCLIENT_ACTIVATION_PARAMS {
+                ActivationType: AUDIOCLIENT_ACTIVATION_TYPE_PROCESS_LOOPBACK,
+                Anonymous: AUDIOCLIENT_ACTIVATION_PARAMS_0 {
+                    ProcessLoopbackParams: AUDIOCLIENT_PROCESS_LOOPBACK_PARAMS {
+                        TargetProcessId: std::process::id(),
+                        ProcessLoopbackMode: PROCESS_LOOPBACK_MODE_EXCLUDE_TARGET_PROCESS_TREE,
                     },
                 },
-            }),
-        },
-    };
+            },
+            prop: ManuallyDrop::new(PROPVARIANT::default()),
+        });
+        // The blob points into the box, so it is only built once `params`
+        // has its final address.
+        let blob_data = &mut args.params as *mut AUDIOCLIENT_ACTIVATION_PARAMS as *mut u8;
+        args.prop = ManuallyDrop::new(PROPVARIANT {
+            Anonymous: PROPVARIANT_0 {
+                Anonymous: ManuallyDrop::new(PROPVARIANT_0_0 {
+                    vt: VT_BLOB,
+                    wReserved1: 0,
+                    wReserved2: 0,
+                    wReserved3: 0,
+                    Anonymous: PROPVARIANT_0_0_0 {
+                        blob: BLOB {
+                            cbSize: std::mem::size_of::<AUDIOCLIENT_ACTIVATION_PARAMS>() as u32,
+                            pBlobData: blob_data,
+                        },
+                    },
+                }),
+            },
+        });
+        args
+    }
+}
+
+unsafe fn activate_and_start() -> Result<Started, String> {
+    let args = ActivationArgs::new();
 
     let (done_tx, done_rx) = mpsc::channel();
     let handler: IActivateAudioInterfaceCompletionHandler = ActivationHandler {
@@ -218,16 +242,23 @@ unsafe fn activate_and_start() -> Result<Started, String> {
     }
     .into();
 
+    // A synchronous failure starts no activation, so `args` may be freed.
     let operation = ActivateAudioInterfaceAsync(
         VIRTUAL_AUDIO_DEVICE_PROCESS_LOOPBACK,
         &IAudioClient::IID,
-        Some(&prop),
+        Some(&*args.prop),
         &handler,
     )
     .map_err(|e| format!("ActivateAudioInterfaceAsync: {e}"))?;
-    done_rx
-        .recv_timeout(ACTIVATION_TIMEOUT)
-        .map_err(|_| "process loopback activation timed out".to_string())?;
+    if done_rx.recv_timeout(ACTIVATION_TIMEOUT).is_err() {
+        // The activation has not completed and may still read the blob, so
+        // the args are leaked (a few dozen bytes, on this failure path only)
+        // instead of being freed under it.
+        let _ = Box::leak(args);
+        return Err("process loopback activation timed out".to_string());
+    }
+    // ActivateCompleted has run: the activation is done reading the blob.
+    drop(args);
 
     let mut activate_hr = HRESULT(0);
     let mut activated = None;
