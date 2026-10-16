@@ -21,7 +21,7 @@ use policy::{batch_decode, live_decode, BatchDecode, ModelTraits};
 use serde::{Deserialize, Serialize};
 use specta::Type;
 use std::panic::{catch_unwind, AssertUnwindSafe};
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{mpsc, Arc, Condvar, Mutex, MutexGuard};
 use std::thread;
 use std::time::{Duration, Instant, SystemTime};
@@ -31,6 +31,7 @@ use transcribe_cpp::{Backend, RunOptions, Task, Transcript};
 
 mod chunked;
 mod live;
+pub mod meeting;
 pub mod policy;
 
 const STREAM_PERF_LOG_INTERVAL: Duration = Duration::from_secs(5);
@@ -263,6 +264,11 @@ pub struct TranscriptionManager {
     /// yet. This prevents a second worker from starting after finalize/cancel
     /// closes the router but before the first worker has fully exited.
     active_stream_worker: Arc<AtomicU64>,
+    /// Dictations being transcribed: a meeting's transcription waits for
+    /// them between chunks.
+    foreground_runs: Arc<AtomicUsize>,
+    /// True while a meeting is transcribed, which keeps the model loaded.
+    meeting_active: Arc<AtomicBool>,
 }
 
 impl TranscriptionManager {
@@ -282,6 +288,8 @@ impl TranscriptionManager {
             stream_active: Arc::new(AtomicBool::new(false)),
             next_stream_worker_id: Arc::new(AtomicU64::new(1)),
             active_stream_worker: Arc::new(AtomicU64::new(0)),
+            foreground_runs: Arc::new(AtomicUsize::new(0)),
+            meeting_active: Arc::new(AtomicBool::new(false)),
         };
 
         // Start the idle watcher
@@ -309,12 +317,13 @@ impl TranscriptionManager {
                         continue;
                     }
 
-                    // While recording, keep the idle timer fresh so the
-                    // model is never unloaded mid-session.
+                    // While recording or transcribing a meeting, keep the
+                    // idle timer fresh so the model is never unloaded
+                    // mid-session.
                     let is_recording = app_handle_cloned
                         .try_state::<Arc<AudioRecordingManager>>()
                         .is_some_and(|a| a.is_recording());
-                    if is_recording {
+                    if is_recording || manager_cloned.is_transcribing_meeting() {
                         manager_cloned.touch_activity();
                         continue;
                     }
@@ -484,6 +493,11 @@ impl TranscriptionManager {
     /// is loaded. Never waits for the worker to exit, so it is safe on any
     /// thread, including the event loop.
     pub fn maybe_unload_immediately(&self, context: &str) {
+        // A meeting's transcription needs the model between its chunks; it
+        // unloads it once done.
+        if self.is_transcribing_meeting() {
+            return;
+        }
         let settings = get_settings(&self.app_handle);
         if settings.model_unload_timeout == ModelUnloadTimeout::Immediately
             && self.is_model_loaded()
@@ -886,12 +900,14 @@ impl TranscriptionManager {
     /// Transcribe a whole clip in batch: a re-transcribed history entry, or
     /// a file from the CLI.
     pub fn transcribe(&self, audio: Vec<f32>) -> Result<String> {
+        let _foreground = meeting::ForegroundRun::new(&self.foreground_runs);
         self.complete(Instant::now(), audio, None)
     }
 
     /// Transcribe a finished recording: what its live decode produced, or a
     /// batch run of the whole recording when there is no live result.
     pub fn transcribe_recording(&self, samples: Vec<f32>) -> Result<String> {
+        let _foreground = meeting::ForegroundRun::new(&self.foreground_runs);
         let started = Instant::now();
         let live = self.finalize_live(samples.len())?;
         self.complete(started, samples, live)
