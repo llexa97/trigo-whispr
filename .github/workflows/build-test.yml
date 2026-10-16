@@ -23,7 +23,8 @@ jobs:
       platform: ${{ matrix.platform }}
       target: ${{ matrix.target }}
       build-args: ${{ matrix.args }}
-      sign-binaries: true
+      # Test builds are unsigned: the signing secrets are not configured here.
+      sign-binaries: false
       asset-prefix: "trigo-whispr-test"
       upload-artifacts: true
       is-debug-build: ${{ contains(matrix.args, '--debug') }}
