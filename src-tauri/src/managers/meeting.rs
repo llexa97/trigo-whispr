@@ -528,16 +528,23 @@ impl MeetingManager {
         if let Err(e) = session.stop() {
             warn!("Capture stop failed while cancelling meeting {id}: {e}");
         }
-        if let Err(e) = fs::remove_dir_all(&folder_path) {
-            warn!("Failed to delete folder of cancelled meeting {id}: {e}");
-        }
-        if let Err(e) = self.conn().and_then(|c| store::delete(&c, &id)) {
-            error!("Failed to delete cancelled meeting {id}: {e}");
-        }
+        let result = self.conn().and_then(|c| {
+            folder::discard_cancelled(&c, &id, || folder::remove_folder(&folder_path))
+        });
+        // The capture is stopped either way: free the state.
         self.end_active();
-        info!("Meeting {id} cancelled");
-        self.emit_updated(MeetingsUpdated::Deleted { id });
-        Ok(())
+        match result {
+            Ok(()) => {
+                info!("Meeting {id} cancelled");
+                self.emit_updated(MeetingsUpdated::Deleted { id });
+                Ok(())
+            }
+            Err(e) => {
+                error!("Cancelling meeting {id} left files behind: {e}");
+                self.emit_meeting(&id, false);
+                Err(e)
+            }
+        }
     }
 
     fn active_id(&self) -> Option<MeetingId> {

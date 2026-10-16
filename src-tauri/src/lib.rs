@@ -198,14 +198,46 @@ fn stop_meeting_for_exit(app: &AppHandle) {
     }
 }
 
+/// Set once quitting was confirmed (or nothing was recording), so the
+/// `ExitRequested` that follows is let through instead of asking again.
+static EXIT_CONFIRMED: AtomicBool = AtomicBool::new(false);
+/// A quit confirmation dialog is on screen; further quit requests wait on it.
+static QUIT_DIALOG_OPEN: AtomicBool = AtomicBool::new(false);
+
+#[derive(Debug, PartialEq, Eq)]
+enum ExitAction {
+    /// Let the exit happen (after finalizing any meeting).
+    Allow,
+    /// Prevent it and ask the user first.
+    Confirm,
+}
+
+/// Decides what to do with an exit request. A restart cannot be prevented
+/// (Tauri ignores `prevent_exit` for it), so it is always allowed.
+fn exit_action(confirmed: bool, meeting_recording: bool, code: Option<i32>) -> ExitAction {
+    if confirmed || !meeting_recording || code == Some(tauri::RESTART_EXIT_CODE) {
+        ExitAction::Allow
+    } else {
+        ExitAction::Confirm
+    }
+}
+
+fn meeting_recording(app: &AppHandle) -> bool {
+    app.try_state::<Arc<MeetingManager>>()
+        .is_some_and(|m| m.is_recording())
+}
+
 /// Quits the app, asking for confirmation first while a meeting is being
-/// recorded. On confirmation the meeting is stopped cleanly before exiting.
+/// recorded. Shared by the tray "Quit" item and every other user exit
+/// (Cmd+Q, ...), which reach it through `ExitRequested`. Cancelling leaves
+/// the recording running; confirming finalizes it before exiting.
 fn request_quit(app: &AppHandle) {
-    let recording = app
-        .try_state::<Arc<MeetingManager>>()
-        .is_some_and(|m| m.is_recording());
-    if !recording {
+    if !meeting_recording(app) {
+        EXIT_CONFIRMED.store(true, Ordering::SeqCst);
         app.exit(0);
+        return;
+    }
+    if QUIT_DIALOG_OPEN.swap(true, Ordering::SeqCst) {
         return;
     }
 
@@ -235,8 +267,10 @@ fn request_quit(app: &AppHandle) {
                 or_en(strings.cancel, english.cancel),
             ))
             .blocking_show();
+        QUIT_DIALOG_OPEN.store(false, Ordering::SeqCst);
         if confirmed {
             stop_meeting_for_exit(&app);
+            EXIT_CONFIRMED.store(true, Ordering::SeqCst);
             app.exit(0);
         }
     });
@@ -1201,10 +1235,21 @@ pub fn run(cli_args: CliArgs) {
             }
             show_main_window(app);
         }
-        // Covers exits that bypass `request_quit` (Cmd+Q, updater restart):
-        // finalize the meeting so its files and row are consistent.
-        tauri::RunEvent::ExitRequested { .. } => {
-            stop_meeting_for_exit(app);
+        // Every exit (Cmd+Q, app.exit, updater restart) lands here: while a
+        // meeting records, hold it and ask first; once allowed, finalize the
+        // meeting so its files and row are consistent.
+        tauri::RunEvent::ExitRequested { code, api, .. } => {
+            match exit_action(
+                EXIT_CONFIRMED.load(Ordering::SeqCst),
+                meeting_recording(app),
+                *code,
+            ) {
+                ExitAction::Confirm => {
+                    api.prevent_exit();
+                    request_quit(app);
+                }
+                ExitAction::Allow => stop_meeting_for_exit(app),
+            }
         }
         // No transcription teardown on exit: transcribe.cpp runs only in the
         // worker process, which exits by itself as soon as this process's end
@@ -1212,6 +1257,32 @@ pub fn run(cli_args: CliArgs) {
         // could block quitting behind a hung model load.
         _ => {}
     });
+}
+
+#[cfg(test)]
+mod exit_tests {
+    use super::{exit_action, ExitAction};
+
+    #[test]
+    fn asks_before_quitting_during_a_meeting() {
+        // Cmd+Q (None) and programmatic exits both ask while recording.
+        assert_eq!(exit_action(false, true, None), ExitAction::Confirm);
+        assert_eq!(exit_action(false, true, Some(0)), ExitAction::Confirm);
+    }
+
+    #[test]
+    fn lets_confirmed_or_idle_exits_through() {
+        assert_eq!(exit_action(true, true, Some(0)), ExitAction::Allow);
+        assert_eq!(exit_action(false, false, None), ExitAction::Allow);
+    }
+
+    #[test]
+    fn restart_is_never_held() {
+        assert_eq!(
+            exit_action(false, true, Some(tauri::RESTART_EXIT_CODE)),
+            ExitAction::Allow
+        );
+    }
 }
 
 #[cfg(test)]

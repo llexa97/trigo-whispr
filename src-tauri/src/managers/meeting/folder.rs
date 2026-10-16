@@ -13,7 +13,7 @@ use crate::meeting::capture::{
     repair_wav, SystemCaptureMode, MIC_FILE_NAME, SYSTEM_FILE_NAME, TRACK_SAMPLE_RATE,
 };
 use crate::settings::MeetingAudioRetention;
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use log::warn;
 use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
@@ -364,6 +364,37 @@ pub fn self_heal(meetings_dir: &Path, conn: &mut Connection) -> Result<RecoveryR
     Ok(report)
 }
 
+/// Removes a meeting folder; a folder that is already gone is not an error.
+pub fn remove_folder(path: &Path) -> std::io::Result<()> {
+    match fs::remove_dir_all(path) {
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        other => other,
+    }
+}
+
+/// Discards a cancelled meeting: its files first, then its row. When the
+/// files cannot be removed (locked file, permissions), the row is kept as
+/// `failed` with the reason, so the meeting is neither reported as deleted
+/// nor re-imported by `self_heal` as if nothing happened; `delete_meeting`
+/// can finish the job later.
+pub fn discard_cancelled(
+    conn: &Connection,
+    id: &str,
+    remove_files: impl FnOnce() -> std::io::Result<()>,
+) -> Result<()> {
+    match remove_files() {
+        Ok(()) => {
+            store::delete(conn, id)?;
+            Ok(())
+        }
+        Err(e) => {
+            let reason = format!("cancelled, but its files could not be deleted: {e}");
+            store::set_status(conn, id, MeetingStatus::Failed, Some(&reason))?;
+            Err(anyhow!("Meeting {id} {reason}"))
+        }
+    }
+}
+
 /// Deletes the WAV files of meetings past the retention window. The
 /// transcript and the database row are kept (`has_audio = false`).
 /// Returns the ids of the meetings whose audio was removed.
@@ -606,6 +637,59 @@ mod tests {
         // Second pass is a no-op.
         let again = self_heal(dir.path(), &mut conn).unwrap();
         assert_eq!(again, RecoveryReport::default());
+    }
+
+    #[test]
+    fn discarding_a_cancelled_meeting_removes_files_and_row() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut conn = memory_db();
+        let m = sample("a", 0, MeetingStatus::Recording);
+        store::insert(&conn, &m).unwrap();
+        let folder = make_folder(dir.path(), &m, false);
+
+        discard_cancelled(&conn, "a", || remove_folder(&folder)).unwrap();
+        assert!(!folder.exists());
+        assert!(store::get(&conn, "a").unwrap().is_none());
+        // Nothing left to re-import.
+        assert_eq!(
+            self_heal(dir.path(), &mut conn).unwrap(),
+            RecoveryReport::default()
+        );
+    }
+
+    #[test]
+    fn failed_cancel_is_reported_and_not_reimported() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut conn = memory_db();
+        let m = sample("a", 0, MeetingStatus::Recording);
+        store::insert(&conn, &m).unwrap();
+        let folder = make_folder(dir.path(), &m, false);
+
+        let err = discard_cancelled(&conn, "a", || {
+            Err(std::io::Error::new(
+                std::io::ErrorKind::PermissionDenied,
+                "file locked",
+            ))
+        })
+        .unwrap_err();
+        assert!(err.to_string().contains("file locked"));
+
+        let kept = store::get(&conn, "a").unwrap().unwrap();
+        assert_eq!(kept.status, MeetingStatus::Failed);
+        assert!(kept.error.unwrap().contains("could not be deleted"));
+
+        // The folder (manifest included) is still there, but the meeting is
+        // not resurrected as a new or recovered one on next launch.
+        assert!(folder.join(MANIFEST_FILE).exists());
+        let report = self_heal(dir.path(), &mut conn).unwrap();
+        assert_eq!(report, RecoveryReport::default());
+        assert_eq!(store::list(&conn, 0, 10).unwrap().meetings.len(), 1);
+    }
+
+    #[test]
+    fn remove_folder_ignores_missing() {
+        let dir = tempfile::tempdir().unwrap();
+        remove_folder(&dir.path().join("gone")).unwrap();
     }
 
     #[test]
