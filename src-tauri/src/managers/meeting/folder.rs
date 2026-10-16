@@ -9,11 +9,12 @@
 //! the folders alone (inspired by fly-on-the-wall's `fly-storage/recovery.rs`).
 
 use super::store::{self, Meeting, MeetingSegment, MeetingSourceKind, MeetingStatus};
-use crate::meeting::capture::{SystemCaptureMode, MIC_FILE, SYSTEM_FILE};
-use crate::meeting::wav_repair;
+use crate::meeting::capture::{
+    repair_wav, SystemCaptureMode, MIC_FILE_NAME, SYSTEM_FILE_NAME, TRACK_SAMPLE_RATE,
+};
 use crate::settings::MeetingAudioRetention;
 use anyhow::{Context, Result};
-use log::{info, warn};
+use log::warn;
 use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
 use specta::Type;
@@ -63,8 +64,8 @@ impl Manifest {
             source: m.source,
             source_app: m.source_app.clone(),
             tracks: ManifestTracks {
-                mic: Some(MIC_FILE.to_string()),
-                system: capture_system.then(|| SYSTEM_FILE.to_string()),
+                mic: Some(MIC_FILE_NAME.to_string()),
+                system: capture_system.then(|| SYSTEM_FILE_NAME.to_string()),
             },
             system_mode: None,
             created_at: m.created_at,
@@ -140,7 +141,7 @@ pub fn unique_folder_name(meetings_dir: &Path, date_prefix: &str, title: &str) -
 }
 
 pub fn track_paths(folder: &Path) -> (PathBuf, PathBuf) {
-    (folder.join(MIC_FILE), folder.join(SYSTEM_FILE))
+    (folder.join(MIC_FILE_NAME), folder.join(SYSTEM_FILE_NAME))
 }
 
 struct TrackScan {
@@ -161,13 +162,12 @@ fn repair_tracks(folder: &Path) -> TrackScan {
         if !path.exists() {
             continue;
         }
-        match wav_repair::repair(path) {
-            Ok(info) => {
-                if info.repaired {
-                    info!("Repaired WAV header of {}", path.display());
-                }
+        // Tracks are mono 16-bit at TRACK_SAMPLE_RATE.
+        match repair_wav(path) {
+            Ok(data_bytes) => {
                 *flag = true;
-                scan.duration_ms = scan.duration_ms.max(info.duration_ms);
+                let duration_ms = data_bytes / 2 * 1000 / TRACK_SAMPLE_RATE as u64;
+                scan.duration_ms = scan.duration_ms.max(duration_ms);
             }
             Err(e) => warn!("Could not repair {}: {e}", path.display()),
         }
@@ -499,8 +499,8 @@ mod tests {
         store::insert(&conn, &m).unwrap();
         let folder = make_folder(dir.path(), &m, false);
         // 3 s of mic, 2 s of system audio.
-        write_crashed_wav(&folder.join(MIC_FILE), 48_000);
-        write_crashed_wav(&folder.join(SYSTEM_FILE), 32_000);
+        write_crashed_wav(&folder.join(MIC_FILE_NAME), 48_000);
+        write_crashed_wav(&folder.join(SYSTEM_FILE_NAME), 32_000);
 
         let report = self_heal(dir.path(), &mut conn).unwrap();
         assert_eq!(report.recovered, ["a"]);
@@ -511,7 +511,9 @@ mod tests {
         assert_eq!(healed.duration_ms, Some(3_000));
         assert_eq!(healed.ended_at, Some(13_000));
         assert_eq!(
-            hound::WavReader::open(folder.join(MIC_FILE)).unwrap().len(),
+            hound::WavReader::open(folder.join(MIC_FILE_NAME))
+                .unwrap()
+                .len(),
             48_000
         );
         assert_eq!(read_manifest(&folder).unwrap().ended_at, Some(13_000));
@@ -552,7 +554,7 @@ mod tests {
         // Folder of a finished, transcribed meeting.
         let done = sample("done", 0, MeetingStatus::Done);
         let folder = make_folder(dir.path(), &done, true);
-        write_wav(&folder.join(MIC_FILE), 16_000);
+        write_wav(&folder.join(MIC_FILE_NAME), 16_000);
         let transcript = TranscriptFile {
             model_id: Some("parakeet".into()),
             segments: vec![MeetingSegment {
@@ -571,11 +573,11 @@ mod tests {
         // Finished but not transcribed yet.
         let pending = sample("pending", 1, MeetingStatus::Pending);
         let folder = make_folder(dir.path(), &pending, true);
-        write_wav(&folder.join(MIC_FILE), 16_000);
+        write_wav(&folder.join(MIC_FILE_NAME), 16_000);
         // Crashed while recording, database lost too.
         let crashed = sample("crashed", 2, MeetingStatus::Recording);
         let folder = make_folder(dir.path(), &crashed, false);
-        write_crashed_wav(&folder.join(SYSTEM_FILE), 8_000);
+        write_crashed_wav(&folder.join(SYSTEM_FILE_NAME), 8_000);
         // Not a meeting folder.
         fs::create_dir(dir.path().join("random")).unwrap();
 
@@ -625,8 +627,8 @@ mod tests {
         m.ended_at = Some(ended_at);
         store::insert(conn, &m).unwrap();
         let folder = make_folder(dir, &m, true);
-        write_wav(&folder.join(MIC_FILE), 160);
-        write_wav(&folder.join(SYSTEM_FILE), 160);
+        write_wav(&folder.join(MIC_FILE_NAME), 160);
+        write_wav(&folder.join(SYSTEM_FILE_NAME), 160);
         fs::write(folder.join(TRANSCRIPT_MD_FILE), "# t").unwrap();
         folder
     }
@@ -661,11 +663,11 @@ mod tests {
         let removed =
             apply_retention(dir.path(), &conn, MeetingAudioRetention::Days30, now).unwrap();
         assert_eq!(removed, ["old"]);
-        assert!(!old.join(MIC_FILE).exists() && !old.join(SYSTEM_FILE).exists());
+        assert!(!old.join(MIC_FILE_NAME).exists() && !old.join(SYSTEM_FILE_NAME).exists());
         assert!(old.join(TRANSCRIPT_MD_FILE).exists() && old.join(MANIFEST_FILE).exists());
         assert!(!store::get(&conn, "old").unwrap().unwrap().has_audio);
-        assert!(recent.join(MIC_FILE).exists());
-        assert!(waiting.join(MIC_FILE).exists());
+        assert!(recent.join(MIC_FILE_NAME).exists());
+        assert!(waiting.join(MIC_FILE_NAME).exists());
 
         // Already applied: nothing left to remove.
         assert!(
@@ -702,8 +704,8 @@ mod tests {
         )
         .unwrap();
         assert_eq!(removed, ["done"]);
-        assert!(!done.join(MIC_FILE).exists());
+        assert!(!done.join(MIC_FILE_NAME).exists());
         // Failed meetings keep their audio so the transcription can be retried.
-        assert!(failed.join(MIC_FILE).exists());
+        assert!(failed.join(MIC_FILE_NAME).exists());
     }
 }

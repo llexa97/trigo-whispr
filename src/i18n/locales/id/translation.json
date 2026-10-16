@@ -597,6 +597,20 @@
         "verdictOk": "Peristiwa tombol mencapai Trigo Whispr secara normal.",
         "verdictNoEvents": "Tidak ada peristiwa yang tertangkap — apakah Anda menekan tombol selama pengujian?",
         "failed": "Diagnostik gagal: {{error}}"
+      },
+      "meetingCaptureTest": {
+        "title": "Uji tangkapan rapat",
+        "description": "Merekam 10 dtk audio mikrofon dan sistem ke folder sementara, seperti saat rapat.",
+        "run": "Jalankan tangkapan 10 dtk",
+        "running": "Merekam… bicaralah dan putar audio",
+        "outDir": "Folder",
+        "mic": "Trek mikrofon",
+        "system": "Trek sistem",
+        "duration": "Durasi (ms)",
+        "mode": "Mode tangkapan sistem",
+        "warnings": "Peringatan",
+        "none": "tidak ada",
+        "failed": "Tangkapan gagal: {{error}}"
       }
     },
     "about": {

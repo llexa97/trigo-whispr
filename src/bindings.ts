@@ -762,6 +762,18 @@ async getMicrophoneMode() : Promise<Result<boolean, string>> {
 async getWindowsMicrophonePermissionStatus() : Promise<WindowsMicrophonePermissionStatus> {
     return await TAURI_INVOKE("get_windows_microphone_permission_status");
 },
+/**
+ * Debug: record a short meeting capture (microphone + system audio) into a
+ * fresh temporary directory and report where the tracks went.
+ */
+async testMeetingCapture(seconds: number) : Promise<Result<MeetingCaptureTestReport, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("test_meeting_capture", { seconds }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async openMicrophonePrivacySettings() : Promise<Result<null, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("open_microphone_privacy_settings") };
@@ -1140,7 +1152,40 @@ export type AudioDevice = { index: string; name: string; is_default: boolean }
 export type AutoSubmitKey = "enter" | "ctrl_enter" | "cmd_enter"
 export type AvailableAccelerators = { transcribe: string[]; gpu_devices: GpuDeviceOption[] }
 export type BindingResponse = { success: boolean; binding: ShortcutBinding | null; error: string | null }
-export type CaptureWarning = "system_audio_unavailable" | "system_audio_silent" | "output_muted" | "device_changed" | "mic_unavailable"
+/**
+ * What a finished capture produced. Paths are absolute; both tracks have
+ * the same duration.
+ */
+export type CaptureOutput = { mic_path: string | null; system_path: string | null; duration_ms: number; system_mode: SystemCaptureMode | null; warnings: CaptureWarning[] }
+/**
+ * Something that degrades a capture. Startup conditions and one-off events
+ * (`MicUnavailable`, `SystemAudioUnavailable`, `DeviceChanged`) stick for the
+ * whole session; `OutputMuted` and `SystemAudioSilent` reflect the current
+ * state and clear when it is fixed.
+ */
+export type CaptureWarning = 
+/**
+ * The system track could not be opened: only the microphone is recorded.
+ */
+"system_audio_unavailable" | 
+/**
+ * The system track has recorded nothing but digital silence for a while.
+ */
+"system_audio_silent" | 
+/**
+ * The default output is muted or at 0 %, so loopback may record silence.
+ */
+"output_muted" | 
+/**
+ * An input device failed or the default device changed; it was reopened
+ * and the gap filled with silence.
+ */
+"device_changed" | 
+/**
+ * The microphone could not be opened (missing, or access denied in the
+ * Windows privacy settings): only the system audio is recorded.
+ */
+"mic_unavailable"
 /**
  * Script applied to Mandarin and Cantonese output. Other languages are never
  * converted.
@@ -1190,6 +1235,11 @@ export type MeetingAudioPaths = { mic: string | null; system: string | null }
  * transcript and the meeting itself stay.
  */
 export type MeetingAudioRetention = "forever" | "days_7" | "days_30" | "days_90" | "delete_after_transcription"
+export type MeetingCaptureTestReport = { 
+/**
+ * Temporary directory holding `mic.wav` / `system.wav`.
+ */
+out_dir: string; output: CaptureOutput }
 export type MeetingDetail = { meeting: Meeting; segments: MeetingSegment[] }
 export type MeetingPhase = "idle" | "recording" | "stopping"
 export type MeetingSegment = { idx: number; speaker: Speaker; start_ms: number; end_ms: number; text: string }
@@ -1376,6 +1426,26 @@ export type StreamTextEvent = { committed: string; tentative: string }
  * Semantic kind of "working" phase, used to localize the spinner label.
  */
 export type StreamWorkKind = "transcribing" | "polishing"
+/**
+ * How the system track is captured.
+ */
+export type SystemCaptureMode = 
+/**
+ * Windows 10 build 20348+ / Windows 11: every process except Trigo
+ * Whispr's own tree (its feedback sounds stay out of the recording);
+ * follows default-output changes by itself.
+ */
+"process_loopback" | 
+/**
+ * Older Windows: loopback of the default output endpoint (includes
+ * Trigo Whispr's own sounds).
+ */
+"endpoint_loopback" | 
+/**
+ * macOS 14.6+: Core Audio process tap on the default output device.
+ * Includes Trigo Whispr's own sounds.
+ */
+"core_audio_tap"
 /**
  * UI appearance mode. `System` follows the OS `prefers-color-scheme`; `Light`
  * and `Dark` force one of the two palettes Trigo Whispr already ships.

@@ -1,6 +1,6 @@
-//! Meeting recording: capture backends and low-level helpers used by
-//! `managers::meeting::MeetingManager`.
+//! Meeting recording. `capture` records the microphone and the system audio
+//! as two aligned tracks on disk; storage and lifecycle live in
+//! `managers::meeting`, which builds on it.
 
 pub mod capture;
 pub mod power;
-pub mod wav_repair;

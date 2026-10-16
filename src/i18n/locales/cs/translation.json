@@ -584,6 +584,20 @@
         "verdictNoEvents": "Nebyly zachyceny žádné události — stiskli jste během testu nějaké klávesy?",
         "failed": "Diagnostika selhala: {{error}}"
       },
+      "meetingCaptureTest": {
+        "title": "Test záznamu schůzky",
+        "description": "Nahraje 10 s mikrofonu a systémového zvuku do dočasné složky, stejně jako u schůzky.",
+        "run": "Spustit 10s záznam",
+        "running": "Nahrávání… mluvte a pusťte nějaký zvuk",
+        "outDir": "Složka",
+        "mic": "Stopa mikrofonu",
+        "system": "Systémová stopa",
+        "duration": "Délka (ms)",
+        "mode": "Režim zachytávání systému",
+        "warnings": "Upozornění",
+        "none": "žádné",
+        "failed": "Záznam selhal: {{error}}"
+      },
       "whatsNewPreview": {
         "title": "Náhled novinek",
         "description": "Otevřít nejnovější přibalené poznámky k vydání bez označení jako zobrazené",

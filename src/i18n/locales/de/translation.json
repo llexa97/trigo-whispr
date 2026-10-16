@@ -584,6 +584,20 @@
         "verdictNoEvents": "Keine Ereignisse erfasst — hast du während des Tests Tasten gedrückt?",
         "failed": "Diagnose fehlgeschlagen: {{error}}"
       },
+      "meetingCaptureTest": {
+        "title": "Test der Meeting-Aufnahme",
+        "description": "Nimmt 10 s Mikrofon- und Systemaudio in einem temporären Ordner auf, wie bei einem Meeting.",
+        "run": "10-Sekunden-Aufnahme starten",
+        "running": "Aufnahme läuft… sprich und spiele etwas Audio ab",
+        "outDir": "Ordner",
+        "mic": "Mikrofonspur",
+        "system": "Systemspur",
+        "duration": "Dauer (ms)",
+        "mode": "Systemaufnahmemodus",
+        "warnings": "Warnungen",
+        "none": "keine",
+        "failed": "Aufnahme fehlgeschlagen: {{error}}"
+      },
       "whatsNewPreview": {
         "title": "Vorschau der Neuerungen",
         "description": "Die neuesten gebündelten Versionshinweise öffnen, ohne sie als gesehen zu markieren",

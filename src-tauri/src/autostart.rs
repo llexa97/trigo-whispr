@@ -32,12 +32,53 @@ pub fn apply_autostart(app: &AppHandle, enabled: bool) {
     } else {
         manager.disable()
     };
-    if let Err(e) = result {
-        log::warn!(
+    match result {
+        // Disabling an entry that was never registered: nothing to undo.
+        Err(e) if !enabled && is_not_found(&e) => {}
+        Err(e) => log::warn!(
             "Failed to apply autostart setting (enabled={}): {}",
             enabled,
             e
-        );
+        ),
+        Ok(()) => {}
+    }
+}
+
+/// Whether the plugin failed because the autostart entry does not exist.
+/// The plugin flattens auto-launch's `io::Error` into a string, so the
+/// not-found case is recognised by its OS error code suffix (Windows
+/// ERROR_FILE_NOT_FOUND and Unix ENOENT are both 2).
+fn is_not_found(e: &tauri_plugin_autostart::Error) -> bool {
+    match e {
+        tauri_plugin_autostart::Error::Io(io) => io.kind() == std::io::ErrorKind::NotFound,
+        tauri_plugin_autostart::Error::Anyhow(msg) => msg.ends_with("(os error 2)"),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::is_not_found;
+    use tauri_plugin_autostart::Error;
+
+    #[test]
+    fn missing_entry_is_not_found() {
+        let flattened = std::io::Error::from_raw_os_error(2).to_string();
+        assert!(is_not_found(&Error::Anyhow(flattened)));
+        assert!(is_not_found(&Error::Io(
+            std::io::ErrorKind::NotFound.into()
+        )));
+    }
+
+    #[test]
+    fn other_failures_are_reported() {
+        let denied = std::io::Error::from_raw_os_error(5).to_string();
+        assert!(!is_not_found(&Error::Anyhow(denied)));
+        assert!(!is_not_found(&Error::Anyhow(
+            "app path doesn't exist".into()
+        )));
+        assert!(!is_not_found(&Error::Io(
+            std::io::ErrorKind::PermissionDenied.into()
+        )));
     }
 }
 

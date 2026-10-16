@@ -584,6 +584,20 @@
         "verdictNoEvents": "Hiç olay yakalanmadı — test sırasında herhangi bir tuşa bastınız mı?",
         "failed": "Tanılama başarısız: {{error}}"
       },
+      "meetingCaptureTest": {
+        "title": "Toplantı kaydı testi",
+        "description": "Bir toplantıda olduğu gibi 10 sn mikrofon ve sistem sesini geçici bir klasöre kaydeder.",
+        "run": "10 sn kayıt başlat",
+        "running": "Kaydediliyor… konuşun ve biraz ses çalın",
+        "outDir": "Klasör",
+        "mic": "Mikrofon parçası",
+        "system": "Sistem parçası",
+        "duration": "Süre (ms)",
+        "mode": "Sistem yakalama modu",
+        "warnings": "Uyarılar",
+        "none": "yok",
+        "failed": "Kayıt başarısız: {{error}}"
+      },
       "whatsNewPreview": {
         "title": "Yenilikleri Önizle",
         "description": "En son paketlenmiş sürüm notunu görüldü olarak işaretlemeden aç",

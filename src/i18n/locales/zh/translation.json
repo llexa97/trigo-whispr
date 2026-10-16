@@ -584,6 +584,20 @@
         "verdictNoEvents": "未捕获到任何事件——测试期间您按过键吗？",
         "failed": "诊断失败：{{error}}"
       },
+      "meetingCaptureTest": {
+        "title": "会议录制测试",
+        "description": "像录制会议一样，将麦克风和系统音频录制 10 秒到临时文件夹。",
+        "run": "运行 10 秒录制",
+        "running": "正在录制… 请说话并播放一些音频",
+        "outDir": "文件夹",
+        "mic": "麦克风音轨",
+        "system": "系统音轨",
+        "duration": "时长 (ms)",
+        "mode": "系统录制模式",
+        "warnings": "警告",
+        "none": "无",
+        "failed": "录制失败：{{error}}"
+      },
       "whatsNewPreview": {
         "title": "预览新功能",
         "description": "打开最新内置发行说明，且不标记为已查看",

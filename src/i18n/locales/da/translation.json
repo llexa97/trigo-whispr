@@ -597,6 +597,20 @@
         "verdictOk": "Tastehændelser når frem til Trigo Whispr som normalt.",
         "verdictNoEvents": "Ingen hændelser registreret — trykkede du på nogen taster under testen?",
         "failed": "Diagnostik mislykkedes: {{error}}"
+      },
+      "meetingCaptureTest": {
+        "title": "Test af mødeoptagelse",
+        "description": "Optager 10 s mikrofon- og systemlyd i en midlertidig mappe, som ved et møde.",
+        "run": "Start 10 s optagelse",
+        "running": "Optager… tal og afspil noget lyd",
+        "outDir": "Mappe",
+        "mic": "Mikrofonspor",
+        "system": "Systemspor",
+        "duration": "Varighed (ms)",
+        "mode": "Tilstand for systemoptagelse",
+        "warnings": "Advarsler",
+        "none": "ingen",
+        "failed": "Optagelsen mislykkedes: {{error}}"
       }
     },
     "about": {

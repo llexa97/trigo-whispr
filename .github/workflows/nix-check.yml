@@ -7,27 +7,14 @@
 # Build artifacts are pushed to Cachix so Nix users can skip local compilation.
 
 name: "nix build check"
+# Automatic runs are disabled: Trigo Whispr is not distributed through Nix
+# (the .exe/.dmg come from build.yml), so this check only slowed down PRs.
+# It can still be run by hand from the Actions tab. To re-enable, restore
+# the `push` (branches: [main]) and `pull_request` triggers with the paths
+# filter: flake.nix, flake.lock, .nix/**, bun.lock, src-tauri/**, src/**,
+# .github/workflows/**.
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - "flake.nix"
-      - "flake.lock"
-      - ".nix/**"
-      - "bun.lock"
-      - "src-tauri/**"
-      - "src/**"
-      - ".github/workflows/**"
-  pull_request:
-    paths:
-      - "flake.nix"
-      - "flake.lock"
-      - ".nix/**"
-      - "bun.lock"
-      - "src-tauri/**"
-      - "src/**"
-      - ".github/workflows/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}

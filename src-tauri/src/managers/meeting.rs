@@ -11,7 +11,8 @@ pub mod store;
 
 use crate::managers::audio::AudioRecordingManager;
 use crate::meeting::capture::{
-    self, CaptureConfig, CaptureError, CaptureSession, CaptureWarning, MIC_FILE, SYSTEM_FILE,
+    self, CaptureConfig, CaptureError, CaptureSession, CaptureWarning, SystemCaptureMode,
+    MIC_FILE_NAME, SYSTEM_FILE_NAME,
 };
 use crate::meeting::power::SleepGuard;
 use crate::settings::{get_settings, MeetingAudioRetention};
@@ -132,6 +133,12 @@ pub struct MeetingManager {
     suppress_feedback: AtomicBool,
     recovery_notice: Mutex<Option<RecoveryReport>>,
     transcription_listener: Mutex<Option<TranscriptionListener>>,
+}
+
+/// Whether sounds played by this app end up in the system track (the
+/// process loopback excludes our own process tree; the other modes do not).
+fn captures_own_sounds(mode: SystemCaptureMode) -> bool {
+    !matches!(mode, SystemCaptureMode::ProcessLoopback)
 }
 
 fn now_ms() -> i64 {
@@ -281,7 +288,7 @@ impl MeetingManager {
     }
 
     pub fn start(&self, source: MeetingSource) -> Result<MeetingId> {
-        if !capture::meetings_supported() {
+        if !capture::capture_supported() {
             bail!("{}", CaptureError::Unsupported);
         }
         let mut state = self.state.lock().unwrap();
@@ -325,7 +332,10 @@ impl MeetingManager {
         folder::write_manifest(&folder_path, &manifest)?;
 
         let session = match capture::start_capture(CaptureConfig {
-            mic_device: get_settings(&self.app_handle).selected_microphone,
+            mic_device: self
+                .app_handle
+                .try_state::<Arc<AudioRecordingManager>>()
+                .and_then(|rm| rm.preferred_microphone_name()),
             capture_system,
             out_dir: folder_path.clone(),
         }) {
@@ -354,7 +364,7 @@ impl MeetingManager {
 
         self.recording.store(true, Ordering::SeqCst);
         self.suppress_feedback.store(
-            system_mode.is_some_and(|m| m.captures_own_sounds()),
+            system_mode.is_some_and(captures_own_sounds),
             Ordering::SeqCst,
         );
         // A dictation already in progress may have muted the output; the
@@ -610,8 +620,8 @@ impl MeetingManager {
             path.exists().then(|| path.to_string_lossy().into_owned())
         };
         Ok(MeetingAudioPaths {
-            mic: existing(MIC_FILE),
-            system: existing(SYSTEM_FILE),
+            mic: existing(MIC_FILE_NAME),
+            system: existing(SYSTEM_FILE_NAME),
         })
     }
 

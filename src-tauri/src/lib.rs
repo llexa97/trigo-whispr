@@ -14,7 +14,7 @@ mod helpers;
 mod input;
 mod llm_client;
 mod managers;
-mod meeting;
+pub mod meeting;
 mod memory;
 mod overlay;
 mod paste_tx;
@@ -780,6 +780,7 @@ fn specta_builder() -> Builder<tauri::Wry> {
             commands::audio::update_microphone_mode,
             commands::audio::get_microphone_mode,
             commands::audio::get_windows_microphone_permission_status,
+            commands::meeting::test_meeting_capture,
             commands::audio::open_microphone_privacy_settings,
             commands::audio::get_available_microphones,
             commands::audio::set_selected_microphone,
