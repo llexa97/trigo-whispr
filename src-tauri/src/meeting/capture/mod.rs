@@ -18,9 +18,8 @@
 //! Platforms:
 //! - Windows: microphone + system audio (process loopback excluding Trigo
 //!   Whispr on build 20348+, endpoint loopback of the default output before).
-//! - macOS: microphone only for now; the system track (Core Audio process
-//!   tap) is the `SystemCaptureMode::CoreAudioTap` extension point, until
-//!   then a capture reports [`CaptureWarning::SystemAudioUnavailable`].
+//! - macOS 14.6+: microphone + system audio via a Core Audio process tap on
+//!   the default output-only device. Older macOS versions record mic only.
 //! - Linux: unsupported ([`start_capture`] returns [`CaptureError::Unsupported`]).
 
 use std::fmt;
@@ -123,7 +122,8 @@ pub enum SystemCaptureMode {
     /// Older Windows: loopback of the default output endpoint (includes
     /// Trigo Whispr's own sounds).
     EndpointLoopback,
-    /// macOS Core Audio process tap — not implemented yet (see T9).
+    /// macOS 14.6+: Core Audio process tap on the default output device.
+    /// Includes Trigo Whispr's own sounds.
     CoreAudioTap,
 }
 
@@ -155,7 +155,19 @@ pub trait CaptureSession: Send {
 
 /// Whether this platform can record the system output.
 pub fn system_capture_supported() -> bool {
-    cfg!(target_os = "windows")
+    #[cfg(target_os = "macos")]
+    {
+        use objc2_foundation::{NSOperatingSystemVersion, NSProcessInfo};
+        NSProcessInfo::processInfo().isOperatingSystemAtLeastVersion(NSOperatingSystemVersion {
+            majorVersion: 14,
+            minorVersion: 6,
+            patchVersion: 0,
+        })
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        cfg!(target_os = "windows")
+    }
 }
 
 /// Whether meeting capture (at least the microphone track) is available.

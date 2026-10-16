@@ -1286,7 +1286,8 @@ export type SystemCaptureMode =
  */
 "endpoint_loopback" | 
 /**
- * macOS Core Audio process tap — not implemented yet (see T9).
+ * macOS 14.6+: Core Audio process tap on the default output device.
+ * Includes Trigo Whispr's own sounds.
  */
 "core_audio_tap"
 /**

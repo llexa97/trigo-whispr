@@ -435,9 +435,10 @@ fn open_system(
     }
     #[cfg(target_os = "macos")]
     {
-        // Extension point for T9: a Core Audio process tap
-        // (`SystemCaptureMode::CoreAudioTap`) plugs in here.
-        Err("system audio capture is not implemented on macOS yet".into())
+        if !super::system_capture_supported() {
+            return Err("system audio capture requires macOS 14.6 or later".into());
+        }
+        open_endpoint_loopback(host).map(|input| (input, SystemCaptureMode::CoreAudioTap))
     }
     #[cfg(not(any(target_os = "windows", target_os = "macos")))]
     {
@@ -445,13 +446,22 @@ fn open_system(
     }
 }
 
-/// WASAPI endpoint loopback of the default output (Windows < 20348, or when
-/// process loopback fails). Captures Trigo Whispr's own sounds too.
-#[cfg(target_os = "windows")]
+/// Loopback of the default output: WASAPI on Windows, Core Audio process tap
+/// on macOS 14.6+. Includes Trigo Whispr's own sounds. CPAL owns and destroys
+/// the private tap/aggregate device when the stream is dropped.
+#[cfg(any(target_os = "windows", target_os = "macos"))]
 fn open_endpoint_loopback(host: &cpal::Host) -> std::result::Result<Input, String> {
     let device = host
         .default_output_device()
         .ok_or("no default output device")?;
+    // CPAL chooses ordinary microphone input for duplex devices instead of
+    // creating a process tap. Never silently label that as system audio.
+    #[cfg(target_os = "macos")]
+    if device.supports_input() {
+        return Err(
+            "system audio loopback requires an output-only device; select the Mac speakers or an output-only device in Sound settings".into(),
+        );
+    }
     // Loopback uses the output device's render format for an input stream.
     let config = device
         .default_output_config()
