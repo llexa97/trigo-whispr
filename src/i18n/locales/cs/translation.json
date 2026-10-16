@@ -20,6 +20,7 @@
     "advanced": "Pokročilé",
     "postProcessing": "Následné zpracování",
     "history": "Historie",
+    "meetings": "Meetings",
     "debug": "Ladění",
     "about": "O aplikaci"
   },
@@ -727,6 +728,112 @@
     "dismiss": "Zavřít"
   },
   "meetings": {
-    "recoveredNotice": "Obnovené schůzky po neočekávaném ukončení: {{total}}"
+    "recoveredNotice": "Obnovené schůzky po neočekávaném ukončení: {{total}}",
+    "title": "Meetings",
+    "loading": "Loading meetings…",
+    "empty": {
+      "title": "No meetings yet",
+      "description": "Record a meeting to get a local, private transcript of what you and the other participants said."
+    },
+    "search": {
+      "placeholder": "Search meetings",
+      "noResults": "No meeting matches your search."
+    },
+    "recorder": {
+      "start": "Record a meeting",
+      "stop": "Stop ({{time}})",
+      "stopping": "Finishing recording…",
+      "recording": "Recording",
+      "micLevel": "Microphone",
+      "systemLevel": "System"
+    },
+    "warnings": {
+      "system_audio_unavailable": "System audio could not be captured: only your microphone is recorded.",
+      "system_audio_silent": "System audio is silent: check that the output is not muted and that the meeting app plays through the default device.",
+      "output_muted": "The audio output is muted or at 0%: the other participants may not be recorded. Turn the volume up.",
+      "device_changed": "An audio device changed; recording resumed on the new device.",
+      "mic_unavailable": "The microphone could not be opened: only the system audio is recorded. Check that it is connected and allowed in the privacy settings.",
+      "openPrivacySettings": "Open privacy settings"
+    },
+    "status": {
+      "recording": "Recording",
+      "pending": "Pending",
+      "transcribing": "Transcribing",
+      "transcribingProgress": "Transcribing {{percent}}%",
+      "done": "Done",
+      "failed": "Failed",
+      "recovered": "Recovered"
+    },
+    "source": {
+      "manual": "Manual"
+    },
+    "speaker": {
+      "me": "Me",
+      "others": "Others",
+      "mic_only": "Mic"
+    },
+    "markdown": {
+      "line": "**[{{time}}] {{speaker}}:** {{text}}"
+    },
+    "player": {
+      "play": "Play",
+      "pause": "Pause",
+      "seek": "Playback position"
+    },
+    "transcript": {
+      "playFrom": "Play from {{time}}"
+    },
+    "detail": {
+      "back": "Back to meetings",
+      "rename": "Rename meeting",
+      "titleLabel": "Meeting title",
+      "date": "Date",
+      "duration": "Duration",
+      "source": "Source",
+      "model": "Model",
+      "systemTrack": "System track",
+      "systemTrackYes": "Recorded",
+      "systemTrackNo": "Not recorded",
+      "audio": "Audio",
+      "audioDeleted": "Deleted by the retention policy",
+      "progress": "Transcription progress",
+      "eta": "About {{time}} remaining",
+      "transcript": "Transcript",
+      "loading": "Loading transcript…",
+      "exported": "Transcript exported",
+      "emptyTranscript": {
+        "recording": "The transcript will be available after the recording.",
+        "pending": "Waiting for transcription.",
+        "transcribing": "Transcription in progress…",
+        "done": "No speech was detected in this meeting.",
+        "failed": "The transcription failed. You can retry it.",
+        "recovered": "This meeting was recovered after an unexpected shutdown and is waiting for transcription."
+      }
+    },
+    "actions": {
+      "copy": "Copy transcript",
+      "export": "Export as Markdown…",
+      "openFolder": "Open folder",
+      "retry": "Retry transcription",
+      "cancelTranscription": "Cancel transcription",
+      "delete": "Delete"
+    },
+    "delete": {
+      "title": "Delete this meeting?",
+      "description": "“{{title}}”, its audio and its transcript will be permanently deleted.",
+      "cancel": "Cancel",
+      "confirm": "Delete"
+    },
+    "errors": {
+      "start": "Could not start the meeting recording",
+      "stop": "Could not stop the meeting recording",
+      "rename": "Could not rename the meeting",
+      "copy": "Could not copy the transcript",
+      "export": "Could not export the transcript",
+      "openFolder": "Could not open the meeting folder",
+      "retry": "Could not retry the transcription",
+      "cancelTranscription": "Could not cancel the transcription",
+      "delete": "Could not delete the meeting"
+    }
   }
 }

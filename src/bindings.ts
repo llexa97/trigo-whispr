@@ -981,6 +981,25 @@ async listMeetings(offset: number | null, limit: number | null) : Promise<Result
     else return { status: "error", error: e  as any };
 }
 },
+/**
+ * Meetings whose title or transcript contains `query`, newest first.
+ */
+async searchMeetings(query: string, offset: number | null, limit: number | null) : Promise<Result<PaginatedMeetings, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("search_meetings", { query, offset, limit }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async openMeetingFolder(id: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("open_meeting_folder", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async getMeeting(id: string) : Promise<Result<MeetingDetail | null, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("get_meeting", { id }) };

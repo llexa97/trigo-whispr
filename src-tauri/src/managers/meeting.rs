@@ -561,6 +561,17 @@ impl MeetingManager {
         store::list(&self.conn()?, offset, limit)
     }
 
+    pub fn search(&self, query: &str, offset: usize, limit: usize) -> Result<PaginatedMeetings> {
+        store::search(&self.conn()?, query, offset, limit)
+    }
+
+    /// Absolute path of the meeting's folder.
+    pub fn folder_path(&self, id: &str) -> Result<PathBuf> {
+        let meeting =
+            store::get(&self.conn()?, id)?.ok_or_else(|| anyhow!("Meeting {id} not found"))?;
+        Ok(self.meetings_dir.join(&meeting.folder))
+    }
+
     pub fn get(&self, id: &str) -> Result<Option<MeetingDetail>> {
         let conn = self.conn()?;
         let Some(meeting) = store::get(&conn, id)? else {
