@@ -769,8 +769,8 @@ jobs:
           function Assert-PackageContents {
             param([string]$Root, [string]$Label)
 
-            $trigo-whispr = Get-ChildItem $Root -Filter "trigo-whispr.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
-            if (-not $trigo-whispr) {
+            $trigoWhispr = Get-ChildItem $Root -Filter "trigo-whispr.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+            if (-not $trigoWhispr) {
               throw "$Label package is missing trigo-whispr.exe"
             }
             foreach ($dll in $stagedDlls) {
@@ -779,7 +779,7 @@ jobs:
               }
             }
 
-            $deviceOutput = (& $trigo-whispr.FullName --list-devices | Out-String)
+            $deviceOutput = (& $trigoWhispr.FullName --list-devices | Out-String)
             $deviceOutput | Write-Host
             if ($LASTEXITCODE -ne 0) {
               throw "$Label trigo-whispr.exe --list-devices failed"
