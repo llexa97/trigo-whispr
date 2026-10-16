@@ -7,7 +7,12 @@
     "model": "Model",
     "quit": "Quit",
     "cancel": "Cancel",
-    "secureInputWarning": "⚠ Shortcuts blocked by Secure Input"
+    "secureInputWarning": "⚠ Shortcuts blocked by Secure Input",
+    "meetingTitleDetected": "Meeting {{app}} — {{date}}",
+    "meetingTitleManual": "Meeting — {{date}}",
+    "quitMeetingTitle": "Meeting in progress",
+    "quitMeetingMessage": "A meeting is being recorded. Stop the recording and quit?",
+    "quitMeetingConfirm": "Stop and Quit"
   },
   "sidebar": {
     "general": "General",
@@ -592,6 +597,20 @@
         "verdictOk": "Key events are reaching Trigo Whispr normally.",
         "verdictNoEvents": "No events captured — did you press any keys during the test?",
         "failed": "Diagnostic failed: {{error}}"
+      },
+      "meetingCaptureTest": {
+        "title": "Meeting Capture Test",
+        "description": "Records 10 s of microphone and system audio into a temporary folder, the way a meeting is recorded.",
+        "run": "Run 10s capture",
+        "running": "Recording… speak and play some audio",
+        "outDir": "Folder",
+        "mic": "Microphone track",
+        "system": "System track",
+        "duration": "Duration (ms)",
+        "mode": "System capture mode",
+        "warnings": "Warnings",
+        "none": "none",
+        "failed": "Capture failed: {{error}}"
       }
     },
     "about": {
@@ -706,5 +725,8 @@
     "learnMore": "How to fix",
     "recorderBlocked": "Can't record shortcuts right now — macOS Secure Input is blocking key events. Resolve the Secure Input warning first.",
     "dismiss": "Dismiss"
+  },
+  "meetings": {
+    "recoveredNotice": "{{total}} meeting(s) recovered after an unexpected shutdown"
   }
 }

@@ -560,6 +560,16 @@ impl AudioRecordingManager {
         }
     }
 
+    /// Name of the microphone dictation would use right now (selected or
+    /// clamshell), `None` for the system default. Meeting capture opens the
+    /// same microphone through its own stream.
+    pub fn preferred_microphone_name(&self) -> Option<String> {
+        match self.desired_microphone(&get_settings(&self.app_handle)) {
+            DesiredMicrophone::Default => None,
+            DesiredMicrophone::Selected(name) | DesiredMicrophone::Clamshell(name) => Some(name),
+        }
+    }
+
     pub fn invalidate_device_cache(&self) {
         *self.cached_device.lock().unwrap() = None;
     }
@@ -734,6 +744,16 @@ impl AudioRecordingManager {
     pub fn apply_mute(&self) {
         let settings = get_settings(&self.app_handle);
         if !settings.mute_while_recording {
+            return;
+        }
+        // Muting during a meeting would silence the system track and the
+        // meeting itself for the user.
+        if self
+            .app_handle
+            .try_state::<Arc<crate::managers::meeting::MeetingManager>>()
+            .is_some_and(|m| m.is_recording())
+        {
+            debug!("Mute skipped: a meeting is being recorded");
             return;
         }
 

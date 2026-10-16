@@ -7,7 +7,12 @@
     "model": "मोडेल",
     "quit": "बाहिर निस्कनुहोस्",
     "cancel": "रद्द गर्नुहोस्",
-    "secureInputWarning": "⚠ Secure Input ले सर्टकटहरू रोकेको छ"
+    "secureInputWarning": "⚠ Secure Input ले सर्टकटहरू रोकेको छ",
+    "meetingTitleDetected": "बैठक {{app}} — {{date}}",
+    "meetingTitleManual": "बैठक — {{date}}",
+    "quitMeetingTitle": "बैठक जारी छ",
+    "quitMeetingMessage": "बैठक रेकर्ड हुँदैछ। रेकर्डिङ रोकेर बाहिरिने?",
+    "quitMeetingConfirm": "रोक्नुहोस् र बाहिरिनुहोस्"
   },
   "sidebar": {
     "general": "सामान्य",
@@ -592,6 +597,20 @@
         "verdictOk": "कुञ्जी इभेन्टहरू Trigo Whispr सम्म सामान्य रूपमा पुगिरहेका छन्।",
         "verdictNoEvents": "कुनै इभेन्ट कैद भएन — के तपाईंले परीक्षणको क्रममा कुनै कुञ्जी थिच्नुभयो?",
         "failed": "डायग्नोस्टिक असफल: {{error}}"
+      },
+      "meetingCaptureTest": {
+        "title": "बैठक क्याप्चर परीक्षण",
+        "description": "बैठकमा जस्तै, माइक्रोफोन र सिस्टम अडियोको १० सेकेन्ड अस्थायी फोल्डरमा रेकर्ड गर्छ।",
+        "run": "१० सेकेन्ड क्याप्चर चलाउनुहोस्",
+        "running": "रेकर्ड हुँदैछ… बोल्नुहोस् र केही अडियो बजाउनुहोस्",
+        "outDir": "फोल्डर",
+        "mic": "माइक्रोफोन ट्र्याक",
+        "system": "सिस्टम ट्र्याक",
+        "duration": "अवधि (ms)",
+        "mode": "सिस्टम क्याप्चर मोड",
+        "warnings": "चेतावनीहरू",
+        "none": "कुनै पनि छैन",
+        "failed": "क्याप्चर असफल: {{error}}"
       }
     },
     "about": {
@@ -706,5 +725,8 @@
     "learnMore": "यसलाई कसरी ठिक गर्ने",
     "recorderBlocked": "अहिले सर्टकट रेकर्ड गर्न सकिँदैन — macOS Secure Input ले कुञ्जी इभेन्टहरू रोकिरहेको छ। पहिले Secure Input चेतावनी समाधान गर्नुहोस्।",
     "dismiss": "हटाउनुहोस्"
+  },
+  "meetings": {
+    "recoveredNotice": "अनपेक्षित बन्द भएपछि पुनःप्राप्त बैठक: {{total}}"
   }
 }

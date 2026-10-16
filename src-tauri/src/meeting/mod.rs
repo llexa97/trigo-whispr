@@ -1,15 +1,16 @@
-//! Meeting recordings (epic #2): the engine-independent half of their
-//! transcription. Each track is decoded on its own ([`track`]), the mic's
-//! echo of the system track is removed ([`crosstalk`]), and the two are
-//! merged into one "Me / Others" transcript ([`transcript`]).
+//! Meeting recording and transcription. `capture` records the microphone
+//! and the system audio as two aligned tracks on disk; storage and lifecycle
+//! live in `managers::meeting`, which builds on it.
 //!
-//! The queue that runs this on the engine is
+//! Transcription is engine-independent here: each track is decoded on its
+//! own ([`track`]), the mic's echo of the system track is removed
+//! ([`crosstalk`]), and the two are merged into one "Me / Others" transcript
+//! ([`transcript`]). The queue that runs it on the engine is
 //! `managers::transcription::meeting`.
 
-// Nothing feeds the queue until the MeetingManager (#4) records meetings.
-#![allow(dead_code)]
-
+pub mod capture;
 pub mod crosstalk;
+pub mod power;
 pub mod track;
 pub mod transcript;
 

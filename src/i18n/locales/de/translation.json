@@ -7,7 +7,12 @@
     "model": "Modell",
     "quit": "Beenden",
     "cancel": "Abbrechen",
-    "secureInputWarning": "⚠ Tastenkürzel durch Secure Input blockiert"
+    "secureInputWarning": "⚠ Tastenkürzel durch Secure Input blockiert",
+    "meetingTitleDetected": "Besprechung {{app}} — {{date}}",
+    "meetingTitleManual": "Besprechung — {{date}}",
+    "quitMeetingTitle": "Besprechung läuft",
+    "quitMeetingMessage": "Eine Besprechung wird aufgezeichnet. Aufnahme beenden und schließen?",
+    "quitMeetingConfirm": "Beenden und schließen"
   },
   "sidebar": {
     "general": "Allgemein",
@@ -579,6 +584,20 @@
         "verdictNoEvents": "Keine Ereignisse erfasst — hast du während des Tests Tasten gedrückt?",
         "failed": "Diagnose fehlgeschlagen: {{error}}"
       },
+      "meetingCaptureTest": {
+        "title": "Test der Meeting-Aufnahme",
+        "description": "Nimmt 10 s Mikrofon- und Systemaudio in einem temporären Ordner auf, wie bei einem Meeting.",
+        "run": "10-Sekunden-Aufnahme starten",
+        "running": "Aufnahme läuft… sprich und spiele etwas Audio ab",
+        "outDir": "Ordner",
+        "mic": "Mikrofonspur",
+        "system": "Systemspur",
+        "duration": "Dauer (ms)",
+        "mode": "Systemaufnahmemodus",
+        "warnings": "Warnungen",
+        "none": "keine",
+        "failed": "Aufnahme fehlgeschlagen: {{error}}"
+      },
       "whatsNewPreview": {
         "title": "Vorschau der Neuerungen",
         "description": "Die neuesten gebündelten Versionshinweise öffnen, ohne sie als gesehen zu markieren",
@@ -706,5 +725,8 @@
     "learnMore": "So behebst du das",
     "recorderBlocked": "Tastenkürzel können gerade nicht aufgezeichnet werden — macOS Secure Input blockiert Tastenereignisse. Behebe zuerst die Secure-Input-Warnung.",
     "dismiss": "Ausblenden"
+  },
+  "meetings": {
+    "recoveredNotice": "{{total}} Besprechung(en) nach einem unerwarteten Beenden wiederhergestellt"
   }
 }

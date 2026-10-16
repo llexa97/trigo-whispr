@@ -54,6 +54,12 @@ enigo = "0.6.1"
 # Feedback sounds. No `recording`: microphone capture is handy-recorder's.
 rodio = { version = "0.23.0", default-features = false, features = ["playback", "wav", "flac", "mp3", "vorbis"] }
 handy-recorder = "0.1"
+# Meeting capture opens its own streams (see src/meeting/capture). Same cpal
+# fork handy-recorder builds on (WASAPI loopback), not a second cpal.
+cpal = { package = "handy-cpal", version = "=0.18.2" }
+# Lock-free ring buffer between the capture callbacks and the writer thread
+# (already in the graph via handy-recorder).
+rtrb = "0.4"
 reqwest = { version = "0.12", features = ["json", "stream", "gzip", "brotli", "deflate"] }
 futures-util = "0.3"
 rustfft = "6.4.0"
@@ -65,6 +71,7 @@ regex = "1"
 whatlang = "0.16"
 isolang = "2"
 chrono = "0.4"
+uuid = { version = "1", features = ["v4"] }
 rusqlite = { version = "0.37", features = ["bundled"] }
 sha2 = "0.10"
 libc = "0.2"
@@ -100,18 +107,28 @@ tauri-plugin-updater = "2.10.1"
 # version wry links against so the COM types are identical.
 webview2-com = "0.38"
 windows = { version = "0.61.3", features = [
+  "Wdk_System_SystemServices",
+  "Win32_Media_Audio",
   "Win32_Media_Audio_Endpoints",
+  "Win32_Media_Multimedia",
+  "Win32_System_Com",
   "Win32_System_Com_StructuredStorage",
   "Win32_System_DataExchange",
   "Win32_System_LibraryLoader",
   "Win32_System_Ole",
+  "Win32_System_Power",
   "Win32_System_Memory",
+  "Win32_Security",
+  "Win32_System_SystemInformation",
   "Win32_System_Threading",
   "Win32_System_Variant",
   "Win32_Foundation",
   "Win32_Graphics_Gdi",
   "Win32_UI_WindowsAndMessaging",
 ] }
+# `#[implement]` (COM callbacks of the meeting process loopback) expands to
+# `windows_core::` paths; same version the `windows` crate above re-exports.
+windows-core = "0.61"
 winreg = "0.55"
 
 # Whisper backend per Windows arch. x86_64 ships the Vulkan GPU backend and

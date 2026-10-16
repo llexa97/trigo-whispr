@@ -2183,7 +2183,7 @@ mod tests {
     fn fuzzy_correction_is_skipped_exactly_when_vocabulary_was_sent() {
         let settings = AppSettings {
             selected_language: "en".to_string(),
-            custom_words: vec!["Trigo Whispr".to_string()],
+            custom_words: vec!["Handy".to_string()],
             ..Default::default()
         };
         let evidence = OutputLanguageEvidence::UserSelected("en".to_string());
@@ -2207,7 +2207,7 @@ mod tests {
             &evidence,
             &supported,
         );
-        assert_eq!(corrected, "i use Trigo Whispr every day");
+        assert_eq!(corrected, "i use Handy every day");
     }
 }
 

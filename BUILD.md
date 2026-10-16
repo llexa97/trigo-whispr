@@ -101,6 +101,26 @@ bun run tauri build
 
 This compiles a release binary and generates platform-specific bundles (deb, rpm, AppImage on Linux; dmg on macOS; msi on Windows).
 
+### Test meeting capture on macOS
+
+System audio capture requires macOS 14.6 or later. In the app, press
+`Cmd+Shift+D`, open Debug settings, and run the 10-second meeting capture test
+while playing audio and speaking. Allow the system audio recording permission
+when macOS asks; if necessary, enable it in System Settings → Privacy & Security
+→ Screen & System Audio Recording, restart the app, and repeat the test.
+
+The report links to a temporary directory with separate `mic.wav` and
+`system.wav` files (mono, 16 kHz), padded to the same duration. The system mode
+should be `core_audio_tap`. This captures the default output, including the
+app's own sounds. Default-output changes are detected and the stream reopened.
+
+Use the Mac speakers or another output-only device for this test. The current
+CPAL backend opens a microphone stream on duplex devices (some USB interfaces
+and Bluetooth headsets), so these are rejected for system capture to avoid
+mistaking microphone audio for system audio. A failed system capture leaves the
+microphone available and reports `system_audio_unavailable`; the detailed reason
+is logged.
+
 ## Linux Install (from source)
 
 The raw binary (`src-tauri/target/release/trigo-whispr`) cannot run standalone — it needs Tauri resource files (tray icons, sounds, VAD model) to be co-located at the expected path.

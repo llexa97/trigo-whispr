@@ -7,7 +7,12 @@
     "model": "Model",
     "quit": "Afslut",
     "cancel": "Annuller",
-    "secureInputWarning": "⚠ Genveje blokeret af Secure Input"
+    "secureInputWarning": "⚠ Genveje blokeret af Secure Input",
+    "meetingTitleDetected": "Møde {{app}} — {{date}}",
+    "meetingTitleManual": "Møde — {{date}}",
+    "quitMeetingTitle": "Møde i gang",
+    "quitMeetingMessage": "Et møde optages. Stop optagelsen og afslut?",
+    "quitMeetingConfirm": "Stop og afslut"
   },
   "sidebar": {
     "general": "Generelt",
@@ -592,6 +597,20 @@
         "verdictOk": "Tastehændelser når frem til Trigo Whispr som normalt.",
         "verdictNoEvents": "Ingen hændelser registreret — trykkede du på nogen taster under testen?",
         "failed": "Diagnostik mislykkedes: {{error}}"
+      },
+      "meetingCaptureTest": {
+        "title": "Test af mødeoptagelse",
+        "description": "Optager 10 s mikrofon- og systemlyd i en midlertidig mappe, som ved et møde.",
+        "run": "Start 10 s optagelse",
+        "running": "Optager… tal og afspil noget lyd",
+        "outDir": "Mappe",
+        "mic": "Mikrofonspor",
+        "system": "Systemspor",
+        "duration": "Varighed (ms)",
+        "mode": "Tilstand for systemoptagelse",
+        "warnings": "Advarsler",
+        "none": "ingen",
+        "failed": "Optagelsen mislykkedes: {{error}}"
       }
     },
     "about": {
@@ -706,5 +725,8 @@
     "learnMore": "Sådan løser du det",
     "recorderBlocked": "Genveje kan ikke optages lige nu — macOS Secure Input blokerer tastehændelser. Løs advarslen om Secure Input først.",
     "dismiss": "Afvis"
+  },
+  "meetings": {
+    "recoveredNotice": "{{total}} møde(r) gendannet efter en uventet lukning"
   }
 }

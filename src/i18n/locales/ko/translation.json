@@ -7,7 +7,12 @@
     "model": "모델",
     "quit": "종료",
     "cancel": "취소",
-    "secureInputWarning": "⚠ Secure Input으로 단축키가 차단됨"
+    "secureInputWarning": "⚠ Secure Input으로 단축키가 차단됨",
+    "meetingTitleDetected": "회의 {{app}} — {{date}}",
+    "meetingTitleManual": "회의 — {{date}}",
+    "quitMeetingTitle": "회의 진행 중",
+    "quitMeetingMessage": "회의를 녹음하고 있습니다. 녹음을 중지하고 종료할까요?",
+    "quitMeetingConfirm": "중지 후 종료"
   },
   "sidebar": {
     "general": "일반",
@@ -574,6 +579,20 @@
         "verdictNoEvents": "이벤트가 감지되지 않았습니다. 테스트 중에 키를 누르셨나요?",
         "failed": "진단 실패: {{error}}"
       },
+      "meetingCaptureTest": {
+        "title": "회의 캡처 테스트",
+        "description": "회의를 녹음할 때처럼 마이크와 시스템 오디오를 10초 동안 임시 폴더에 녹음합니다.",
+        "run": "10초 캡처 실행",
+        "running": "녹음 중… 말하면서 오디오를 재생해 보세요",
+        "outDir": "폴더",
+        "mic": "마이크 트랙",
+        "system": "시스템 트랙",
+        "duration": "길이 (ms)",
+        "mode": "시스템 캡처 모드",
+        "warnings": "경고",
+        "none": "없음",
+        "failed": "캡처 실패: {{error}}"
+      },
       "paths": {
         "appData": "앱 데이터:",
         "models": "모델:",
@@ -706,5 +725,8 @@
     "learnMore": "해결 방법",
     "recorderBlocked": "지금은 단축키를 등록할 수 없습니다. macOS Secure Input이 키 이벤트를 차단하고 있습니다. Secure Input 경고를 먼저 해결하세요.",
     "dismiss": "닫기"
+  },
+  "meetings": {
+    "recoveredNotice": "예기치 않은 종료 후 회의 {{total}}개를 복구했습니다"
   }
 }

@@ -202,6 +202,16 @@ function App() {
     };
   }, [t]);
 
+  // Tell the user about meetings recovered at startup (after a crash or a
+  // rebuilt meetings database). The backend hands the report out only once.
+  useEffect(() => {
+    commands.takeMeetingRecoveryNotice().then((report) => {
+      if (!report) return;
+      const total = new Set([...report.recovered, ...report.rebuilt]).size;
+      toast.info(t("meetings.recoveredNotice", { total }));
+    });
+  }, [t]);
+
   // Listen for model loading failures and show a toast
   useEffect(() => {
     const unlisten = listen<ModelStateEvent>("model-state-changed", (event) => {

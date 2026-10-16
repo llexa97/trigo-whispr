@@ -14,7 +14,7 @@ mod helpers;
 mod input;
 mod llm_client;
 mod managers;
-mod meeting;
+pub mod meeting;
 mod memory;
 mod overlay;
 mod paste_tx;
@@ -37,6 +37,7 @@ pub use utils::env_flag_enabled;
 use env_filter::Builder as EnvFilterBuilder;
 use managers::audio::AudioRecordingManager;
 use managers::history::HistoryManager;
+use managers::meeting::MeetingManager;
 use managers::model::ModelManager;
 use managers::transcription::TranscriptionManager;
 use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
@@ -186,6 +187,95 @@ fn should_force_show_permissions_window(app: &AppHandle) -> bool {
     false
 }
 
+fn stop_meeting_for_exit(app: &AppHandle) {
+    let Some(meeting_manager) = app.try_state::<Arc<MeetingManager>>() else {
+        return;
+    };
+    if meeting_manager.is_recording() {
+        if let Err(e) = meeting_manager.stop() {
+            log::error!("Failed to stop meeting before exit: {e}");
+        }
+    }
+}
+
+/// Set once quitting was confirmed (or nothing was recording), so the
+/// `ExitRequested` that follows is let through instead of asking again.
+static EXIT_CONFIRMED: AtomicBool = AtomicBool::new(false);
+/// A quit confirmation dialog is on screen; further quit requests wait on it.
+static QUIT_DIALOG_OPEN: AtomicBool = AtomicBool::new(false);
+
+#[derive(Debug, PartialEq, Eq)]
+enum ExitAction {
+    /// Let the exit happen (after finalizing any meeting).
+    Allow,
+    /// Prevent it and ask the user first.
+    Confirm,
+}
+
+/// Decides what to do with an exit request. A restart cannot be prevented
+/// (Tauri ignores `prevent_exit` for it), so it is always allowed.
+fn exit_action(confirmed: bool, meeting_recording: bool, code: Option<i32>) -> ExitAction {
+    if confirmed || !meeting_recording || code == Some(tauri::RESTART_EXIT_CODE) {
+        ExitAction::Allow
+    } else {
+        ExitAction::Confirm
+    }
+}
+
+fn meeting_recording(app: &AppHandle) -> bool {
+    app.try_state::<Arc<MeetingManager>>()
+        .is_some_and(|m| m.is_recording())
+}
+
+/// Quits the app, asking for confirmation first while a meeting is being
+/// recorded. Shared by the tray "Quit" item and every other user exit
+/// (Cmd+Q, ...), which reach it through `ExitRequested`. Cancelling leaves
+/// the recording running; confirming finalizes it before exiting.
+fn request_quit(app: &AppHandle) {
+    if !meeting_recording(app) {
+        EXIT_CONFIRMED.store(true, Ordering::SeqCst);
+        app.exit(0);
+        return;
+    }
+    if QUIT_DIALOG_OPEN.swap(true, Ordering::SeqCst) {
+        return;
+    }
+
+    let app = app.clone();
+    // The dialog blocks: keep it off the event loop thread.
+    std::thread::spawn(move || {
+        use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
+
+        let locale = settings::get_settings(&app).app_language;
+        let strings = tray_i18n::get_tray_translations(Some(locale));
+        let english = tray_i18n::get_tray_translations(Some("en".to_string()));
+        let or_en = |s: String, en: String| if s.is_empty() { en } else { s };
+
+        let confirmed = app
+            .dialog()
+            .message(or_en(
+                strings.quit_meeting_message,
+                english.quit_meeting_message,
+            ))
+            .title(or_en(
+                strings.quit_meeting_title,
+                english.quit_meeting_title,
+            ))
+            .kind(MessageDialogKind::Warning)
+            .buttons(MessageDialogButtons::OkCancelCustom(
+                or_en(strings.quit_meeting_confirm, english.quit_meeting_confirm),
+                or_en(strings.cancel, english.cancel),
+            ))
+            .blocking_show();
+        QUIT_DIALOG_OPEN.store(false, Ordering::SeqCst);
+        if confirmed {
+            stop_meeting_for_exit(&app);
+            EXIT_CONFIRMED.store(true, Ordering::SeqCst);
+            app.exit(0);
+        }
+    });
+}
+
 fn initialize_core_logic(app_handle: &AppHandle) {
     // Note: Enigo (keyboard/mouse simulation) is NOT initialized here.
     // The frontend is responsible for calling the `initialize_enigo` command
@@ -207,12 +297,17 @@ fn initialize_core_logic(app_handle: &AppHandle) {
     );
     let history_manager =
         Arc::new(HistoryManager::new(app_handle).expect("Failed to initialize history manager"));
+    // Runs crash recovery (`self_heal`) before anything can start a meeting.
+    let meeting_manager =
+        Arc::new(MeetingManager::new(app_handle).expect("Failed to initialize meeting manager"));
 
     // Add managers to Tauri's managed state
     app_handle.manage(recording_manager.clone());
     app_handle.manage(model_manager.clone());
     app_handle.manage(transcription_manager.clone());
     app_handle.manage(history_manager.clone());
+    app_handle.manage(meeting_manager.clone());
+    meeting_manager.start_retention_timer();
     app_handle.manage(tray::TrayState::new());
 
     // Note: Shortcuts are NOT initialized here.
@@ -314,7 +409,7 @@ fn initialize_core_logic(app_handle: &AppHandle) {
                 cancel_current_operation(app);
             }
             "quit" => {
-                app.exit(0);
+                request_quit(app);
             }
             id if id.starts_with("model_select:") => {
                 let model_id = id.strip_prefix("model_select:").unwrap().to_string();
@@ -620,34 +715,9 @@ fn run_headless_transcription(app: &AppHandle, args: &CliArgs) -> i32 {
     0
 }
 
-#[cfg_attr(mobile, tauri::mobile_entry_point)]
-pub fn run(cli_args: CliArgs) {
-    // Avoid ggml-metal residency-set teardown assertions when a native engine
-    // outlives the Tauri shutdown sequence (#1902). This must happen before
-    // transcribe-cpp initializes its Metal device. Advanced users can restore
-    // upstream residency behavior with TRIGO_WHISPR_METAL_RESIDENCY=1.
-    #[cfg(target_os = "macos")]
-    if std::env::var("TRIGO_WHISPR_METAL_RESIDENCY").as_deref() == Ok("1") {
-        // ggml treats GGML_METAL_NO_RESIDENCY as presence-based, so remove an
-        // inherited value as well when explicitly opting back in.
-        std::env::remove_var("GGML_METAL_NO_RESIDENCY");
-    } else {
-        std::env::set_var("GGML_METAL_NO_RESIDENCY", "1");
-    }
-
-    // Pin glibc's dynamic mmap threshold before the first large allocation,
-    // so per-dictation transient buffers are returned to the OS on free
-    // instead of accumulating in malloc arenas (#1792). No-op off Linux/glibc.
-    memory::init_allocator();
-
-    // Detect portable mode before anything else
-    portable::init();
-
-    // Parse console logging directives from RUST_LOG, falling back to info-level logging
-    // when the variable is unset
-    let console_filter = build_console_filter();
-
-    let specta_builder = Builder::<tauri::Wry>::new()
+/// Commands and events exposed to the frontend (exported to `src/bindings.ts`).
+fn specta_builder() -> Builder<tauri::Wry> {
+    Builder::<tauri::Wry>::new()
         .commands(collect_commands![
             shortcut::change_binding,
             shortcut::reset_binding,
@@ -744,6 +814,7 @@ pub fn run(cli_args: CliArgs) {
             commands::audio::update_microphone_mode,
             commands::audio::get_microphone_mode,
             commands::audio::get_windows_microphone_permission_status,
+            commands::meeting::test_meeting_capture,
             commands::audio::open_microphone_privacy_settings,
             commands::audio::get_available_microphones,
             commands::audio::set_selected_microphone,
@@ -768,14 +839,59 @@ pub fn run(cli_args: CliArgs) {
             commands::history::retry_history_entry_transcription,
             commands::history::update_history_limit,
             commands::history::update_recording_retention_period,
+            commands::meeting::start_meeting,
+            commands::meeting::stop_meeting,
+            commands::meeting::cancel_meeting,
+            commands::meeting::get_meeting_state,
+            commands::meeting::list_meetings,
+            commands::meeting::get_meeting,
+            commands::meeting::rename_meeting,
+            commands::meeting::delete_meeting,
+            commands::meeting::get_meeting_audio_paths,
+            commands::meeting::retry_meeting_transcription,
+            commands::meeting::take_meeting_recovery_notice,
+            commands::meeting::update_meeting_audio_retention,
             helpers::clamshell::is_laptop,
         ])
         .events(collect_events![
             managers::history::HistoryUpdatePayload,
+            managers::meeting::MeetingStateChanged,
+            managers::meeting::MeetingsUpdated,
+            managers::meeting::MeetingsRecovered,
             managers::transcription::StreamTextEvent,
             managers::transcription::StreamPhaseEvent,
             managers::transcription::meeting::MeetingTranscriptionProgress,
-        ]);
+        ])
+}
+
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
+pub fn run(cli_args: CliArgs) {
+    // Avoid ggml-metal residency-set teardown assertions when a native engine
+    // outlives the Tauri shutdown sequence (#1902). This must happen before
+    // transcribe-cpp initializes its Metal device. Advanced users can restore
+    // upstream residency behavior with TRIGO_WHISPR_METAL_RESIDENCY=1.
+    #[cfg(target_os = "macos")]
+    if std::env::var("TRIGO_WHISPR_METAL_RESIDENCY").as_deref() == Ok("1") {
+        // ggml treats GGML_METAL_NO_RESIDENCY as presence-based, so remove an
+        // inherited value as well when explicitly opting back in.
+        std::env::remove_var("GGML_METAL_NO_RESIDENCY");
+    } else {
+        std::env::set_var("GGML_METAL_NO_RESIDENCY", "1");
+    }
+
+    // Pin glibc's dynamic mmap threshold before the first large allocation,
+    // so per-dictation transient buffers are returned to the OS on free
+    // instead of accumulating in malloc arenas (#1792). No-op off Linux/glibc.
+    memory::init_allocator();
+
+    // Detect portable mode before anything else
+    portable::init();
+
+    // Parse console logging directives from RUST_LOG, falling back to info-level logging
+    // when the variable is unset
+    let console_filter = build_console_filter();
+
+    let specta_builder = specta_builder();
 
     #[cfg(debug_assertions)] // <- Only export on non-release builds
     specta_builder
@@ -1120,10 +1236,70 @@ pub fn run(cli_args: CliArgs) {
             }
             show_main_window(app);
         }
+        // Every exit (Cmd+Q, app.exit, updater restart) lands here: while a
+        // meeting records, hold it and ask first; once allowed, finalize the
+        // meeting so its files and row are consistent.
+        tauri::RunEvent::ExitRequested { code, api, .. } => {
+            match exit_action(
+                EXIT_CONFIRMED.load(Ordering::SeqCst),
+                meeting_recording(app),
+                *code,
+            ) {
+                ExitAction::Confirm => {
+                    api.prevent_exit();
+                    request_quit(app);
+                }
+                ExitAction::Allow => stop_meeting_for_exit(app),
+            }
+        }
         // No transcription teardown on exit: transcribe.cpp runs only in the
         // worker process, which exits by itself as soon as this process's end
         // of its stdin closes, even if it is hung. Waiting on an unload here
         // could block quitting behind a hung model load.
         _ => {}
     });
+}
+
+#[cfg(test)]
+mod exit_tests {
+    use super::{exit_action, ExitAction};
+
+    #[test]
+    fn asks_before_quitting_during_a_meeting() {
+        // Cmd+Q (None) and programmatic exits both ask while recording.
+        assert_eq!(exit_action(false, true, None), ExitAction::Confirm);
+        assert_eq!(exit_action(false, true, Some(0)), ExitAction::Confirm);
+    }
+
+    #[test]
+    fn lets_confirmed_or_idle_exits_through() {
+        assert_eq!(exit_action(true, true, Some(0)), ExitAction::Allow);
+        assert_eq!(exit_action(false, false, None), ExitAction::Allow);
+    }
+
+    #[test]
+    fn restart_is_never_held() {
+        assert_eq!(
+            exit_action(false, true, Some(tauri::RESTART_EXIT_CODE)),
+            ExitAction::Allow
+        );
+    }
+}
+
+#[cfg(test)]
+mod bindings_export {
+    use specta_typescript::{BigIntExportBehavior, Typescript};
+
+    /// Regenerates `src/bindings.ts` without launching the app:
+    /// `cargo test export_bindings -- --ignored`.
+    #[test]
+    #[ignore = "writes src/bindings.ts"]
+    fn export_bindings() {
+        super::specta_builder()
+            .export(
+                Typescript::default().bigint(BigIntExportBehavior::Number),
+                "../src/bindings.ts",
+            )
+            .expect("Failed to export typescript bindings");
+    }
 }

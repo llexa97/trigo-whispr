@@ -7,7 +7,12 @@
     "model": "Modelo",
     "quit": "Salir",
     "cancel": "Cancelar",
-    "secureInputWarning": "⚠ Atajos bloqueados por Secure Input"
+    "secureInputWarning": "⚠ Atajos bloqueados por Secure Input",
+    "meetingTitleDetected": "Reunión {{app}} — {{date}}",
+    "meetingTitleManual": "Reunión — {{date}}",
+    "quitMeetingTitle": "Reunión en curso",
+    "quitMeetingMessage": "Se está grabando una reunión. ¿Detener la grabación y salir?",
+    "quitMeetingConfirm": "Detener y salir"
   },
   "sidebar": {
     "general": "General",
@@ -579,6 +584,20 @@
         "verdictNoEvents": "No se capturó ningún evento: ¿pulsaste alguna tecla durante la prueba?",
         "failed": "El diagnóstico falló: {{error}}"
       },
+      "meetingCaptureTest": {
+        "title": "Prueba de captura de reunión",
+        "description": "Graba 10 s de micrófono y audio del sistema en una carpeta temporal, como en una reunión.",
+        "run": "Iniciar captura de 10 s",
+        "running": "Grabando… habla y reproduce algo de audio",
+        "outDir": "Carpeta",
+        "mic": "Pista de micrófono",
+        "system": "Pista del sistema",
+        "duration": "Duración (ms)",
+        "mode": "Modo de captura del sistema",
+        "warnings": "Advertencias",
+        "none": "ninguna",
+        "failed": "La captura falló: {{error}}"
+      },
       "whatsNewPreview": {
         "title": "Vista previa de novedades",
         "description": "Abrir la nota de la versión incluida más reciente sin marcarla como vista",
@@ -706,5 +725,8 @@
     "learnMore": "Cómo solucionarlo",
     "recorderBlocked": "Ahora mismo no se pueden grabar atajos: Secure Input de macOS está bloqueando los eventos de teclado. Resuelve primero el aviso de Secure Input.",
     "dismiss": "Descartar"
+  },
+  "meetings": {
+    "recoveredNotice": "{{total}} reunión(es) recuperada(s) tras un cierre inesperado"
   }
 }

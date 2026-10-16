@@ -1,4 +1,5 @@
 use crate::audio_toolkit::audio::output_device_name;
+use crate::managers::meeting::MeetingManager;
 use crate::settings::SoundTheme;
 use crate::settings::{self, AppSettings};
 use log::{debug, error, warn};
@@ -7,6 +8,7 @@ use rodio::DeviceSinkBuilder;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use std::thread;
 use tauri::{AppHandle, Manager};
 
@@ -46,9 +48,16 @@ fn get_sound_base_dir(settings: &AppSettings) -> tauri::path::BaseDirectory {
     }
 }
 
+/// In endpoint loopback mode the meeting's system track records everything
+/// we play, so dictation sounds are skipped while a meeting is recorded.
+fn meeting_captures_feedback(app: &AppHandle) -> bool {
+    app.try_state::<Arc<MeetingManager>>()
+        .is_some_and(|m| m.suppress_feedback_sounds())
+}
+
 pub fn play_feedback_sound(app: &AppHandle, sound_type: SoundType) {
     let settings = settings::get_settings(app);
-    if !settings.audio_feedback {
+    if !settings.audio_feedback || meeting_captures_feedback(app) {
         return;
     }
     if let Some(path) = resolve_sound_path(app, &settings, sound_type) {
@@ -58,7 +67,7 @@ pub fn play_feedback_sound(app: &AppHandle, sound_type: SoundType) {
 
 pub fn play_feedback_sound_blocking(app: &AppHandle, sound_type: SoundType) {
     let settings = settings::get_settings(app);
-    if !settings.audio_feedback {
+    if !settings.audio_feedback || meeting_captures_feedback(app) {
         return;
     }
     if let Some(path) = resolve_sound_path(app, &settings, sound_type) {

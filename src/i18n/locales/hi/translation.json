@@ -7,7 +7,12 @@
     "model": "मॉडल",
     "quit": "बाहर निकलें",
     "cancel": "रद्द करें",
-    "secureInputWarning": "⚠ Secure Input ने शॉर्टकट ब्लॉक किए हैं"
+    "secureInputWarning": "⚠ Secure Input ने शॉर्टकट ब्लॉक किए हैं",
+    "meetingTitleDetected": "मीटिंग {{app}} — {{date}}",
+    "meetingTitleManual": "मीटिंग — {{date}}",
+    "quitMeetingTitle": "मीटिंग जारी है",
+    "quitMeetingMessage": "एक मीटिंग रिकॉर्ड हो रही है। रिकॉर्डिंग रोककर बाहर निकलें?",
+    "quitMeetingConfirm": "रोकें और बाहर निकलें"
   },
   "sidebar": {
     "general": "सामान्य",
@@ -592,6 +597,20 @@
         "verdictOk": "कुंजी इवेंट Trigo Whispr तक सामान्य रूप से पहुँच रहे हैं.",
         "verdictNoEvents": "कोई इवेंट कैप्चर नहीं हुआ — क्या आपने टेस्ट के दौरान कोई कुंजी दबाई थी?",
         "failed": "डायग्नोस्टिक विफल: {{error}}"
+      },
+      "meetingCaptureTest": {
+        "title": "मीटिंग कैप्चर परीक्षण",
+        "description": "मीटिंग की तरह, माइक्रोफ़ोन और सिस्टम ऑडियो के 10 सेकंड एक अस्थायी फ़ोल्डर में रिकॉर्ड करता है।",
+        "run": "10 सेकंड कैप्चर चलाएँ",
+        "running": "रिकॉर्डिंग… बोलें और कोई ऑडियो चलाएँ",
+        "outDir": "फ़ोल्डर",
+        "mic": "माइक्रोफ़ोन ट्रैक",
+        "system": "सिस्टम ट्रैक",
+        "duration": "अवधि (ms)",
+        "mode": "सिस्टम कैप्चर मोड",
+        "warnings": "चेतावनियाँ",
+        "none": "कोई नहीं",
+        "failed": "कैप्चर विफल: {{error}}"
       }
     },
     "about": {
@@ -706,5 +725,8 @@
     "learnMore": "इसे कैसे ठीक करें",
     "recorderBlocked": "अभी शॉर्टकट रिकॉर्ड नहीं किए जा सकते — macOS Secure Input कुंजी इवेंट ब्लॉक कर रहा है. पहले Secure Input चेतावनी हल करें.",
     "dismiss": "खारिज करें"
+  },
+  "meetings": {
+    "recoveredNotice": "अप्रत्याशित बंद होने के बाद पुनर्प्राप्त मीटिंग: {{total}}"
   }
 }

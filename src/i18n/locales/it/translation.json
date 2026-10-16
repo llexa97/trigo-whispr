@@ -7,7 +7,12 @@
     "model": "Modello",
     "quit": "Esci",
     "cancel": "Annulla",
-    "secureInputWarning": "⚠ Scorciatoie bloccate da Secure Input"
+    "secureInputWarning": "⚠ Scorciatoie bloccate da Secure Input",
+    "meetingTitleDetected": "Riunione {{app}} — {{date}}",
+    "meetingTitleManual": "Riunione — {{date}}",
+    "quitMeetingTitle": "Riunione in corso",
+    "quitMeetingMessage": "È in corso la registrazione di una riunione. Interrompere la registrazione e uscire?",
+    "quitMeetingConfirm": "Interrompi ed esci"
   },
   "sidebar": {
     "general": "Generale",
@@ -579,6 +584,20 @@
         "verdictNoEvents": "Nessun evento rilevato: hai premuto qualche tasto durante il test?",
         "failed": "Diagnostica non riuscita: {{error}}"
       },
+      "meetingCaptureTest": {
+        "title": "Test di acquisizione riunione",
+        "description": "Registra 10 s di microfono e audio di sistema in una cartella temporanea, come per una riunione.",
+        "run": "Avvia acquisizione di 10 s",
+        "running": "Registrazione… parla e riproduci dell'audio",
+        "outDir": "Cartella",
+        "mic": "Traccia microfono",
+        "system": "Traccia di sistema",
+        "duration": "Durata (ms)",
+        "mode": "Modalità di acquisizione di sistema",
+        "warnings": "Avvisi",
+        "none": "nessuno",
+        "failed": "Acquisizione non riuscita: {{error}}"
+      },
       "whatsNewPreview": {
         "title": "Anteprima delle novità",
         "description": "Apri le note di rilascio incluse più recenti senza segnarle come viste",
@@ -706,5 +725,8 @@
     "learnMore": "Come risolvere",
     "recorderBlocked": "Non è possibile registrare scorciatoie in questo momento: Secure Input di macOS sta bloccando gli eventi dei tasti. Risolvi prima l'avviso di Secure Input.",
     "dismiss": "Ignora"
+  },
+  "meetings": {
+    "recoveredNotice": "{{total}} riunione/i recuperata/e dopo una chiusura imprevista"
   }
 }

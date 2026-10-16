@@ -7,7 +7,12 @@
     "model": "Model",
     "quit": "Surt",
     "cancel": "Cancel·la",
-    "secureInputWarning": "⚠ Dreceres blocades per l'entrada segura"
+    "secureInputWarning": "⚠ Dreceres blocades per l'entrada segura",
+    "meetingTitleDetected": "Reunió {{app}} — {{date}}",
+    "meetingTitleManual": "Reunió — {{date}}",
+    "quitMeetingTitle": "Reunió en curs",
+    "quitMeetingMessage": "S'està enregistrant una reunió. Voleu aturar l'enregistrament i sortir?",
+    "quitMeetingConfirm": "Atura i surt"
   },
   "sidebar": {
     "general": "General",
@@ -592,6 +597,20 @@
         "verdictOk": "Els esdeveniments de tecla arriben al Trigo Whispr amb normalitat.",
         "verdictNoEvents": "No s'ha capturat cap esdeveniment. Heu premut alguna tecla durant la prova?",
         "failed": "El diagnòstic ha fallat: {{error}}"
+      },
+      "meetingCaptureTest": {
+        "title": "Prova de captura de reunió",
+        "description": "Enregistra 10 s del micròfon i de l'àudio del sistema en una carpeta temporal, com en una reunió.",
+        "run": "Inicia una captura de 10 s",
+        "running": "Enregistrant… parla i reprodueix algun àudio",
+        "outDir": "Carpeta",
+        "mic": "Pista del micròfon",
+        "system": "Pista del sistema",
+        "duration": "Durada (ms)",
+        "mode": "Mode de captura del sistema",
+        "warnings": "Avisos",
+        "none": "cap",
+        "failed": "La captura ha fallat: {{error}}"
       }
     },
     "about": {
@@ -706,5 +725,8 @@
     "learnMore": "Com es resol",
     "recorderBlocked": "Ara no se'n poden enregistrar dreceres: l'entrada segura del macOS bloca els esdeveniments de tecla. Resol primer l'avís d'entrada segura.",
     "dismiss": "Descarta"
+  },
+  "meetings": {
+    "recoveredNotice": "{{total}} reunió(ns) recuperada(es) després d'un tancament inesperat"
   }
 }

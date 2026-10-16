@@ -7,7 +7,12 @@
     "model": "מודל",
     "quit": "יציאה",
     "cancel": "ביטול",
-    "secureInputWarning": "⚠ קיצורי המקשים חסומים על ידי Secure Input"
+    "secureInputWarning": "⚠ קיצורי המקשים חסומים על ידי Secure Input",
+    "meetingTitleDetected": "פגישה {{app}} — {{date}}",
+    "meetingTitleManual": "פגישה — {{date}}",
+    "quitMeetingTitle": "פגישה בתהליך",
+    "quitMeetingMessage": "מתבצעת הקלטה של פגישה. לעצור את ההקלטה ולצאת?",
+    "quitMeetingConfirm": "עצור וצא"
   },
   "sidebar": {
     "general": "כללי",
@@ -579,6 +584,20 @@
         "verdictNoEvents": "לא נקלטו אירועים — האם הקשת על מקשים במהלך הבדיקה?",
         "failed": "האבחון נכשל: {{error}}"
       },
+      "meetingCaptureTest": {
+        "title": "בדיקת הקלטת פגישה",
+        "description": "מקליט 10 שניות של מיקרופון ושמע מערכת לתיקייה זמנית, כמו בפגישה.",
+        "run": "הפעלת הקלטה של 10 שניות",
+        "running": "מקליט… דברו והשמיעו שמע כלשהו",
+        "outDir": "תיקייה",
+        "mic": "רצועת מיקרופון",
+        "system": "רצועת מערכת",
+        "duration": "משך (מ\"ש)",
+        "mode": "מצב לכידת מערכת",
+        "warnings": "אזהרות",
+        "none": "אין",
+        "failed": "ההקלטה נכשלה: {{error}}"
+      },
       "whatsNewPreview": {
         "title": "תצוגה מקדימה של מה חדש",
         "description": "פתח את הערת הגרסה המצורפת האחרונה בלי לסמן אותה כנצפתה",
@@ -706,5 +725,8 @@
     "learnMore": "איך לתקן את זה",
     "recorderBlocked": "לא ניתן להקליט קיצורים כרגע — Secure Input של macOS חוסם אירועי מקשים. פתור תחילה את אזהרת Secure Input.",
     "dismiss": "התעלם"
+  },
+  "meetings": {
+    "recoveredNotice": "פגישות ששוחזרו לאחר כיבוי לא צפוי: {{total}}"
   }
 }

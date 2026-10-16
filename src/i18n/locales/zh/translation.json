@@ -7,7 +7,12 @@
     "model": "模型",
     "quit": "退出",
     "cancel": "取消",
-    "secureInputWarning": "⚠ 快捷键被 Secure Input 阻止"
+    "secureInputWarning": "⚠ 快捷键被 Secure Input 阻止",
+    "meetingTitleDetected": "会议 {{app}} — {{date}}",
+    "meetingTitleManual": "会议 — {{date}}",
+    "quitMeetingTitle": "会议进行中",
+    "quitMeetingMessage": "正在录制会议。要停止录制并退出吗？",
+    "quitMeetingConfirm": "停止并退出"
   },
   "sidebar": {
     "general": "通用",
@@ -579,6 +584,20 @@
         "verdictNoEvents": "未捕获到任何事件——测试期间您按过键吗？",
         "failed": "诊断失败：{{error}}"
       },
+      "meetingCaptureTest": {
+        "title": "会议录制测试",
+        "description": "像录制会议一样，将麦克风和系统音频录制 10 秒到临时文件夹。",
+        "run": "运行 10 秒录制",
+        "running": "正在录制… 请说话并播放一些音频",
+        "outDir": "文件夹",
+        "mic": "麦克风音轨",
+        "system": "系统音轨",
+        "duration": "时长 (ms)",
+        "mode": "系统录制模式",
+        "warnings": "警告",
+        "none": "无",
+        "failed": "录制失败：{{error}}"
+      },
       "whatsNewPreview": {
         "title": "预览新功能",
         "description": "打开最新内置发行说明，且不标记为已查看",
@@ -706,5 +725,8 @@
     "learnMore": "如何解决",
     "recorderBlocked": "当前无法录制快捷键——macOS 的 Secure Input 正在阻止按键事件。请先解决 Secure Input 警告。",
     "dismiss": "关闭"
+  },
+  "meetings": {
+    "recoveredNotice": "意外关闭后已恢复 {{total}} 个会议"
   }
 }
