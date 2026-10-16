@@ -21,10 +21,11 @@
 //! icon/menu/tooltip, so those must only ever be set through the applier.
 
 use crate::managers::history::{HistoryEntry, HistoryManager};
+use crate::managers::meeting::MeetingPhase;
 use crate::managers::model::ModelManager;
 use crate::managers::transcription::TranscriptionManager;
 use crate::settings;
-use crate::tray_i18n::get_tray_translations;
+use crate::tray_i18n::{get_tray_translations, TrayStrings};
 use log::{debug, error, info, trace, warn};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -41,13 +42,73 @@ pub enum TrayIconState {
     Idle,
     Recording,
     Transcribing,
+    /// Icon only, never set by callers: shown instead of the idle icon while
+    /// a meeting records. A dictation in progress keeps its own icon.
+    MeetingRecording,
 }
 
 impl TrayIconState {
     /// Recording and Transcribing share the same menu ("Cancel" instead of the
     /// model submenu), so only the idle/busy distinction matters for the menu.
     fn is_busy(self) -> bool {
-        self != TrayIconState::Idle
+        matches!(self, TrayIconState::Recording | TrayIconState::Transcribing)
+    }
+}
+
+/// The meeting entry of the menu.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum MeetingMenu {
+    /// Meetings cannot be recorded on this platform (Linux): no entry.
+    Hidden,
+    /// "Record a Meeting".
+    Idle,
+    /// "Stop Recording (12:34)". The timer is updated in place, without
+    /// rebuilding the menu.
+    Recording,
+    /// Disabled "Stopping Recording…" while the files are finalized.
+    Stopping,
+}
+
+impl MeetingMenu {
+    fn from_phase(phase: MeetingPhase) -> Self {
+        if !crate::meeting::control::manual_recording_supported() {
+            return MeetingMenu::Hidden;
+        }
+        match phase {
+            MeetingPhase::Idle => MeetingMenu::Idle,
+            MeetingPhase::Recording => MeetingMenu::Recording,
+            MeetingPhase::Stopping => MeetingMenu::Stopping,
+        }
+    }
+}
+
+/// Icon to show for the dictation state and whether a meeting records.
+fn effective_icon_state(dictation: TrayIconState, meeting: MeetingPhase) -> TrayIconState {
+    if dictation == TrayIconState::Idle && meeting != MeetingPhase::Idle {
+        TrayIconState::MeetingRecording
+    } else {
+        dictation
+    }
+}
+
+/// `12:34`, or `1:02:03` past an hour.
+fn format_elapsed(elapsed_ms: u64) -> String {
+    let secs = elapsed_ms / 1000;
+    let (h, m, s) = (secs / 3600, (secs / 60) % 60, secs % 60);
+    if h > 0 {
+        format!("{h}:{m:02}:{s:02}")
+    } else {
+        format!("{m:02}:{s:02}")
+    }
+}
+
+fn meeting_label(strings: &TrayStrings, menu: MeetingMenu, elapsed_ms: u64) -> String {
+    match menu {
+        MeetingMenu::Hidden | MeetingMenu::Idle => strings.record_meeting.clone(),
+        MeetingMenu::Recording => strings
+            .stop_meeting
+            .replace("{{time}}", &format_elapsed(elapsed_ms)),
+        MeetingMenu::Stopping => strings.stopping_meeting.clone(),
     }
 }
 
@@ -56,6 +117,7 @@ impl TrayIconState {
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct MenuInputs {
     busy: bool,
+    meeting: MeetingMenu,
     warning: bool,
     model_loaded: bool,
     selected_model: String,
@@ -75,6 +137,12 @@ struct TrayDesired {
 struct TrayInner {
     /// Intent set by [`set_tray_state`].
     icon_state: TrayIconState,
+    /// Set by [`set_meeting_state`].
+    meeting_phase: MeetingPhase,
+    meeting_elapsed_ms: u64,
+    /// The meeting entry of the native menu and its current text, so the
+    /// timer can be updated without rebuilding the menu every second.
+    meeting_item: Option<(MenuItem<tauri::Wry>, String)>,
     /// Latest computed snapshot, waiting to be (or just) applied.
     desired: Option<TrayDesired>,
     /// Icon the native tray currently shows. Only updated when `set_icon`
@@ -102,6 +170,9 @@ impl TrayState {
     pub fn new() -> Self {
         Self(Mutex::new(TrayInner {
             icon_state: TrayIconState::Idle,
+            meeting_phase: MeetingPhase::Idle,
+            meeting_elapsed_ms: 0,
+            meeting_item: None,
             desired: None,
             applied_icon: None,
             applied_menu: None,
@@ -211,12 +282,58 @@ pub fn get_icon_path(theme: AppTheme, state: TrayIconState, warning: bool) -> &'
         (AppTheme::Colored, TrayIconState::Idle) => "resources/trigo-whispr.png",
         (AppTheme::Colored, TrayIconState::Recording) => "resources/recording.png",
         (AppTheme::Colored, TrayIconState::Transcribing) => "resources/transcribing.png",
+        (AppTheme::Dark, TrayIconState::MeetingRecording) => "resources/tray_meeting.png",
+        (AppTheme::Light, TrayIconState::MeetingRecording) => "resources/tray_meeting_dark.png",
+        // Meetings are not recorded on Linux, the only colored-theme platform.
+        (AppTheme::Colored, TrayIconState::MeetingRecording) => "resources/recording.png",
     }
 }
 
 /// Sets the recording state shown by the tray (icon + Cancel/model menu).
 pub fn set_tray_state(app: &AppHandle, state: TrayIconState) {
     sync_tray_with(app, |inner| inner.icon_state = state);
+}
+
+/// Records the meeting state shown by the tray (icon + menu entry). Called on
+/// every `MeetingStateChanged`, i.e. every second while recording: a timer
+/// tick only updates the entry's text, a phase change re-syncs the tray.
+pub fn set_meeting_state(app: &AppHandle, phase: MeetingPhase, elapsed_ms: u64) {
+    let Some(state) = app.try_state::<TrayState>() else {
+        return;
+    };
+    let phase_changed = {
+        let mut inner = state.lock();
+        inner.meeting_elapsed_ms = elapsed_ms;
+        inner.meeting_phase != phase
+    };
+    if phase_changed {
+        sync_tray_with(app, |inner| inner.meeting_phase = phase);
+    } else {
+        refresh_meeting_label(&state);
+    }
+}
+
+fn refresh_meeting_label(state: &TrayState) {
+    let (item, label) = {
+        let mut inner = state.lock();
+        let Some(menu) = inner.applied_menu.as_ref() else {
+            return;
+        };
+        let strings = get_tray_translations(Some(menu.locale.clone()));
+        let label = meeting_label(&strings, menu.meeting, inner.meeting_elapsed_ms);
+        let Some((item, text)) = inner.meeting_item.as_mut() else {
+            return;
+        };
+        if *text == label {
+            return;
+        }
+        text.clone_from(&label);
+        (item.clone(), label)
+    };
+    // Menu items marshal their updates onto the main thread themselves.
+    if let Err(err) = item.set_text(label) {
+        error!("Failed to update the tray meeting timer: {err}");
+    }
 }
 
 /// Re-syncs the tray after something other than the recording state changed
@@ -249,11 +366,11 @@ fn sync_tray_with(app: &AppHandle, update: impl FnOnce(&mut TrayInner)) {
 
     // Record intent and claim a sequence number in one critical section, so
     // sequence order == the order in which state changes were requested.
-    let (seq, icon_state) = {
+    let (seq, icon_state, meeting_phase) = {
         let mut inner = state.lock();
         update(&mut inner);
         inner.next_seq += 1;
-        (inner.next_seq, inner.icon_state)
+        (inner.next_seq, inner.icon_state, inner.meeting_phase)
     };
 
     // Tray not built yet (early secure-input monitor callbacks). The intent
@@ -262,7 +379,7 @@ fn sync_tray_with(app: &AppHandle, update: impl FnOnce(&mut TrayInner)) {
         return;
     }
 
-    let desired = compute_desired(app, icon_state);
+    let desired = compute_desired(app, icon_state, meeting_phase);
 
     // Decode the icon off the main thread, once per path, outside the lock.
     let needs_icon = !state.lock().icons.contains_key(desired.icon_path);
@@ -309,7 +426,11 @@ fn sync_tray_with(app: &AppHandle, update: impl FnOnce(&mut TrayInner)) {
     }
 }
 
-fn compute_desired(app: &AppHandle, icon_state: TrayIconState) -> TrayDesired {
+fn compute_desired(
+    app: &AppHandle,
+    icon_state: TrayIconState,
+    meeting_phase: MeetingPhase,
+) -> TrayDesired {
     let settings = settings::get_settings(app);
     let theme = get_current_theme(app);
     let warning = crate::secure_input::tray_warning_active(app);
@@ -325,9 +446,14 @@ fn compute_desired(app: &AppHandle, icon_state: TrayIconState) -> TrayDesired {
     downloaded_models.sort_by(|a, b| a.1.cmp(&b.1));
 
     TrayDesired {
-        icon_path: get_icon_path(theme, icon_state, warning),
+        icon_path: get_icon_path(
+            theme,
+            effective_icon_state(icon_state, meeting_phase),
+            warning,
+        ),
         menu: MenuInputs {
             busy: icon_state.is_busy(),
+            meeting: MeetingMenu::from_phase(meeting_phase),
             warning,
             model_loaded,
             selected_model: settings.selected_model,
@@ -360,7 +486,7 @@ fn apply_on_main(app: &AppHandle) {
     };
 
     let started = Instant::now();
-    let (desired, icon, icon_changed, menu_changed) = {
+    let (desired, icon, icon_changed, menu_changed, meeting_elapsed_ms) = {
         let mut inner = state.lock();
         inner.pending = false;
         let Some(desired) = inner.desired.clone() else {
@@ -373,7 +499,8 @@ fn apply_on_main(app: &AppHandle) {
             return;
         }
         let icon = inner.icons.get(desired.icon_path).cloned();
-        (desired, icon, icon_changed, menu_changed)
+        let elapsed = inner.meeting_elapsed_ms;
+        (desired, icon, icon_changed, menu_changed, elapsed)
     };
 
     // Each part is recorded as applied only if its native call succeeded, so a
@@ -391,11 +518,13 @@ fn apply_on_main(app: &AppHandle) {
     }
 
     let mut menu_ok = false;
+    let mut new_meeting_item = None;
     if menu_changed {
-        match build_menu(app, &desired.menu) {
-            Ok((menu, tooltip)) => match tray.set_menu(Some(menu)) {
+        match build_menu(app, &desired.menu, meeting_elapsed_ms) {
+            Ok((menu, tooltip, meeting_item)) => match tray.set_menu(Some(menu)) {
                 Ok(()) => {
                     menu_ok = true;
+                    new_meeting_item = Some(meeting_item);
                     // Best-effort: logged, not retried. The tooltip is cosmetic
                     // and can only fail on Windows, where a failing
                     // Shell_NotifyIcon call means the icon is failing too.
@@ -418,6 +547,9 @@ fn apply_on_main(app: &AppHandle) {
         }
         if menu_ok {
             inner.applied_menu = Some(desired.menu.clone());
+        }
+        if let Some(item) = new_meeting_item {
+            inner.meeting_item = item;
         }
     }
 
@@ -451,11 +583,19 @@ fn version_label() -> String {
     }
 }
 
+type MeetingItem = Option<(MenuItem<tauri::Wry>, String)>;
+
 /// Builds the tray menu and tooltip for the given inputs. Pure with respect
-/// to app state: everything it depends on is in `inputs`, plus the
-/// process-constant `TRIGO_WHISPR_DISABLE_UPDATER` env flag behind
+/// to app state: everything it depends on is in `inputs` (plus the meeting
+/// timer's starting value), and the process-constant
+/// `TRIGO_WHISPR_DISABLE_UPDATER` env flag behind
 /// `update_checks_forced_disabled()`, which cannot change during a run.
-fn build_menu(app: &AppHandle, inputs: &MenuInputs) -> tauri::Result<(Menu<tauri::Wry>, String)> {
+/// Also returns the meeting entry, whose text the timer updates in place.
+fn build_menu(
+    app: &AppHandle,
+    inputs: &MenuInputs,
+    meeting_elapsed_ms: u64,
+) -> tauri::Result<(Menu<tauri::Wry>, String, MeetingItem)> {
     let strings = get_tray_translations(Some(inputs.locale.clone()));
 
     // Secure Input warning entry (macOS): clicking opens the settings window
@@ -512,6 +652,15 @@ fn build_menu(app: &AppHandle, inputs: &MenuInputs) -> tauri::Result<(Menu<tauri
     let quit_i = MenuItem::with_id(app, "quit", &strings.quit, true, quit_accelerator)?;
     let separator = || PredefinedMenuItem::separator(app);
 
+    let meeting_text = meeting_label(&strings, inputs.meeting, meeting_elapsed_ms);
+    let meeting_i = MenuItem::with_id(
+        app,
+        "toggle_meeting",
+        &meeting_text,
+        inputs.meeting != MeetingMenu::Stopping,
+        None::<&str>,
+    )?;
+
     let menu = if inputs.busy {
         let cancel_i = MenuItem::with_id(app, "cancel", &strings.cancel, true, None::<&str>)?;
         Menu::with_items(
@@ -521,6 +670,7 @@ fn build_menu(app: &AppHandle, inputs: &MenuInputs) -> tauri::Result<(Menu<tauri
                 &separator()?,
                 &cancel_i,
                 &separator()?,
+                &meeting_i,
                 &copy_last_transcript_i,
                 &separator()?,
                 &settings_i,
@@ -559,6 +709,7 @@ fn build_menu(app: &AppHandle, inputs: &MenuInputs) -> tauri::Result<(Menu<tauri
             &[
                 &version_i,
                 &separator()?,
+                &meeting_i,
                 &copy_last_transcript_i,
                 &separator()?,
                 &model_submenu,
@@ -582,6 +733,13 @@ fn build_menu(app: &AppHandle, inputs: &MenuInputs) -> tauri::Result<(Menu<tauri
         menu.remove(&check_updates_i)?;
     }
 
+    let meeting_item = if inputs.meeting == MeetingMenu::Hidden {
+        menu.remove(&meeting_i)?;
+        None
+    } else {
+        Some((meeting_i, meeting_text))
+    };
+
     // Both layouts start with [version, separator, ...]; slot the warning in
     // right below the version line so it's the first actionable thing seen.
     let mut tooltip = version_label;
@@ -591,7 +749,7 @@ fn build_menu(app: &AppHandle, inputs: &MenuInputs) -> tauri::Result<(Menu<tauri
         tooltip = format!("{} — {}", tooltip, warning_item.text().unwrap_or_default());
     }
 
-    Ok((menu, tooltip))
+    Ok((menu, tooltip, meeting_item))
 }
 
 fn last_transcript_text(entry: &HistoryEntry) -> &str {
@@ -668,8 +826,12 @@ pub fn copy_last_transcript(app: &AppHandle) {
 
 #[cfg(test)]
 mod tests {
-    use super::{last_transcript_text, load_tray_icon, MenuInputs, TrayDesired, TrayIconState};
+    use super::{
+        effective_icon_state, format_elapsed, last_transcript_text, load_tray_icon, MeetingMenu,
+        MenuInputs, TrayDesired, TrayIconState,
+    };
     use crate::managers::history::HistoryEntry;
+    use crate::managers::meeting::MeetingPhase;
 
     fn build_entry(transcription: &str, post_processed: Option<&str>) -> HistoryEntry {
         HistoryEntry {
@@ -688,6 +850,7 @@ mod tests {
     fn inputs(busy: bool) -> MenuInputs {
         MenuInputs {
             busy,
+            meeting: MeetingMenu::Idle,
             warning: false,
             model_loaded: true,
             selected_model: "small".to_string(),
@@ -740,5 +903,35 @@ mod tests {
     #[test]
     fn idle_and_busy_menus_differ() {
         assert_ne!(inputs(false), inputs(true));
+    }
+
+    #[test]
+    fn meeting_icon_replaces_idle_but_not_dictation() {
+        use TrayIconState::*;
+        assert_eq!(
+            effective_icon_state(Idle, MeetingPhase::Recording),
+            MeetingRecording
+        );
+        assert_eq!(
+            effective_icon_state(Idle, MeetingPhase::Stopping),
+            MeetingRecording
+        );
+        assert_eq!(effective_icon_state(Idle, MeetingPhase::Idle), Idle);
+        assert_eq!(
+            effective_icon_state(Recording, MeetingPhase::Recording),
+            Recording
+        );
+        assert_eq!(
+            effective_icon_state(Transcribing, MeetingPhase::Recording),
+            Transcribing
+        );
+        assert!(!MeetingRecording.is_busy());
+    }
+
+    #[test]
+    fn meeting_timer_format() {
+        assert_eq!(format_elapsed(0), "00:00");
+        assert_eq!(format_elapsed(754_999), "12:34");
+        assert_eq!(format_elapsed(3_723_000), "1:02:03");
     }
 }

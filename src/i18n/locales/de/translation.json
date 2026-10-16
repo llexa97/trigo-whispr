@@ -12,7 +12,15 @@
     "meetingTitleManual": "Besprechung — {{date}}",
     "quitMeetingTitle": "Besprechung läuft",
     "quitMeetingMessage": "Eine Besprechung wird aufgezeichnet. Aufnahme beenden und schließen?",
-    "quitMeetingConfirm": "Beenden und schließen"
+    "quitMeetingConfirm": "Beenden und schließen",
+    "recordMeeting": "Besprechung aufnehmen",
+    "stopMeeting": "Aufnahme beenden ({{time}})",
+    "stoppingMeeting": "Aufnahme wird beendet…",
+    "meetingReminderTitle": "Besprechung wird aufgenommen",
+    "meetingReminderMessage": "Informiere die Teilnehmenden, dass du diese Besprechung aufnimmst.",
+    "meetingReminderStart": "Aufnahme starten",
+    "meetingReminderDontShow": "Starten, nicht mehr anzeigen",
+    "meetingStartFailedTitle": "Die Besprechung konnte nicht aufgenommen werden"
   },
   "sidebar": {
     "general": "Allgemein",
@@ -176,6 +184,10 @@
           "transcribe_with_post_process": {
             "name": "Nachbearbeitungs-Tastenkürzel",
             "description": "Optional: Ein dediziertes Tastenkürzel, das immer die KI-Nachbearbeitung auf deine Transkription anwendet."
+          },
+          "toggle_meeting_recording": {
+            "name": "Tastenkürzel für Besprechungsaufnahme",
+            "description": "Optional: ein Tastenkürzel, um die Aufnahme einer Besprechung zu starten oder zu beenden."
           }
         },
         "errors": {
@@ -727,6 +739,19 @@
     "dismiss": "Ausblenden"
   },
   "meetings": {
-    "recoveredNotice": "{{total}} Besprechung(en) nach einem unerwarteten Beenden wiederhergestellt"
+    "recoveredNotice": "{{total}} Besprechung(en) nach einem unerwarteten Beenden wiederhergestellt",
+    "indicator": {
+      "stop": "Beenden",
+      "recording": "Besprechung wird aufgenommen",
+      "microphone": "Mikrofon",
+      "systemAudio": "Systemaudio",
+      "warnings": {
+        "system_audio_unavailable": "Systemaudio nicht verfügbar — nur dein Mikrofon wird aufgenommen",
+        "system_audio_silent": "Seit einer Weile kein Systemaudio empfangen — prüfe die Ausgabe der Besprechungs-App",
+        "output_muted": "Deine Tonausgabe ist stummgeschaltet — Systemaudio wird eventuell als Stille aufgenommen",
+        "device_changed": "Ein Audiogerät hat sich geändert — die Aufnahme läuft auf dem neuen weiter",
+        "mic_unavailable": "Mikrofon nicht verfügbar — nur Systemaudio wird aufgenommen"
+      }
+    }
   }
 }

@@ -12,7 +12,15 @@
     "meetingTitleManual": "Toplantı — {{date}}",
     "quitMeetingTitle": "Toplantı sürüyor",
     "quitMeetingMessage": "Bir toplantı kaydediliyor. Kayıt durdurulup çıkılsın mı?",
-    "quitMeetingConfirm": "Durdur ve çık"
+    "quitMeetingConfirm": "Durdur ve çık",
+    "recordMeeting": "Toplantı kaydet",
+    "stopMeeting": "Kaydı durdur ({{time}})",
+    "stoppingMeeting": "Kayıt durduruluyor…",
+    "meetingReminderTitle": "Toplantı kaydediliyor",
+    "meetingReminderMessage": "Katılımcılara bu toplantıyı kaydettiğinizi bildirin.",
+    "meetingReminderStart": "Kaydı başlat",
+    "meetingReminderDontShow": "Başlat, bir daha gösterme",
+    "meetingStartFailedTitle": "Toplantı kaydedilemedi"
   },
   "sidebar": {
     "general": "Genel",
@@ -176,6 +184,10 @@
           "transcribe_with_post_process": {
             "name": "Son İşlem Kısayolu",
             "description": "İsteğe bağlı: Transkripsiyonunuza her zaman yapay zekâ ile son işlem uygulayan özel bir kısayol tuşu."
+          },
+          "toggle_meeting_recording": {
+            "name": "Toplantı kaydı kısayolu",
+            "description": "İsteğe bağlı: bir toplantının kaydını başlatmak veya durdurmak için klavye kısayolu."
           }
         },
         "errors": {
@@ -727,6 +739,19 @@
     "dismiss": "Kapat"
   },
   "meetings": {
-    "recoveredNotice": "Beklenmedik kapanmanın ardından kurtarılan toplantı: {{total}}"
+    "recoveredNotice": "Beklenmedik kapanmanın ardından kurtarılan toplantı: {{total}}",
+    "indicator": {
+      "stop": "Durdur",
+      "recording": "Toplantı kaydediliyor",
+      "microphone": "Mikrofon",
+      "systemAudio": "Sistem sesi",
+      "warnings": {
+        "system_audio_unavailable": "Sistem sesi kullanılamıyor — yalnızca mikrofonunuz kaydediliyor",
+        "system_audio_silent": "Bir süredir sistem sesi alınmadı — toplantı uygulamasının çıkışını kontrol edin",
+        "output_muted": "Ses çıkışınız kapalı — sistem sesi sessizlik olarak kaydedilebilir",
+        "device_changed": "Bir ses aygıtı değişti — kayıt yeni aygıtta devam etti",
+        "mic_unavailable": "Mikrofon kullanılamıyor — yalnızca sistem sesi kaydediliyor"
+      }
+    }
   }
 }

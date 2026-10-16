@@ -12,7 +12,15 @@
     "meetingTitleManual": "बैठक — {{date}}",
     "quitMeetingTitle": "बैठक जारी छ",
     "quitMeetingMessage": "बैठक रेकर्ड हुँदैछ। रेकर्डिङ रोकेर बाहिरिने?",
-    "quitMeetingConfirm": "रोक्नुहोस् र बाहिरिनुहोस्"
+    "quitMeetingConfirm": "रोक्नुहोस् र बाहिरिनुहोस्",
+    "recordMeeting": "बैठक रेकर्ड गर्नुहोस्",
+    "stopMeeting": "रेकर्डिङ रोक्नुहोस् ({{time}})",
+    "stoppingMeeting": "रेकर्डिङ रोकिँदै…",
+    "meetingReminderTitle": "बैठक रेकर्ड हुँदैछ",
+    "meetingReminderMessage": "सहभागीहरूलाई तपाईं यो बैठक रेकर्ड गर्दै हुनुहुन्छ भनी जानकारी दिनुहोस्।",
+    "meetingReminderStart": "रेकर्डिङ सुरु गर्नुहोस्",
+    "meetingReminderDontShow": "सुरु गर्नुहोस्, फेरि नदेखाउनुहोस्",
+    "meetingStartFailedTitle": "बैठक रेकर्ड गर्न सकिएन"
   },
   "sidebar": {
     "general": "सामान्य",
@@ -149,6 +157,10 @@
           "transcribe_with_post_process": {
             "name": "पोस्ट-प्रोसेसिङ हटकी",
             "description": "वैकल्पिक: तपाईंको ट्रान्सक्रिप्सनमा सधैँ AI पोस्ट-प्रोसेसिङ लागू गर्ने छुट्टै हटकी।"
+          },
+          "toggle_meeting_recording": {
+            "name": "बैठक रेकर्डिङ सर्टकट",
+            "description": "वैकल्पिक: बैठकको रेकर्डिङ सुरु गर्न वा रोक्न किबोर्ड सर्टकट।"
           }
         },
         "errors": {
@@ -727,6 +739,19 @@
     "dismiss": "हटाउनुहोस्"
   },
   "meetings": {
-    "recoveredNotice": "अनपेक्षित बन्द भएपछि पुनःप्राप्त बैठक: {{total}}"
+    "recoveredNotice": "अनपेक्षित बन्द भएपछि पुनःप्राप्त बैठक: {{total}}",
+    "indicator": {
+      "stop": "रोक्नुहोस्",
+      "recording": "बैठक रेकर्ड हुँदैछ",
+      "microphone": "माइक्रोफोन",
+      "systemAudio": "प्रणाली अडियो",
+      "warnings": {
+        "system_audio_unavailable": "प्रणाली अडियो उपलब्ध छैन — तपाईंको माइक्रोफोन मात्र रेकर्ड हुँदैछ",
+        "system_audio_silent": "केही समयदेखि प्रणाली अडियो प्राप्त भएको छैन — बैठक एपको आउटपुट जाँच गर्नुहोस्",
+        "output_muted": "तपाईंको ध्वनि आउटपुट म्युट छ — प्रणाली अडियो मौनताको रूपमा रेकर्ड हुन सक्छ",
+        "device_changed": "एउटा अडियो उपकरण परिवर्तन भयो — रेकर्डिङ नयाँ उपकरणमा जारी रह्यो",
+        "mic_unavailable": "माइक्रोफोन उपलब्ध छैन — प्रणाली अडियो मात्र रेकर्ड हुँदैछ"
+      }
+    }
   }
 }

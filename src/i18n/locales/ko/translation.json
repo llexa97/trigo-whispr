@@ -12,7 +12,15 @@
     "meetingTitleManual": "회의 — {{date}}",
     "quitMeetingTitle": "회의 진행 중",
     "quitMeetingMessage": "회의를 녹음하고 있습니다. 녹음을 중지하고 종료할까요?",
-    "quitMeetingConfirm": "중지 후 종료"
+    "quitMeetingConfirm": "중지 후 종료",
+    "recordMeeting": "회의 녹음",
+    "stopMeeting": "녹음 중지 ({{time}})",
+    "stoppingMeeting": "녹음을 중지하는 중…",
+    "meetingReminderTitle": "회의 녹음 중",
+    "meetingReminderMessage": "참가자에게 이 회의를 녹음하고 있다고 알려 주세요.",
+    "meetingReminderStart": "녹음 시작",
+    "meetingReminderDontShow": "시작하고 다시 표시 안 함",
+    "meetingStartFailedTitle": "회의를 녹음할 수 없습니다"
   },
   "sidebar": {
     "general": "일반",
@@ -149,6 +157,10 @@
           "transcribe_with_post_process": {
             "name": "후처리 단축키",
             "description": "선택 사항: 항상 AI 후처리를 적용하는 전용 단축키입니다."
+          },
+          "toggle_meeting_recording": {
+            "name": "회의 녹음 단축키",
+            "description": "선택 사항: 회의 녹음을 시작하거나 중지하는 키보드 단축키입니다."
           }
         },
         "errors": {
@@ -727,6 +739,19 @@
     "dismiss": "닫기"
   },
   "meetings": {
-    "recoveredNotice": "예기치 않은 종료 후 회의 {{total}}개를 복구했습니다"
+    "recoveredNotice": "예기치 않은 종료 후 회의 {{total}}개를 복구했습니다",
+    "indicator": {
+      "stop": "중지",
+      "recording": "회의 녹음 중",
+      "microphone": "마이크",
+      "systemAudio": "시스템 오디오",
+      "warnings": {
+        "system_audio_unavailable": "시스템 오디오를 사용할 수 없음 — 마이크만 녹음됩니다",
+        "system_audio_silent": "한동안 시스템 오디오가 수신되지 않음 — 회의 앱의 출력을 확인하세요",
+        "output_muted": "사운드 출력이 음소거됨 — 시스템 오디오가 무음으로 녹음될 수 있습니다",
+        "device_changed": "오디오 장치가 변경됨 — 새 장치에서 녹음을 계속했습니다",
+        "mic_unavailable": "마이크를 사용할 수 없음 — 시스템 오디오만 녹음됩니다"
+      }
+    }
   }
 }

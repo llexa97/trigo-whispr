@@ -12,7 +12,15 @@
     "meetingTitleManual": "Зустріч — {{date}}",
     "quitMeetingTitle": "Триває зустріч",
     "quitMeetingMessage": "Триває запис зустрічі. Зупинити запис і вийти?",
-    "quitMeetingConfirm": "Зупинити й вийти"
+    "quitMeetingConfirm": "Зупинити й вийти",
+    "recordMeeting": "Записати зустріч",
+    "stopMeeting": "Зупинити запис ({{time}})",
+    "stoppingMeeting": "Зупинення запису…",
+    "meetingReminderTitle": "Триває запис зустрічі",
+    "meetingReminderMessage": "Повідомте учасників, що ви записуєте цю зустріч.",
+    "meetingReminderStart": "Почати запис",
+    "meetingReminderDontShow": "Почати й більше не показувати",
+    "meetingStartFailedTitle": "Не вдалося записати зустріч"
   },
   "sidebar": {
     "general": "Загальні",
@@ -149,6 +157,10 @@
           "transcribe_with_post_process": {
             "name": "Гаряча клавіша постобробки",
             "description": "Необов'язково: Спеціальна гаряча клавіша, яка завжди застосовує AI-постобробку до вашої транскрипції."
+          },
+          "toggle_meeting_recording": {
+            "name": "Комбінація клавіш для запису зустрічі",
+            "description": "Необов'язково: комбінація клавіш, щоб почати або зупинити запис зустрічі."
           }
         },
         "errors": {
@@ -727,6 +739,19 @@
     "dismiss": "Приховати"
   },
   "meetings": {
-    "recoveredNotice": "Відновлено зустрічей після неочікуваного завершення: {{total}}"
+    "recoveredNotice": "Відновлено зустрічей після неочікуваного завершення: {{total}}",
+    "indicator": {
+      "stop": "Зупинити",
+      "recording": "Триває запис зустрічі",
+      "microphone": "Мікрофон",
+      "systemAudio": "Системний звук",
+      "warnings": {
+        "system_audio_unavailable": "Системний звук недоступний — записується лише мікрофон",
+        "system_audio_silent": "Системний звук давно не надходить — перевірте вихід застосунку для зустрічей",
+        "output_muted": "Звуковий вихід вимкнено — системний звук може записатися як тиша",
+        "device_changed": "Аудіопристрій змінився — запис продовжився на новому",
+        "mic_unavailable": "Мікрофон недоступний — записується лише системний звук"
+      }
+    }
   }
 }

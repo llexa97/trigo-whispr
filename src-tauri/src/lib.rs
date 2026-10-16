@@ -402,6 +402,9 @@ fn initialize_core_logic(app_handle: &AppHandle) {
                 transcription_manager.request_unload();
                 log::info!("Model unloaded via tray.");
             }
+            "toggle_meeting" => {
+                crate::meeting::control::toggle_meeting(app, "tray");
+            }
             "cancel" => {
                 use crate::utils::cancel_current_operation;
 
@@ -457,6 +460,9 @@ fn initialize_core_logic(app_handle: &AppHandle) {
 
     // Create the recording overlay window (hidden by default)
     utils::create_recording_overlay(app_handle);
+
+    // Meeting pill (hidden) and tray sync with the meeting state.
+    meeting::control::init(app_handle);
 }
 
 #[tauri::command]
@@ -851,6 +857,8 @@ fn specta_builder() -> Builder<tauri::Wry> {
             commands::meeting::retry_meeting_transcription,
             commands::meeting::take_meeting_recovery_notice,
             commands::meeting::update_meeting_audio_retention,
+            commands::meeting::change_show_meeting_indicator_setting,
+            commands::meeting::change_meeting_consent_reminder_setting,
             helpers::clamshell::is_laptop,
         ])
         .events(collect_events![
@@ -975,6 +983,8 @@ pub fn run(cli_args: CliArgs) {
                 signal_handle::send_transcription_input(app, "transcribe", "CLI");
             } else if args.iter().any(|a| a == "--toggle-post-process") {
                 signal_handle::send_transcription_input(app, "transcribe_with_post_process", "CLI");
+            } else if args.iter().any(|a| a == "--toggle-meeting") {
+                crate::meeting::control::toggle_meeting(app, "CLI");
             } else if args.iter().any(|a| a == "--cancel") {
                 crate::utils::cancel_current_operation(app);
             } else {

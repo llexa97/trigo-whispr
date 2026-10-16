@@ -553,6 +553,23 @@ pub struct AppSettings {
     /// `overlay_position` (position `none` → style `None`).
     #[serde(default = "default_overlay_style")]
     pub overlay_style: OverlayStyle,
+    /// Floating pill (timer, levels, Stop) shown while a meeting records.
+    #[serde(default = "default_show_meeting_indicator")]
+    pub show_meeting_indicator: bool,
+    /// Where the user last dragged the meeting pill, in physical pixels.
+    /// `None` until it is moved: the pill then sits in its default corner.
+    #[serde(default)]
+    pub meeting_indicator_position: Option<WindowPosition>,
+    /// Remind the user to tell the participants before a meeting recording
+    /// starts. Turned off by the reminder's "don't show again".
+    #[serde(default = "default_meeting_consent_reminder")]
+    pub meeting_consent_reminder: bool,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Type)]
+pub struct WindowPosition {
+    pub x: i32,
+    pub y: i32,
 }
 
 fn default_model() -> String {
@@ -689,6 +706,14 @@ fn default_app_language() -> String {
 }
 
 fn default_show_tray_icon() -> bool {
+    true
+}
+
+fn default_show_meeting_indicator() -> bool {
+    true
+}
+
+fn default_meeting_consent_reminder() -> bool {
     true
 }
 
@@ -924,6 +949,21 @@ fn ensure_post_process_defaults(settings: &mut AppSettings) -> bool {
 
 pub const SETTINGS_STORE_PATH: &str = "settings_store.json";
 
+pub const TOGGLE_MEETING_BINDING: &str = "toggle_meeting_recording";
+
+/// Whether `binding` is registered as a global shortcut at all. "cancel" is
+/// registered only while recording, the post-processing shortcut only when
+/// the feature is on, and an unbound (empty) shortcut never.
+pub fn binding_is_registrable(id: &str, binding: &ShortcutBinding, settings: &AppSettings) -> bool {
+    if id == "cancel" {
+        return false;
+    }
+    if id == "transcribe_with_post_process" && !settings.post_process_enabled {
+        return false;
+    }
+    !binding.current_binding.trim().is_empty()
+}
+
 pub fn get_default_settings() -> AppSettings {
     #[cfg(target_os = "windows")]
     let default_shortcut = "ctrl+space";
@@ -973,6 +1013,18 @@ pub fn get_default_settings() -> AppSettings {
             description: "Cancels the current recording.".to_string(),
             default_binding: "escape".to_string(),
             current_binding: "escape".to_string(),
+        },
+    );
+    // Unbound by default: any default combo would risk clashing with the
+    // shortcuts of the meeting apps themselves.
+    bindings.insert(
+        TOGGLE_MEETING_BINDING.to_string(),
+        ShortcutBinding {
+            id: TOGGLE_MEETING_BINDING.to_string(),
+            name: "Record Meeting".to_string(),
+            description: "Starts or stops recording a meeting.".to_string(),
+            default_binding: String::new(),
+            current_binding: String::new(),
         },
     );
 
@@ -1041,6 +1093,9 @@ pub fn get_default_settings() -> AppSettings {
         vad_backend: VadBackend::default(),
         long_form_chunking: default_long_form_chunking(),
         overlay_style: default_overlay_style(),
+        show_meeting_indicator: default_show_meeting_indicator(),
+        meeting_indicator_position: None,
+        meeting_consent_reminder: default_meeting_consent_reminder(),
     }
 }
 

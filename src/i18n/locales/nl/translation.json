@@ -12,7 +12,15 @@
     "meetingTitleManual": "Vergadering — {{date}}",
     "quitMeetingTitle": "Vergadering bezig",
     "quitMeetingMessage": "Er wordt een vergadering opgenomen. Opname stoppen en afsluiten?",
-    "quitMeetingConfirm": "Stoppen en afsluiten"
+    "quitMeetingConfirm": "Stoppen en afsluiten",
+    "recordMeeting": "Vergadering opnemen",
+    "stopMeeting": "Opname stoppen ({{time}})",
+    "stoppingMeeting": "Opname wordt gestopt…",
+    "meetingReminderTitle": "Vergadering wordt opgenomen",
+    "meetingReminderMessage": "Laat de deelnemers weten dat je deze vergadering opneemt.",
+    "meetingReminderStart": "Opname starten",
+    "meetingReminderDontShow": "Starten, niet meer tonen",
+    "meetingStartFailedTitle": "De vergadering kon niet worden opgenomen"
   },
   "sidebar": {
     "general": "Algemeen",
@@ -149,6 +157,10 @@
           "transcribe_with_post_process": {
             "name": "Sneltoets voor naverwerking",
             "description": "Optioneel: Een specifieke sneltoets die altijd AI-naverwerking toepast op je transcriptie."
+          },
+          "toggle_meeting_recording": {
+            "name": "Sneltoets vergaderopname",
+            "description": "Optioneel: een sneltoets om de opname van een vergadering te starten of te stoppen."
           }
         },
         "errors": {
@@ -727,6 +739,19 @@
     "dismiss": "Sluiten"
   },
   "meetings": {
-    "recoveredNotice": "{{total}} vergadering(en) hersteld na een onverwachte afsluiting"
+    "recoveredNotice": "{{total}} vergadering(en) hersteld na een onverwachte afsluiting",
+    "indicator": {
+      "stop": "Stoppen",
+      "recording": "Vergadering wordt opgenomen",
+      "microphone": "Microfoon",
+      "systemAudio": "Systeemgeluid",
+      "warnings": {
+        "system_audio_unavailable": "Systeemgeluid niet beschikbaar — alleen je microfoon wordt opgenomen",
+        "system_audio_silent": "Al een tijdje geen systeemgeluid ontvangen — controleer de uitvoer van de vergaderapp",
+        "output_muted": "Je geluidsuitvoer is gedempt — systeemgeluid wordt mogelijk als stilte opgenomen",
+        "device_changed": "Een audioapparaat is gewijzigd — de opname ging verder op het nieuwe",
+        "mic_unavailable": "Microfoon niet beschikbaar — alleen systeemgeluid wordt opgenomen"
+      }
+    }
   }
 }

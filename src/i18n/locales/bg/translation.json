@@ -12,7 +12,15 @@
     "meetingTitleManual": "Среща — {{date}}",
     "quitMeetingTitle": "Тече среща",
     "quitMeetingMessage": "Записва се среща. Да се спре записът и да се излезе?",
-    "quitMeetingConfirm": "Спри и излез"
+    "quitMeetingConfirm": "Спри и излез",
+    "recordMeeting": "Запис на среща",
+    "stopMeeting": "Спиране на записа ({{time}})",
+    "stoppingMeeting": "Спиране на записа…",
+    "meetingReminderTitle": "Записва се среща",
+    "meetingReminderMessage": "Уведомете участниците, че записвате тази среща.",
+    "meetingReminderStart": "Започване на запис",
+    "meetingReminderDontShow": "Започване, без повторно показване",
+    "meetingStartFailedTitle": "Срещата не можа да бъде записана"
   },
   "sidebar": {
     "general": "Общи",
@@ -149,6 +157,10 @@
           "transcribe_with_post_process": {
             "name": "Бърз клавиш за постобработка",
             "description": "По избор: отделна комбинация, която винаги прилага ИИ постобработка върху транскрипцията."
+          },
+          "toggle_meeting_recording": {
+            "name": "Клавишна комбинация за запис на среща",
+            "description": "По избор: клавишна комбинация за започване или спиране на записа на среща."
           }
         },
         "errors": {
@@ -727,6 +739,19 @@
     "dismiss": "Отхвърляне"
   },
   "meetings": {
-    "recoveredNotice": "Възстановени срещи след неочаквано спиране: {{total}}"
+    "recoveredNotice": "Възстановени срещи след неочаквано спиране: {{total}}",
+    "indicator": {
+      "stop": "Спиране",
+      "recording": "Записва се среща",
+      "microphone": "Микрофон",
+      "systemAudio": "Системен звук",
+      "warnings": {
+        "system_audio_unavailable": "Системният звук не е наличен — записва се само микрофонът",
+        "system_audio_silent": "От известно време не се получава системен звук — проверете изхода на приложението за срещи",
+        "output_muted": "Звуковият изход е заглушен — системният звук може да се запише като тишина",
+        "device_changed": "Аудиоустройство се смени — записът продължи на новото",
+        "mic_unavailable": "Микрофонът не е наличен — записва се само системният звук"
+      }
+    }
   }
 }
