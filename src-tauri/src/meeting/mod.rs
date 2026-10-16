@@ -85,7 +85,7 @@ mod integration_tests {
             id: "fixture".into(),
             title: "Fixture".into(),
             started_at: 0,
-            duration_ms: segments.last().map_or(0, |s| s.end_ms),
+            duration_ms: segments.last().map_or(0, |s| s.end_ms.max(0) as u64),
             source_app: None,
         };
         println!("{}", render_markdown(&meeting, &segments));

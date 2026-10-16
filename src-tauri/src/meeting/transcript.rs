@@ -18,8 +18,9 @@ use crate::audio_toolkit::chunking::join_transcripts;
 /// segment.
 pub const MAX_PAUSE_MS: u64 = 2_000;
 
-pub const TRANSCRIPT_JSON: &str = "transcript.json";
-pub const TRANSCRIPT_MD: &str = "transcript.md";
+pub use crate::managers::meeting::folder::{
+    TRANSCRIPT_JSON_FILE as TRANSCRIPT_JSON, TRANSCRIPT_MD_FILE as TRANSCRIPT_MD,
+};
 
 /// One word, in milliseconds from the start of its track.
 #[derive(Debug, Clone, PartialEq)]
@@ -105,45 +106,15 @@ impl TrackTranscript {
     }
 }
 
-/// Who a segment is attributed to. V1 attributes by track.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Type)]
-#[serde(rename_all = "snake_case")]
-pub enum Speaker {
-    /// The mic track, with a system track to tell the user apart.
-    Me,
-    /// The system track.
-    Others,
-    /// The mic track of a meeting recorded without system audio: it holds
-    /// everyone in the room, so it is not labelled as the user.
-    MicOnly,
-}
+pub use crate::managers::meeting::store::{MeetingSegment, Speaker};
 
-impl Speaker {
-    pub fn as_str(self) -> &'static str {
-        match self {
-            Speaker::Me => "me",
-            Speaker::Others => "others",
-            Speaker::MicOnly => "mic_only",
-        }
+/// A speaker's label in the Markdown export.
+pub fn speaker_label(speaker: Speaker) -> &'static str {
+    match speaker {
+        Speaker::Me => "Moi",
+        Speaker::Others => "Autres",
+        Speaker::MicOnly => "Micro",
     }
-
-    /// The label in the Markdown export.
-    pub fn label(self) -> &'static str {
-        match self {
-            Speaker::Me => "Moi",
-            Speaker::Others => "Autres",
-            Speaker::MicOnly => "Micro",
-        }
-    }
-}
-
-/// One merged segment of the meeting, in milliseconds from its start.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Type)]
-pub struct MeetingSegment {
-    pub speaker: Speaker,
-    pub start_ms: u64,
-    pub end_ms: u64,
-    pub text: String,
 }
 
 /// Merges the tracks into one chronological transcript. The mic's echo of
@@ -212,37 +183,56 @@ fn track_as(speaker: Speaker, track: &TrackTranscript) -> Vec<Piece> {
 /// Consecutive pieces of one speaker, in time order, joined into segments; a
 /// change of speaker or a pause over [`MAX_PAUSE_MS`] starts a new one.
 fn group(mut pieces: Vec<Piece>) -> Vec<MeetingSegment> {
+    struct Group {
+        speaker: Speaker,
+        start_ms: u64,
+        end_ms: u64,
+        texts: Vec<String>,
+    }
     // Stable, so pieces starting together keep their track order.
     pieces.sort_by_key(|p| (p.start_ms, p.end_ms));
-    let mut segments: Vec<MeetingSegment> = Vec::new();
-    let mut texts: Vec<String> = Vec::new();
+    let mut groups: Vec<Group> = Vec::new();
     for piece in pieces {
-        let continues = segments.last().is_some_and(|last| {
-            last.speaker == piece.speaker
-                && piece.start_ms.saturating_sub(last.end_ms) <= MAX_PAUSE_MS
-        });
-        if continues {
-            let last = segments.last_mut().expect("checked above");
-            last.end_ms = last.end_ms.max(piece.end_ms);
-        } else {
-            if let Some(last) = segments.last_mut() {
-                last.text = join_transcripts(&texts);
-                texts.clear();
+        match groups.last_mut() {
+            Some(last)
+                if last.speaker == piece.speaker
+                    && piece.start_ms.saturating_sub(last.end_ms) <= MAX_PAUSE_MS =>
+            {
+                last.end_ms = last.end_ms.max(piece.end_ms);
+                last.texts.push(piece.text);
             }
-            segments.push(MeetingSegment {
+            _ => groups.push(Group {
                 speaker: piece.speaker,
                 start_ms: piece.start_ms,
                 end_ms: piece.end_ms,
-                text: String::new(),
-            });
+                texts: vec![piece.text],
+            }),
         }
-        texts.push(piece.text);
     }
-    if let Some(last) = segments.last_mut() {
-        last.text = join_transcripts(&texts);
-    }
-    segments.retain(|s| !s.text.is_empty());
+    let segments = groups
+        .into_iter()
+        .map(|g| MeetingSegment {
+            idx: 0,
+            speaker: g.speaker,
+            start_ms: g.start_ms as i64,
+            end_ms: g.end_ms as i64,
+            text: join_transcripts(&g.texts),
+        })
+        .collect();
+    renumber(segments)
+}
+
+/// Drops empty segments and numbers the rest in order.
+pub fn renumber(segments: Vec<MeetingSegment>) -> Vec<MeetingSegment> {
     segments
+        .into_iter()
+        .filter(|s| !s.text.is_empty())
+        .enumerate()
+        .map(|(idx, s)| MeetingSegment {
+            idx: idx as i64,
+            ..s
+        })
+        .collect()
 }
 
 /// What the transcript files say about the meeting itself.
@@ -256,7 +246,9 @@ pub struct MeetingInfo {
     pub source_app: Option<String>,
 }
 
-/// `transcript.json`: the segments and what produced them.
+/// `transcript.json`: the segments and what produced them. A superset of
+/// what `managers::meeting::folder::read_transcript` re-imports when the
+/// database is rebuilt.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct TranscriptFile {
     pub version: u32,
@@ -310,8 +302,8 @@ pub fn render_markdown(meeting: &MeetingInfo, segments: &[MeetingSegment]) -> St
     for segment in segments {
         md.push_str(&format!(
             "\n**[{}] {} :** {}\n",
-            format_timestamp(segment.start_ms),
-            segment.speaker.label(),
+            format_timestamp(segment.start_ms.max(0) as u64),
+            speaker_label(segment.speaker),
             segment.text
         ));
     }
@@ -384,7 +376,7 @@ mod tests {
         }
     }
 
-    fn summary(segments: &[MeetingSegment]) -> Vec<(Speaker, u64, &str)> {
+    fn summary(segments: &[MeetingSegment]) -> Vec<(Speaker, i64, &str)> {
         segments
             .iter()
             .map(|s| (s.speaker, s.start_ms, s.text.as_str()))
@@ -575,12 +567,14 @@ mod tests {
         };
         let segments = vec![
             MeetingSegment {
+                idx: 0,
                 speaker: Speaker::Me,
                 start_ms: 72_000,
                 end_ms: 75_000,
                 text: "Bonjour.".into(),
             },
             MeetingSegment {
+                idx: 1,
                 speaker: Speaker::Others,
                 start_ms: 80_500,
                 end_ms: 82_000,
@@ -610,6 +604,7 @@ mod tests {
             model_id: "whisper-small".into(),
             language: Some("fr".into()),
             segments: vec![MeetingSegment {
+                idx: 0,
                 speaker: Speaker::MicOnly,
                 start_ms: 0,
                 end_ms: 1_000,
@@ -623,6 +618,13 @@ mod tests {
         assert_eq!(read, file);
         let md = fs::read_to_string(dir.path().join(TRANSCRIPT_MD)).unwrap();
         assert!(md.contains("**[00:00:00] Micro :** Bonjour."));
+
+        // A rebuilt database re-imports it.
+        let reimported = crate::managers::meeting::folder::read_transcript(dir.path())
+            .unwrap()
+            .unwrap();
+        assert_eq!(reimported.model_id.as_deref(), Some("whisper-small"));
+        assert_eq!(reimported.segments, file.segments);
     }
 
     #[test]

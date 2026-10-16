@@ -6,9 +6,6 @@
 //! Where meetings and their status are stored is the `MeetingManager`'s
 //! business (#4); it implements [`MeetingStore`] and feeds the queue.
 
-// Nothing feeds the queue until the MeetingManager (#4) records meetings.
-#![allow(dead_code)]
-
 use std::collections::VecDeque;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
@@ -31,17 +28,15 @@ use super::{
 use crate::audio_toolkit::chunking::Chunker;
 use crate::engine_supervisor::{CancelMark, EngineError};
 use crate::managers::audio::{create_detector, AudioRecordingManager};
+use crate::managers::meeting::store::MeetingStatus;
+use crate::meeting::capture::{MIC_FILE_NAME, SYSTEM_FILE_NAME};
 use crate::meeting::crosstalk::CrosstalkOptions;
 use crate::meeting::track::{decode_track, track_samples, SpeechGate, TrackHooks};
 use crate::meeting::transcript::{
-    merge_tracks, write_transcript_files, MeetingInfo, MeetingSegment, TrackTranscript,
+    merge_tracks, renumber, write_transcript_files, MeetingInfo, MeetingSegment, TrackTranscript,
     TranscriptFile,
 };
 use crate::settings::{get_settings, AppSettings};
-
-/// The tracks in a meeting's folder.
-pub const MIC_TRACK: &str = "mic.wav";
-pub const SYSTEM_TRACK: &str = "system.wav";
 
 /// How often a meeting waiting on a dictation checks again.
 const DICTATION_POLL: Duration = Duration::from_millis(50);
@@ -49,30 +44,22 @@ const DICTATION_POLL: Duration = Duration::from_millis(50);
 /// chunk included. Such a chunk is decoded again, up to this many times.
 const MAX_CHUNK_ATTEMPTS: usize = 3;
 
-/// Where a meeting's transcription stands.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Type)]
-#[serde(rename_all = "snake_case")]
-pub enum MeetingTranscriptionStatus {
-    /// Waiting in the queue, or cancelled: it can be (re)started.
-    Pending,
-    Transcribing,
-    Done,
-    Failed,
-}
-
 /// A finished meeting to transcribe: what the transcript says about it, and
-/// the folder holding its tracks ([`MIC_TRACK`], [`SYSTEM_TRACK`] if system
-/// audio was captured) where the transcript files are written.
+/// the folder holding its tracks ([`MIC_FILE_NAME`], [`SYSTEM_FILE_NAME`] if
+/// system audio was captured) where the transcript files are written.
 #[derive(Clone, Debug)]
 pub struct MeetingJob {
     pub meeting: MeetingInfo,
     pub dir: PathBuf,
 }
 
-/// The meetings' storage, as the transcription queue updates it.
+/// The meetings' storage, as the transcription queue reads and updates it.
 pub trait MeetingStore: Send + Sync {
-    /// Records a status change; `error` is set for [`MeetingTranscriptionStatus::Failed`].
-    fn set_status(&self, meeting_id: &str, status: MeetingTranscriptionStatus, error: Option<&str>);
+    /// The meeting to transcribe, as it is now (its title may have changed
+    /// while it waited).
+    fn job(&self, meeting_id: &str) -> Result<MeetingJob>;
+    /// Records a status change; `error` is set for [`MeetingStatus::Failed`].
+    fn set_status(&self, meeting_id: &str, status: MeetingStatus, error: Option<&str>);
     /// Saves a finished transcript, before its status turns `Done`.
     fn save_transcript(&self, meeting_id: &str, transcript: &TranscriptFile) -> Result<()>;
 }
@@ -162,8 +149,8 @@ impl TranscriptionManager {
         cancelled: &AtomicBool,
         on_progress: &mut dyn FnMut(u64, u64),
     ) -> Result<TranscriptFile> {
-        let mic = Some(job.dir.join(MIC_TRACK)).filter(|p| p.exists());
-        let system = Some(job.dir.join(SYSTEM_TRACK)).filter(|p| p.exists());
+        let mic = Some(job.dir.join(MIC_FILE_NAME)).filter(|p| p.exists());
+        let system = Some(job.dir.join(SYSTEM_FILE_NAME)).filter(|p| p.exists());
         if mic.is_none() && system.is_none() {
             bail!("No audio track in {}", job.dir.display());
         }
@@ -229,9 +216,9 @@ fn post_process_segments(
     detected_language: Option<String>,
 ) -> Vec<MeetingSegment> {
     let output_language = setup.output_language(settings, detected_language);
-    segments
+    let segments = segments
         .into_iter()
-        .filter_map(|mut segment| {
+        .map(|mut segment| {
             segment.text = post_process_transcription_text(
                 segment.text,
                 settings,
@@ -239,9 +226,10 @@ fn post_process_segments(
                 &output_language,
                 &setup.languages,
             );
-            (!segment.text.is_empty()).then_some(segment)
+            segment
         })
-        .collect()
+        .collect();
+    renumber(segments)
 }
 
 /// One meeting's decode on the engine.
@@ -321,6 +309,7 @@ impl TrackHooks for MeetingRun<'_> {
 }
 
 /// The queue of meetings to transcribe, and its worker thread.
+#[derive(Clone)]
 pub struct MeetingTranscriber {
     shared: Arc<Shared>,
 }
@@ -334,7 +323,8 @@ struct Shared {
 
 #[derive(Default)]
 struct Queue {
-    pending: VecDeque<MeetingJob>,
+    /// Ids of the meetings waiting, oldest first.
+    pending: VecDeque<String>,
     /// The meeting being transcribed, and its cancel flag.
     current: Option<(String, Arc<AtomicBool>)>,
 }
@@ -356,34 +346,27 @@ impl MeetingTranscriber {
     }
 
     /// Queues a meeting, unless it is already queued or being transcribed.
-    pub fn enqueue(&self, job: MeetingJob) {
+    /// Its status is the store's: `pending` or `recovered` until it starts.
+    pub fn enqueue(&self, meeting_id: &str) {
         let mut queue = self.shared.lock();
-        let id = job.meeting.id.as_str();
-        let queued = queue.pending.iter().any(|j| j.meeting.id == id)
+        let queued = queue.pending.iter().any(|id| id == meeting_id)
             || queue
                 .current
                 .as_ref()
-                .is_some_and(|(current, _)| current == id);
+                .is_some_and(|(current, _)| current == meeting_id);
         if queued {
             return;
         }
-        self.shared
-            .store
-            .set_status(id, MeetingTranscriptionStatus::Pending, None);
-        queue.pending.push_back(job);
+        queue.pending.push_back(meeting_id.to_string());
         self.shared.wake.notify_one();
     }
 
-    /// Stops a meeting's transcription, or takes it out of the queue. It goes
-    /// back to `Pending`, to be retried. Returns whether it was queued or
-    /// running.
+    /// Stops a meeting's transcription, or takes it out of the queue; either
+    /// way it is left `pending`, to be retried. Returns whether it was queued
+    /// or running.
     pub fn cancel(&self, meeting_id: &str) -> bool {
         let mut queue = self.shared.lock();
-        if let Some(at) = queue
-            .pending
-            .iter()
-            .position(|j| j.meeting.id == meeting_id)
-        {
+        if let Some(at) = queue.pending.iter().position(|id| id == meeting_id) {
             queue.pending.remove(at);
             return true;
         }
@@ -414,19 +397,22 @@ impl Shared {
 
     fn run(&self) {
         loop {
-            let (job, cancelled) = {
+            let (id, cancelled) = {
                 let mut queue = self.lock();
-                let job = loop {
+                let id = loop {
                     match queue.pending.pop_front() {
-                        Some(job) => break job,
+                        Some(id) => break id,
                         None => queue = self.wake.wait(queue).unwrap_or_else(|e| e.into_inner()),
                     }
                 };
                 let cancelled = Arc::new(AtomicBool::new(false));
-                queue.current = Some((job.meeting.id.clone(), Arc::clone(&cancelled)));
-                (job, cancelled)
+                queue.current = Some((id.clone(), Arc::clone(&cancelled)));
+                (id, cancelled)
             };
-            self.transcribe(&job, &cancelled);
+            match self.store.job(&id) {
+                Ok(job) => self.transcribe(&job, &cancelled),
+                Err(e) => warn!("Meeting '{id}' can no longer be transcribed: {e:#}"),
+            }
             self.lock().current = None;
         }
     }
@@ -437,8 +423,7 @@ impl Shared {
             error!("No transcription manager for meeting '{id}'");
             return;
         };
-        self.store
-            .set_status(id, MeetingTranscriptionStatus::Transcribing, None);
+        self.store.set_status(id, MeetingStatus::Transcribing, None);
         self.progress(id, 0.0, None);
 
         let started = Instant::now();
@@ -476,21 +461,16 @@ impl Shared {
                     file.segments.len()
                 );
                 self.progress(id, 1.0, Some(0));
-                self.store
-                    .set_status(id, MeetingTranscriptionStatus::Done, None);
+                self.store.set_status(id, MeetingStatus::Done, None);
             }
             Err(_) if cancelled.load(Ordering::Acquire) => {
                 info!("Meeting '{id}' transcription cancelled");
-                self.store
-                    .set_status(id, MeetingTranscriptionStatus::Pending, None);
+                self.store.set_status(id, MeetingStatus::Pending, None);
             }
             Err(e) => {
                 warn!("Meeting '{id}' transcription failed: {e:#}");
-                self.store.set_status(
-                    id,
-                    MeetingTranscriptionStatus::Failed,
-                    Some(&format!("{e:#}")),
-                );
+                self.store
+                    .set_status(id, MeetingStatus::Failed, Some(&format!("{e:#}")));
             }
         }
     }
