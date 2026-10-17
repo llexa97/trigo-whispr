@@ -75,6 +75,15 @@ pub fn play_feedback_sound_blocking(app: &AppHandle, sound_type: SoundType) {
     }
 }
 
+/// Short sound announcing a detected meeting (`meeting_prompt_sound`, checked
+/// by the caller). Independent of the dictation feedback toggle.
+pub fn play_meeting_prompt_sound(app: &AppHandle) {
+    let settings = settings::get_settings(app);
+    if let Some(path) = resolve_sound_path(app, &settings, SoundType::Start) {
+        play_sound_async(app, path);
+    }
+}
+
 pub fn play_test_sound(app: &AppHandle, sound_type: SoundType) {
     let settings = settings::get_settings(app);
     if let Some(path) = resolve_sound_path(app, &settings, sound_type) {

@@ -658,6 +658,69 @@
         "label": "Mostra novità",
         "description": "Mostra le note di rilascio dopo gli aggiornamenti di Trigo Whispr"
       }
+    },
+    "meetings": {
+      "open": "Settings",
+      "back": "Meetings",
+      "detection": {
+        "title": "Automatic detection",
+        "description": "Offer to record when a meeting app starts using the microphone.",
+        "unsupported": "Automatic detection is not available on this platform yet. You can still record meetings manually."
+      },
+      "meeting_detection_enabled": {
+        "label": "Detect meetings",
+        "description": "Show a prompt when a known meeting app has been using the microphone for a few seconds."
+      },
+      "meeting_auto_start": {
+        "label": "Start recording without asking",
+        "description": "Record detected meetings right away and show a short confirmation instead of a prompt."
+      },
+      "meeting_auto_stop": {
+        "label": "When the meeting ends",
+        "description": "What to do once the app a recording was detected from has released the microphone for 20 seconds. Recordings started manually are never stopped automatically.",
+        "options": {
+          "ask": "Ask before stopping",
+          "auto": "Stop after a 10 s countdown",
+          "never": "Keep recording"
+        }
+      },
+      "meeting_prompt_sound": {
+        "label": "Prompt sound",
+        "description": "Play a short sound when a meeting is detected."
+      },
+      "apps": {
+        "title": "Detected apps",
+        "description": "Apps that can trigger the meeting prompt.",
+        "native": "Offer to record when {{app}} uses the microphone.",
+        "browser": "Off by default: a browser call cannot be told apart from any other use of the microphone."
+      },
+      "recording": {
+        "title": "Recording"
+      },
+      "meeting_capture_system_audio": {
+        "label": "Record system audio",
+        "description": "Record what the other participants say (the sound your computer plays) next to your microphone."
+      },
+      "show_meeting_indicator": {
+        "label": "Show the recording pill",
+        "description": "Floating pill with the timer, levels and a Stop button while a meeting is recorded."
+      },
+      "meeting_consent_reminder": {
+        "label": "Consent reminder",
+        "description": "Remind you to tell the participants before a recording starts."
+      },
+      "meeting_audio_retention": {
+        "label": "Keep meeting audio",
+        "description": "How long the audio files are kept. Transcripts are always kept.",
+        "options": {
+          "forever": "Forever",
+          "days_7": "7 days",
+          "days_30": "30 days",
+          "days_90": "90 days",
+          "delete_after_transcription": "Delete after transcription"
+        }
+      },
+      "privacy": "Everything stays on this computer: audio and transcripts are never sent anywhere. Recording people may require their consent: always let the participants know."
     }
   },
   "footer": {
@@ -752,7 +815,9 @@
         "output_muted": "L'uscita audio è disattivata: l'audio di sistema potrebbe essere registrato come silenzio",
         "device_changed": "Un dispositivo audio è cambiato: la registrazione è proseguita su quello nuovo",
         "mic_unavailable": "Microfono non disponibile: viene registrato solo l'audio di sistema"
-      }
+      },
+      "autoStop": "Stopping in {{seconds}} s",
+      "cancelAutoStop": "Cancel"
     },
     "title": "Meetings",
     "loading": "Loading meetings…",
@@ -856,6 +921,30 @@
       "retry": "Could not retry the transcription",
       "cancelTranscription": "Could not cancel the transcription",
       "delete": "Could not delete the meeting"
+    },
+    "prompt": {
+      "close": "Close",
+      "detected": {
+        "title": "{{app}} meeting detected",
+        "subtitle": "Record and transcribe it locally?",
+        "record": "Record",
+        "ignore": "Ignore"
+      },
+      "stop": {
+        "title": "{{app}} call ended?",
+        "subtitle": "Stop the meeting recording?",
+        "stop": "Stop",
+        "keep": "Keep recording"
+      },
+      "autoStop": {
+        "title": "Recording stops in {{seconds}} s",
+        "subtitle": "{{app}} released the microphone",
+        "cancel": "Keep recording"
+      },
+      "started": {
+        "title": "Recording the {{app}} meeting",
+        "subtitle": "Stop it from the pill or the tray"
+      }
     }
   }
 }

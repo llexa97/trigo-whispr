@@ -2,7 +2,8 @@
 //! and the system audio as two aligned tracks on disk; storage and lifecycle
 //! live in `managers::meeting`, which builds on it. `control` and `indicator`
 //! are the manual controls (tray, shortcut, CLI) and the floating recording
-//! pill.
+//! pill; `detection` offers to record when a meeting app takes the
+//! microphone.
 //!
 //! Transcription is engine-independent here: each track is decoded on its
 //! own ([`track`]), the mic's echo of the system track is removed
@@ -13,6 +14,7 @@
 pub mod capture;
 pub mod control;
 pub mod crosstalk;
+pub mod detection;
 pub mod indicator;
 pub mod power;
 pub mod track;

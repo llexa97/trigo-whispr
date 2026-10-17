@@ -195,7 +195,7 @@ fn on_moved(app: &AppHandle, position: PhysicalPosition<i32>) {
 /// `set_always_on_top` can be overridden on Windows; re-assert the Z-order
 /// without activating the window (same as the dictation overlay).
 #[cfg(target_os = "windows")]
-fn force_topmost(window: &WebviewWindow) {
+pub(crate) fn force_topmost(window: &WebviewWindow) {
     use windows::Win32::UI::WindowsAndMessaging::{
         SetWindowPos, HWND_TOPMOST, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SWP_SHOWWINDOW,
     };

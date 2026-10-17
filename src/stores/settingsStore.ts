@@ -9,6 +9,8 @@ import type {
   TranscribeAcceleratorSetting,
   ShortcutActivation,
   VadBackend,
+  MeetingAudioRetention,
+  MeetingAutoStop,
 } from "@/bindings";
 import { commands } from "@/bindings";
 import { toast } from "sonner";
@@ -197,6 +199,26 @@ const settingUpdaters: {
     commands.changeShowMeetingIndicatorSetting(value as boolean),
   meeting_consent_reminder: (value) =>
     commands.changeMeetingConsentReminderSetting(value as boolean),
+  meeting_audio_retention: async (value) => {
+    const result = await commands.updateMeetingAudioRetention(
+      value as MeetingAudioRetention,
+    );
+    if (result.status === "error") throw new Error(result.error);
+  },
+  meeting_detection_enabled: (value) =>
+    commands.changeMeetingDetectionEnabledSetting(value as boolean),
+  meeting_detection_apps: (value) =>
+    commands.changeMeetingDetectionAppsSetting(
+      value as Partial<{ [key in string]: boolean }>,
+    ),
+  meeting_auto_start: (value) =>
+    commands.changeMeetingAutoStartSetting(value as boolean),
+  meeting_auto_stop: (value) =>
+    commands.changeMeetingAutoStopSetting(value as MeetingAutoStop),
+  meeting_capture_system_audio: (value) =>
+    commands.changeMeetingCaptureSystemAudioSetting(value as boolean),
+  meeting_prompt_sound: (value) =>
+    commands.changeMeetingPromptSoundSetting(value as boolean),
   transcribe_accelerator: (value) =>
     commands.changeTranscribeAcceleratorSetting(
       value as TranscribeAcceleratorSetting,

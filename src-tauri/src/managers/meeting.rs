@@ -110,6 +110,7 @@ pub struct MeetingAudioPaths {
 
 struct ActiveMeeting {
     id: MeetingId,
+    source: MeetingSource,
     folder: PathBuf,
     started_at: i64,
     session: Box<dyn CaptureSession>,
@@ -147,6 +148,32 @@ fn captures_own_sounds(mode: SystemCaptureMode) -> bool {
 
 fn now_ms() -> i64 {
     Utc::now().timestamp_millis()
+}
+
+/// Moves the recording to `Stopping` and hands it over. With `expected`,
+/// only if it is that meeting; anything else is left untouched.
+fn take_recording(state: &mut State, expected: Option<&str>) -> Result<Box<ActiveMeeting>> {
+    match std::mem::replace(state, State::Idle) {
+        State::Recording(active) if expected.is_none_or(|id| id == active.id) => {
+            *state = State::Stopping {
+                id: active.id.clone(),
+                started_at: active.started_at,
+            };
+            Ok(active)
+        }
+        State::Recording(active) => {
+            let current = active.id.clone();
+            *state = State::Recording(active);
+            bail!(
+                "Meeting {} is no longer being recorded (now {current})",
+                expected.unwrap_or_default()
+            )
+        }
+        other => {
+            *state = other;
+            bail!("No meeting is being recorded")
+        }
+    }
 }
 
 impl MeetingManager {
@@ -225,6 +252,15 @@ impl MeetingManager {
         self.suppress_feedback.load(Ordering::SeqCst)
     }
 
+    /// The meeting being recorded and what started it; `None` when idle or
+    /// stopping.
+    pub fn recording_source(&self) -> Option<(MeetingId, MeetingSource)> {
+        match &*self.state.lock().unwrap() {
+            State::Recording(active) => Some((active.id.clone(), active.source.clone())),
+            _ => None,
+        }
+    }
+
     pub fn state(&self) -> MeetingStateChanged {
         match &*self.state.lock().unwrap() {
             State::Idle => MeetingStateChanged::idle(),
@@ -300,10 +336,10 @@ impl MeetingManager {
             bail!("A meeting is already being recorded");
         }
 
-        let (kind, source_app) = match source {
+        let (kind, source_app) = match &source {
             MeetingSource::Manual => (MeetingSourceKind::Manual, None),
             MeetingSource::Detected { app_name, .. } => {
-                (MeetingSourceKind::Detected, Some(app_name))
+                (MeetingSourceKind::Detected, Some(app_name.clone()))
             }
         };
         let started_at = now_ms();
@@ -313,7 +349,8 @@ impl MeetingManager {
         let folder_path = self.meetings_dir.join(&folder_name);
         fs::create_dir_all(&folder_path)?;
 
-        let capture_system = capture::system_capture_supported();
+        let capture_system = capture::system_capture_supported()
+            && get_settings(&self.app_handle).meeting_capture_system_audio;
         let mut meeting = Meeting {
             id: uuid::Uuid::new_v4().to_string(),
             title,
@@ -380,6 +417,7 @@ impl MeetingManager {
         let id = meeting.id.clone();
         *state = State::Recording(Box::new(ActiveMeeting {
             id: id.clone(),
+            source,
             folder: folder_path,
             started_at,
             session,
@@ -417,21 +455,8 @@ impl MeetingManager {
         }
     }
 
-    fn take_active(&self) -> Result<Box<ActiveMeeting>> {
-        let mut state = self.state.lock().unwrap();
-        match std::mem::replace(&mut *state, State::Idle) {
-            State::Recording(active) => {
-                *state = State::Stopping {
-                    id: active.id.clone(),
-                    started_at: active.started_at,
-                };
-                Ok(active)
-            }
-            other => {
-                *state = other;
-                bail!("No meeting is being recorded")
-            }
-        }
+    fn take_active(&self, expected: Option<&str>) -> Result<Box<ActiveMeeting>> {
+        take_recording(&mut self.state.lock().unwrap(), expected)
     }
 
     fn end_active(&self) {
@@ -444,7 +469,18 @@ impl MeetingManager {
     /// Stops the capture, finalizes the files and queues the meeting for
     /// transcription. Blocking.
     pub fn stop(&self) -> Result<MeetingId> {
-        let active = self.take_active()?;
+        self.stop_matching(None)
+    }
+
+    /// Like [`stop`](Self::stop), but only if meeting `id` is the one being
+    /// recorded: checked and taken under one lock, so a stale prompt or
+    /// countdown can never stop a meeting started since.
+    pub fn stop_meeting(&self, id: &str) -> Result<MeetingId> {
+        self.stop_matching(Some(id))
+    }
+
+    fn stop_matching(&self, expected: Option<&str>) -> Result<MeetingId> {
+        let active = self.take_active(expected)?;
         self.emit_state();
         let ActiveMeeting {
             id,
@@ -521,7 +557,7 @@ impl MeetingManager {
     /// Stops the recording and deletes its files and row. The UI asks for
     /// confirmation first.
     pub fn cancel(&self) -> Result<()> {
-        let active = self.take_active()?;
+        let active = self.take_active(None)?;
         self.emit_state();
         let ActiveMeeting {
             id,
@@ -784,5 +820,72 @@ fn meeting_info(m: Meeting) -> MeetingInfo {
         started_at: m.started_at,
         duration_ms: m.duration_ms.unwrap_or(0).max(0) as u64,
         source_app: m.source_app,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::meeting::capture::CaptureOutput;
+
+    struct FakeSession;
+
+    impl CaptureSession for FakeSession {
+        fn stop(self: Box<Self>) -> std::result::Result<CaptureOutput, CaptureError> {
+            Err(CaptureError::Unsupported)
+        }
+        fn elapsed_ms(&self) -> u64 {
+            0
+        }
+        fn warnings(&self) -> Vec<CaptureWarning> {
+            Vec::new()
+        }
+        fn levels(&self) -> (f32, f32) {
+            (0.0, 0.0)
+        }
+        fn system_mode(&self) -> Option<SystemCaptureMode> {
+            None
+        }
+    }
+
+    fn recording(id: &str) -> State {
+        let meeting = store::tests::sample(id, 0, MeetingStatus::Recording);
+        State::Recording(Box::new(ActiveMeeting {
+            id: id.to_string(),
+            source: MeetingSource::Manual,
+            folder: PathBuf::new(),
+            started_at: 0,
+            session: Box::new(FakeSession),
+            manifest: Manifest::for_meeting(&meeting, false),
+            _sleep: SleepGuard::acquire("test"),
+        }))
+    }
+
+    fn recording_id(state: &State) -> Option<&str> {
+        match state {
+            State::Recording(active) => Some(&active.id),
+            _ => None,
+        }
+    }
+
+    #[test]
+    fn a_stale_stop_leaves_the_newer_meeting_recording() {
+        // A stop offered for meeting A, answered once B is recording.
+        let mut state = recording("b");
+        assert!(take_recording(&mut state, Some("a")).is_err());
+        assert_eq!(recording_id(&state), Some("b"));
+
+        let taken = take_recording(&mut state, Some("b")).unwrap();
+        assert_eq!(taken.id, "b");
+        assert!(matches!(state, State::Stopping { ref id, .. } if id == "b"));
+    }
+
+    #[test]
+    fn an_unconditional_stop_takes_any_recording() {
+        let mut state = recording("a");
+        assert_eq!(take_recording(&mut state, None).unwrap().id, "a");
+        let mut idle = State::Idle;
+        assert!(take_recording(&mut idle, None).is_err());
+        assert!(matches!(idle, State::Idle));
     }
 }

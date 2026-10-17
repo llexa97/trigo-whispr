@@ -1,12 +1,13 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Search, Users } from "lucide-react";
+import { ArrowLeft, Search, Settings, Users } from "lucide-react";
 import { toast } from "sonner";
 import { useMeetingsStore } from "@/stores/meetingsStore";
 import { Button } from "../ui/Button";
 import { MeetingDetail } from "./MeetingDetail";
 import { MeetingList } from "./MeetingList";
 import { MeetingRecorder } from "./MeetingRecorder";
+import { MeetingsSettings } from "../settings/meetings/MeetingsSettings";
 
 const EmptyState: React.FC = () => {
   const { t } = useTranslation();
@@ -36,7 +37,8 @@ const EmptyState: React.FC = () => {
   );
 };
 
-/** « Meetings » section: recorder, searchable list and meeting detail. */
+/** « Meetings » section: recorder, searchable list, meeting detail and the
+ * meetings settings. */
 export const MeetingsSection: React.FC = () => {
   const { t } = useTranslation();
   const initialize = useMeetingsStore((s) => s.initialize);
@@ -46,6 +48,7 @@ export const MeetingsSection: React.FC = () => {
   const count = useMeetingsStore((s) => s.meetings.length);
   const selectedId = useMeetingsStore((s) => s.selectedId);
   const select = useMeetingsStore((s) => s.select);
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     initialize();
@@ -74,11 +77,31 @@ export const MeetingsSection: React.FC = () => {
 
   return (
     <div className="max-w-3xl w-full mx-auto space-y-6">
-      <div className="px-4">
-        <MeetingRecorder />
+      <div className="px-4 flex items-start gap-3">
+        <div className="flex-1 min-w-0">
+          <MeetingRecorder />
+        </div>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => setShowSettings((shown) => !shown)}
+          className="flex items-center gap-1.5 shrink-0"
+          aria-pressed={showSettings}
+        >
+          {showSettings ? (
+            <ArrowLeft className="w-4 h-4" aria-hidden="true" />
+          ) : (
+            <Settings className="w-4 h-4" aria-hidden="true" />
+          )}
+          {showSettings
+            ? t("settings.meetings.back")
+            : t("settings.meetings.open")}
+        </Button>
       </div>
 
-      {selectedId ? (
+      {showSettings ? (
+        <MeetingsSettings />
+      ) : selectedId ? (
         <div className="px-4">
           <MeetingDetail id={selectedId} onBack={() => select(null)} />
         </div>

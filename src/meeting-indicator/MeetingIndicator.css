@@ -118,3 +118,27 @@ body {
   border-radius: 2px;
   background: var(--mi-red);
 }
+
+.mi-countdown {
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mi-cancel {
+  flex: none;
+  padding: 3px 8px;
+  border: 1px solid var(--mi-border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--color-mid-gray) 12%, transparent);
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mi-cancel:hover {
+  background: color-mix(in srgb, var(--color-mid-gray) 22%, transparent);
+}
