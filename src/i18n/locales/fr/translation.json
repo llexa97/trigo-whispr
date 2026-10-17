@@ -28,6 +28,7 @@
     "advanced": "Avancé",
     "postProcessing": "Post-traitement",
     "history": "Historique",
+    "meetings": "Réunions",
     "debug": "Débogage",
     "about": "À propos"
   },
@@ -752,6 +753,109 @@
         "device_changed": "Un périphérique audio a changé — l'enregistrement a continué sur le nouveau",
         "mic_unavailable": "Micro indisponible — seul le son du système est enregistré"
       }
+    },
+    "title": "Réunions",
+    "loading": "Chargement des réunions…",
+    "empty": {
+      "title": "Aucune réunion pour l'instant",
+      "description": "Enregistrez une réunion pour obtenir une transcription locale et privée de ce que vous et les autres participants avez dit."
+    },
+    "search": {
+      "placeholder": "Rechercher une réunion",
+      "noResults": "Aucune réunion ne correspond à votre recherche."
+    },
+    "recorder": {
+      "start": "Enregistrer une réunion",
+      "stop": "Arrêter ({{time}})",
+      "stopping": "Finalisation de l'enregistrement…",
+      "recording": "Enregistrement",
+      "micLevel": "Micro",
+      "systemLevel": "Système"
+    },
+    "warnings": {
+      "system_audio_unavailable": "Le son du système n'a pas pu être capté : seul votre micro est enregistré.",
+      "system_audio_silent": "Son du système silencieux : vérifiez que la sortie n'est pas coupée et que l'application de réunion utilise le périphérique par défaut.",
+      "output_muted": "La sortie audio est coupée ou à 0 % : les autres participants risquent de ne pas être enregistrés. Montez le volume.",
+      "device_changed": "Un périphérique audio a changé ; l'enregistrement a repris sur le nouveau périphérique.",
+      "mic_unavailable": "Le micro n'a pas pu être ouvert : seul le son du système est enregistré. Vérifiez qu'il est branché et autorisé dans les paramètres de confidentialité.",
+      "openPrivacySettings": "Ouvrir les paramètres de confidentialité"
+    },
+    "status": {
+      "recording": "Enregistrement",
+      "pending": "En attente",
+      "transcribing": "Transcription",
+      "transcribingProgress": "Transcription {{percent}} %",
+      "done": "Terminé",
+      "failed": "Échec",
+      "recovered": "Récupérée"
+    },
+    "source": {
+      "manual": "Manuel"
+    },
+    "speaker": {
+      "me": "Moi",
+      "others": "Autres",
+      "mic_only": "Micro"
+    },
+    "player": {
+      "play": "Lire",
+      "pause": "Pause",
+      "seek": "Position de lecture"
+    },
+    "transcript": {
+      "playFrom": "Lire à partir de {{time}}"
+    },
+    "detail": {
+      "back": "Retour aux réunions",
+      "rename": "Renommer la réunion",
+      "titleLabel": "Titre de la réunion",
+      "date": "Date",
+      "duration": "Durée",
+      "source": "Source",
+      "model": "Modèle",
+      "systemTrack": "Piste système",
+      "systemTrackYes": "Enregistrée",
+      "systemTrackNo": "Non enregistrée",
+      "audio": "Audio",
+      "audioDeleted": "Supprimé par la politique de rétention",
+      "progress": "Progression de la transcription",
+      "eta": "Environ {{time}} restant",
+      "transcript": "Transcript",
+      "loading": "Chargement du transcript…",
+      "exported": "Transcript exporté",
+      "emptyTranscript": {
+        "recording": "Le transcript sera disponible après l'enregistrement.",
+        "pending": "En attente de transcription.",
+        "transcribing": "Transcription en cours…",
+        "done": "Aucune parole n'a été détectée dans cette réunion.",
+        "failed": "La transcription a échoué. Vous pouvez la relancer.",
+        "recovered": "Cette réunion a été récupérée après un arrêt inattendu et attend sa transcription."
+      }
+    },
+    "actions": {
+      "copy": "Copier le transcript",
+      "export": "Exporter en Markdown…",
+      "openFolder": "Ouvrir le dossier",
+      "retry": "Relancer la transcription",
+      "cancelTranscription": "Annuler la transcription",
+      "delete": "Supprimer"
+    },
+    "delete": {
+      "title": "Supprimer cette réunion ?",
+      "description": "« {{title}} », son audio et son transcript seront définitivement supprimés.",
+      "cancel": "Annuler",
+      "confirm": "Supprimer"
+    },
+    "errors": {
+      "start": "Impossible de démarrer l'enregistrement de la réunion",
+      "stop": "Impossible d'arrêter l'enregistrement de la réunion",
+      "rename": "Impossible de renommer la réunion",
+      "copy": "Impossible de copier le transcript",
+      "export": "Impossible d'exporter le transcript",
+      "openFolder": "Impossible d'ouvrir le dossier de la réunion",
+      "retry": "Impossible de relancer la transcription",
+      "cancelTranscription": "Impossible d'annuler la transcription",
+      "delete": "Impossible de supprimer la réunion"
     }
   }
 }

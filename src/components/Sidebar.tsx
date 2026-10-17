@@ -1,6 +1,15 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Cog, FlaskConical, History, Info, Sparkles, Cpu } from "lucide-react";
+import {
+  Cog,
+  FlaskConical,
+  History,
+  Info,
+  Sparkles,
+  Cpu,
+  Users,
+} from "lucide-react";
+import { type } from "@tauri-apps/plugin-os";
 import TrigoWhisprTextLogo from "./icons/TrigoWhisprTextLogo";
 import TrigoWhisprHand from "./icons/TrigoWhisprHand";
 import { useSettings } from "../hooks/useSettings";
@@ -13,6 +22,10 @@ import {
   PostProcessingSettings,
   ModelsSettings,
 } from "./settings";
+import { MeetingsSection } from "./meetings/MeetingsSection";
+
+// Meeting capture is available on Windows and macOS only.
+const meetingsSupported = () => ["windows", "macos"].includes(type());
 
 export type SidebarSection = keyof typeof SECTIONS_CONFIG;
 
@@ -43,6 +56,12 @@ export const SECTIONS_CONFIG = {
     icon: History,
     component: HistorySettings,
     enabled: () => true,
+  },
+  meetings: {
+    labelKey: "sidebar.meetings",
+    icon: Users,
+    component: MeetingsSection,
+    enabled: meetingsSupported,
   },
   models: {
     labelKey: "sidebar.models",

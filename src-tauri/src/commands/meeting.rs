@@ -12,6 +12,7 @@ use specta::Type;
 use std::sync::Arc;
 use std::time::Duration;
 use tauri::{AppHandle, Manager, State};
+use tauri_plugin_opener::OpenerExt;
 
 const MAX_TEST_SECONDS: u32 = 60;
 
@@ -87,6 +88,16 @@ pub async fn start_meeting(
     blocking(&meeting_manager, move |m| m.start(source)).await
 }
 
+/// Starts a meeting recording the way the tray and the shortcut do: the
+/// consent reminder first, and no concurrent start or stop. Returns at once;
+/// the recording shows up through `MeetingStateChanged`, a failure in a
+/// dialog.
+#[tauri::command]
+#[specta::specta]
+pub fn request_meeting_start(app: AppHandle) {
+    crate::meeting::control::start_meeting(&app, "meetings section");
+}
+
 #[tauri::command]
 #[specta::specta]
 pub async fn stop_meeting(
@@ -117,6 +128,43 @@ pub async fn list_meetings(
     let offset = offset.unwrap_or(0);
     let limit = limit.unwrap_or(DEFAULT_PAGE_SIZE);
     blocking(&meeting_manager, move |m| m.list(offset, limit)).await
+}
+
+/// Meetings whose title or transcript contains `query`, newest first.
+#[tauri::command]
+#[specta::specta]
+pub async fn search_meetings(
+    meeting_manager: State<'_, Arc<MeetingManager>>,
+    query: String,
+    offset: Option<usize>,
+    limit: Option<usize>,
+) -> Result<PaginatedMeetings, String> {
+    let offset = offset.unwrap_or(0);
+    let limit = limit.unwrap_or(DEFAULT_PAGE_SIZE);
+    blocking(&meeting_manager, move |m| m.search(&query, offset, limit)).await
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn open_meeting_folder(
+    app: AppHandle,
+    meeting_manager: State<'_, Arc<MeetingManager>>,
+    id: String,
+) -> Result<(), String> {
+    let folder = blocking(&meeting_manager, move |m| m.folder_path(&id)).await?;
+    app.opener()
+        .open_path(folder.to_string_lossy(), None::<String>)
+        .map_err(|e| format!("Failed to open meeting folder: {e}"))
+}
+
+/// The meeting's transcript in the `transcript.md` format.
+#[tauri::command]
+#[specta::specta]
+pub async fn get_meeting_markdown(
+    meeting_manager: State<'_, Arc<MeetingManager>>,
+    id: String,
+) -> Result<String, String> {
+    blocking(&meeting_manager, move |m| m.markdown(&id)).await
 }
 
 #[tauri::command]

@@ -954,9 +954,29 @@ async startMeeting(source: MeetingSource | null) : Promise<Result<string, string
     else return { status: "error", error: e  as any };
 }
 },
+/**
+ * Starts a meeting recording the way the tray and the shortcut do: the
+ * consent reminder first, and no concurrent start or stop. Returns at once;
+ * the recording shows up through `MeetingStateChanged`, a failure in a
+ * dialog.
+ */
+async requestMeetingStart() : Promise<void> {
+    await TAURI_INVOKE("request_meeting_start");
+},
 async stopMeeting() : Promise<Result<string, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("stop_meeting") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * The meeting's transcript in the `transcript.md` format.
+ */
+async getMeetingMarkdown(id: string) : Promise<Result<string, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_meeting_markdown", { id }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -976,6 +996,25 @@ async getMeetingState() : Promise<MeetingStateChanged> {
 async listMeetings(offset: number | null, limit: number | null) : Promise<Result<PaginatedMeetings, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("list_meetings", { offset, limit }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Meetings whose title or transcript contains `query`, newest first.
+ */
+async searchMeetings(query: string, offset: number | null, limit: number | null) : Promise<Result<PaginatedMeetings, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("search_meetings", { query, offset, limit }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async openMeetingFolder(id: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("open_meeting_folder", { id }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };

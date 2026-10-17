@@ -18,7 +18,7 @@ use crate::meeting::capture::{
     MIC_FILE_NAME, SYSTEM_FILE_NAME,
 };
 use crate::meeting::power::SleepGuard;
-use crate::meeting::transcript::{MeetingInfo, TranscriptFile};
+use crate::meeting::transcript::{render_markdown, MeetingInfo, TranscriptFile};
 use crate::settings::{get_settings, MeetingAudioRetention};
 use crate::tray_i18n::get_tray_translations;
 use anyhow::{anyhow, bail, Result};
@@ -565,6 +565,17 @@ impl MeetingManager {
         store::list(&self.conn()?, offset, limit)
     }
 
+    pub fn search(&self, query: &str, offset: usize, limit: usize) -> Result<PaginatedMeetings> {
+        store::search(&self.conn()?, query, offset, limit)
+    }
+
+    /// Absolute path of the meeting's folder.
+    pub fn folder_path(&self, id: &str) -> Result<PathBuf> {
+        let meeting =
+            store::get(&self.conn()?, id)?.ok_or_else(|| anyhow!("Meeting {id} not found"))?;
+        Ok(self.meetings_dir.join(&meeting.folder))
+    }
+
     pub fn get(&self, id: &str) -> Result<Option<MeetingDetail>> {
         let conn = self.conn()?;
         let Some(meeting) = store::get(&conn, id)? else {
@@ -572,6 +583,14 @@ impl MeetingManager {
         };
         let segments = store::segments(&conn, id)?;
         Ok(Some(MeetingDetail { meeting, segments }))
+    }
+
+    /// The transcript rendered as `transcript.md`.
+    pub fn markdown(&self, id: &str) -> Result<String> {
+        let conn = self.conn()?;
+        let m = store::get(&conn, id)?.ok_or_else(|| anyhow!("Meeting {id} not found"))?;
+        let segments = store::segments(&conn, id)?;
+        Ok(render_markdown(&meeting_info(m), &segments))
     }
 
     pub fn rename(&self, id: &str, title: &str) -> Result<()> {
@@ -727,13 +746,7 @@ impl MeetingStore for MeetingManager {
         }
         Ok(MeetingJob {
             dir: self.meetings_dir.join(&m.folder),
-            meeting: MeetingInfo {
-                id: m.id,
-                title: m.title,
-                started_at: m.started_at,
-                duration_ms: m.duration_ms.unwrap_or(0).max(0) as u64,
-                source_app: m.source_app,
-            },
+            meeting: meeting_info(m),
         })
     }
 
@@ -761,5 +774,15 @@ impl MeetingStore for MeetingManager {
         let mut conn = self.conn()?;
         store::replace_segments(&mut conn, meeting_id, &transcript.segments)?;
         store::set_model_id(&conn, meeting_id, &transcript.model_id)
+    }
+}
+
+fn meeting_info(m: Meeting) -> MeetingInfo {
+    MeetingInfo {
+        id: m.id,
+        title: m.title,
+        started_at: m.started_at,
+        duration_ms: m.duration_ms.unwrap_or(0).max(0) as u64,
+        source_app: m.source_app,
     }
 }

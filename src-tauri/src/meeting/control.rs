@@ -48,6 +48,17 @@ pub fn manual_recording_supported() -> bool {
 /// Starts a meeting recording if none is running, stops it otherwise.
 /// Returns immediately: the blocking work runs on its own thread.
 pub fn toggle_meeting(app: &AppHandle, trigger: &'static str) {
+    run_manual(app, trigger, false);
+}
+
+/// Starts a meeting recording (after the reminder) unless one is already
+/// running, in which case nothing happens. For buttons that only mean
+/// "start", so a stale click never stops a recording.
+pub fn start_meeting(app: &AppHandle, trigger: &'static str) {
+    run_manual(app, trigger, true);
+}
+
+fn run_manual(app: &AppHandle, trigger: &'static str, start_only: bool) {
     if !manual_recording_supported() {
         warn!("Meeting recording toggled from {trigger}, but it is not supported here");
         return;
@@ -68,7 +79,9 @@ pub fn toggle_meeting(app: &AppHandle, trigger: &'static str) {
                 warn!("Meeting toggle from {trigger} before the meeting manager exists");
                 return;
             };
-            if manager.is_recording() {
+            if manager.is_recording() && start_only {
+                info!("Meeting start from {trigger} ignored: already recording");
+            } else if manager.is_recording() {
                 info!("Stopping the meeting recording ({trigger})");
                 if let Err(e) = manager.stop() {
                     error!("Failed to stop the meeting recording: {e}");

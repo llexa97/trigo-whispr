@@ -269,6 +269,47 @@ pub fn list(conn: &Connection, offset: usize, limit: usize) -> Result<PaginatedM
     Ok(PaginatedMeetings { meetings, has_more })
 }
 
+/// Escapes `%`, `_` and `\` for a `LIKE … ESCAPE '\'` pattern.
+fn like_pattern(query: &str) -> String {
+    let mut pattern = String::with_capacity(query.len() + 2);
+    pattern.push('%');
+    for c in query.chars() {
+        if matches!(c, '%' | '_' | '\\') {
+            pattern.push('\\');
+        }
+        pattern.push(c);
+    }
+    pattern.push('%');
+    pattern
+}
+
+/// Meetings whose title or transcript contains `query` (case-insensitive for
+/// ASCII, as SQLite's `LIKE`), newest first.
+pub fn search(
+    conn: &Connection,
+    query: &str,
+    offset: usize,
+    limit: usize,
+) -> Result<PaginatedMeetings> {
+    let pattern = like_pattern(query.trim());
+    let mut stmt = conn.prepare(&format!(
+        "SELECT {COLUMNS} FROM meetings m
+         WHERE m.title LIKE ?1 ESCAPE '\\'
+            OR EXISTS (SELECT 1 FROM meeting_segments s
+                       WHERE s.meeting_id = m.id AND s.text LIKE ?1 ESCAPE '\\')
+         ORDER BY started_at DESC, id LIMIT ?2 OFFSET ?3"
+    ))?;
+    let mut meetings = stmt
+        .query_map(
+            params![pattern, limit as i64 + 1, offset as i64],
+            map_meeting,
+        )?
+        .collect::<rusqlite::Result<Vec<_>>>()?;
+    let has_more = meetings.len() > limit;
+    meetings.truncate(limit);
+    Ok(PaginatedMeetings { meetings, has_more })
+}
+
 pub fn list_by_status(conn: &Connection, statuses: &[MeetingStatus]) -> Result<Vec<Meeting>> {
     let placeholders = vec!["?"; statuses.len()].join(", ");
     let mut stmt = conn.prepare(&format!(
@@ -479,6 +520,49 @@ pub(crate) mod tests {
             .query_row("SELECT COUNT(*) FROM meeting_segments", [], |r| r.get(0))
             .unwrap();
         assert_eq!(left, 0);
+    }
+
+    #[test]
+    fn search_matches_title_and_segments() {
+        let mut conn = memory_db();
+        let mut a = sample("a", 0, MeetingStatus::Done);
+        a.title = "Point budget".into();
+        insert(&conn, &a).unwrap();
+        insert(&conn, &sample("b", 1, MeetingStatus::Done)).unwrap();
+        insert(&conn, &sample("c", 2, MeetingStatus::Done)).unwrap();
+        let seg = |idx, speaker, text: &str| MeetingSegment {
+            idx,
+            speaker,
+            start_ms: 0,
+            end_ms: 500,
+            text: text.into(),
+        };
+        replace_segments(
+            &mut conn,
+            "b",
+            &[
+                seg(0, Speaker::Me, "On parle du BUDGET"),
+                seg(1, Speaker::Others, "100% d'accord"),
+            ],
+        )
+        .unwrap();
+        replace_segments(&mut conn, "c", &[seg(0, Speaker::Me, "1000 euros")]).unwrap();
+
+        let ids = |q: &str| -> Vec<String> {
+            search(&conn, q, 0, 10)
+                .unwrap()
+                .meetings
+                .into_iter()
+                .map(|m| m.id)
+                .collect()
+        };
+        assert_eq!(ids("budget"), ["b", "a"]);
+        // `%` is matched literally, not as a wildcard.
+        assert_eq!(ids("0%"), ["b"]);
+        assert!(ids("absent").is_empty());
+
+        let page = search(&conn, "budget", 0, 1).unwrap();
+        assert!(page.has_more);
     }
 
     #[test]
