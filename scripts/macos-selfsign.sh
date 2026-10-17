@@ -1,0 +1,112 @@
+#!/usr/bin/env bash
+#
+# Self-sign a Trigo Whispr build on macOS so meeting system-audio capture
+# receives real audio.
+#
+# Adapted from fly-on-the-wall's scripts/macos-selfsign.sh
+# (https://github.com/swarnavspujari/fly-on-the-wall, MIT License,
+# Copyright (c) 2026 WizzyWYG). See THIRD_PARTY_LICENSES.md.
+#
+# WHY
+#   The Core Audio process tap used to record the other participants only
+#   delivers audio when the app has a STABLE code-signing identity that macOS
+#   can attach the "System Audio Recording" consent to. Unsigned or ad-hoc
+#   signed builds (`bun run tauri dev`, or `tauri build` with
+#   signingIdentity "-") get callbacks full of zeros: the recording "works"
+#   but the system track is silent. A self-signed certificate is a free,
+#   stable identity, enough to test on your own Mac. It does NOT replace a
+#   Developer ID signature + notarization for distribution.
+#
+# WHAT IT DOES
+#   1. Creates a self-signed code-signing identity in the login keychain if
+#      none exists ("Trigo Whispr Dev"; use SIGN_IDENTITY to pick another
+#      identity, e.g. a real Developer ID).
+#   2. Signs the bundle with hardened runtime and src-tauri/Entitlements.plist.
+#   3. Verifies the signature and prints the one-time consent step.
+#
+# USAGE
+#   bash scripts/macos-selfsign.sh                    # signs the release bundle
+#   bash scripts/macos-selfsign.sh "/Applications/Trigo Whispr.app"
+#   SIGN_IDENTITY="Developer ID Application: You (TEAMID)" bash scripts/macos-selfsign.sh
+#
+set -euo pipefail
+
+if [[ "$(uname)" != "Darwin" ]]; then
+  echo "This script only runs on macOS (it uses codesign and security)." >&2
+  exit 1
+fi
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ENTITLEMENTS="$REPO_ROOT/src-tauri/Entitlements.plist"
+APP_PATH="${1:-$REPO_ROOT/src-tauri/target/release/bundle/macos/Trigo Whispr.app}"
+IDENTITY="${SIGN_IDENTITY:-Trigo Whispr Dev}"
+KEYCHAIN="$HOME/Library/Keychains/login.keychain-db"
+
+if [[ ! -d "$APP_PATH" ]]; then
+  echo "App bundle not found: $APP_PATH" >&2
+  echo "Build it first (bun run tauri build) or pass its path, e.g.:" >&2
+  echo "  bash scripts/macos-selfsign.sh \"/Applications/Trigo Whispr.app\"" >&2
+  exit 1
+fi
+
+# --- ensure the signing identity exists -----------------------------------
+if security find-identity -v -p codesigning | grep -qF "\"$IDENTITY\""; then
+  echo "Using existing signing identity: $IDENTITY"
+elif [[ -n "${SIGN_IDENTITY:-}" ]]; then
+  echo "Signing identity not found in the keychain: $IDENTITY" >&2
+  echo "Unset SIGN_IDENTITY to create the self-signed \"Trigo Whispr Dev\" identity." >&2
+  exit 1
+else
+  echo "Creating a self-signed code-signing identity: $IDENTITY"
+  workdir="$(mktemp -d)"
+  trap 'rm -rf "$workdir"' EXIT
+  # digitalSignature + codeSigning EKU is what codesign and TCC require.
+  # Self-signed means it is its own root, so the identity stays stable.
+  openssl req -x509 -newkey rsa:2048 -sha256 -days 3650 -nodes \
+    -keyout "$workdir/key.pem" -out "$workdir/cert.pem" \
+    -subj "/CN=$IDENTITY" \
+    -addext "keyUsage=critical,digitalSignature" \
+    -addext "extendedKeyUsage=critical,codeSigning" >/dev/null 2>&1
+  # macOS `security` cannot read the default PKCS#12 encryption of OpenSSL 3
+  # (Homebrew); `-legacy` restores it. LibreSSL (/usr/bin/openssl) has no
+  # such flag and already writes the legacy format.
+  p12_pass="trigo-$RANDOM$RANDOM"
+  if ! openssl pkcs12 -export -legacy -inkey "$workdir/key.pem" -in "$workdir/cert.pem" \
+      -out "$workdir/id.p12" -passout "pass:$p12_pass" >/dev/null 2>&1; then
+    openssl pkcs12 -export -inkey "$workdir/key.pem" -in "$workdir/cert.pem" \
+      -out "$workdir/id.p12" -passout "pass:$p12_pass" >/dev/null
+  fi
+  # Let codesign use the key without a keychain prompt.
+  security import "$workdir/id.p12" -k "$KEYCHAIN" -P "$p12_pass" \
+    -T /usr/bin/codesign >/dev/null
+  # Trust the certificate for code signing so `codesign --verify` accepts it.
+  # Asks for the admin password; without it signing still works for capture,
+  # macOS only shows the usual Gatekeeper prompt on first launch.
+  if ! security add-trusted-cert -r trustRoot -p codeSign -k "$KEYCHAIN" \
+      "$workdir/cert.pem"; then
+    echo "  (could not trust the certificate — continuing; capture still works," >&2
+    echo "   expect the Gatekeeper \"unknown developer\" prompt on first launch.)" >&2
+  fi
+fi
+
+# --- sign ------------------------------------------------------------------
+echo "Signing: $APP_PATH"
+echo "     as: $IDENTITY"
+# --force replaces the ad-hoc signature of the release build; --deep also
+# signs the bundled libraries; --options runtime enables the hardened runtime.
+codesign --force --deep --options runtime \
+  --entitlements "$ENTITLEMENTS" --sign "$IDENTITY" "$APP_PATH"
+codesign --verify --deep --strict --verbose=2 "$APP_PATH"
+
+cat <<EOF
+
+Signed. To record the other participants of a meeting:
+  1. Launch the app (right-click → Open the first time if Gatekeeper warns).
+  2. Start a meeting recording; macOS asks to allow System Audio Recording —
+     Allow. You can change it later in System Settings → Privacy & Security →
+     Screen & System Audio Recording → System Audio Recording Only.
+  3. The meeting pill warns when the system track stays silent.
+
+To be asked again: tccutil reset AudioCapture com.trigo.trigo-whispr
+Re-run this script after every rebuild: a new build drops the signature.
+EOF

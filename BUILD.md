@@ -103,16 +103,44 @@ This compiles a release binary and generates platform-specific bundles (deb, rpm
 
 ### Test meeting capture on macOS
 
-System audio capture requires macOS 14.6 or later. In the app, press
-`Cmd+Shift+D`, open Debug settings, and run the 10-second meeting capture test
-while playing audio and speaking. Allow the system audio recording permission
-when macOS asks; if necessary, enable it in System Settings → Privacy & Security
-→ Screen & System Audio Recording, restart the app, and repeat the test.
+System audio capture (the other participants of a call) uses a Core Audio
+process tap and requires macOS 14.6 or later. macOS only sends real audio to
+the tap when the app has a **stable code-signing identity**: `bun run tauri dev`
+and the plain `bun run tauri build` output are ad-hoc signed, so the meeting
+records fine but the system track is digital silence (the meeting pill warns
+that the system audio is silent). The microphone track is not affected.
 
-The report links to a temporary directory with separate `mic.wav` and
-`system.wav` files (mono, 16 kHz), padded to the same duration. The system mode
-should be `core_audio_tap`. This captures the default output, including the
-app's own sounds. Default-output changes are detected and the stream reopened.
+To test with real system audio, build a release bundle and self-sign it:
+
+```bash
+bun run tauri build
+bash scripts/macos-selfsign.sh
+open "src-tauri/target/release/bundle/macos/Trigo Whispr.app"
+```
+
+The script creates a free self-signed `Trigo Whispr Dev` identity in your login
+keychain the first time (macOS may ask for your password to trust it), signs
+the bundle with the hardened runtime and `src-tauri/Entitlements.plist`, then
+runs `codesign --verify --deep --strict`. Pass another bundle path as the first
+argument, or set `SIGN_IDENTITY` to use an existing identity (e.g. a Developer
+ID). Re-run it after every rebuild.
+
+On the first meeting recording, macOS asks to allow system audio recording
+with the `NSAudioCaptureUsageDescription` text from `src-tauri/Info.plist`.
+Allow it; you can change it later in System Settings → Privacy & Security →
+Screen & System Audio Recording → System Audio Recording Only. To be asked
+again (for example after switching signing identity):
+
+```bash
+tccutil reset AudioCapture com.trigo.trigo-whispr
+```
+
+For a quick check, press `Cmd+Shift+D`, open Debug settings, and run the
+10-second meeting capture test while playing audio and speaking. The report
+links to a temporary directory with separate `mic.wav` and `system.wav` files
+(mono, 16 kHz), padded to the same duration. The system mode should be
+`core_audio_tap`. This captures the default output, including the app's own
+sounds. Default-output changes are detected and the stream reopened.
 
 Use the Mac speakers or another output-only device for this test. The current
 CPAL backend opens a microphone stream on duplex devices (some USB interfaces
