@@ -1,5 +1,6 @@
 //! Manual start/stop of a meeting recording, shared by the tray, the global
-//! shortcut, the `--toggle-meeting` CLI flag and the indicator pill.
+//! shortcut, the `--toggle-meeting` CLI flag and the indicator pill, and the
+//! start of a detected meeting (`meeting::detection`).
 //!
 //! Every entry point goes through [`toggle_meeting`], so they all behave the
 //! same: the first recording shows the "tell the participants" reminder, a
@@ -8,6 +9,7 @@
 
 use crate::managers::meeting::{MeetingManager, MeetingSource, MeetingStateChanged};
 use crate::meeting::capture;
+use crate::meeting::detection::prompt::{self, MeetingPrompt};
 use crate::settings;
 use crate::tray_i18n::{get_tray_translations, TrayStrings};
 use log::{error, info, warn};
@@ -48,17 +50,49 @@ pub fn manual_recording_supported() -> bool {
 /// Starts a meeting recording if none is running, stops it otherwise.
 /// Returns immediately: the blocking work runs on its own thread.
 pub fn toggle_meeting(app: &AppHandle, trigger: &'static str) {
-    run_manual(app, trigger, false);
+    run_manual(app, trigger, Request::toggle());
 }
 
 /// Starts a meeting recording (after the reminder) unless one is already
 /// running, in which case nothing happens. For buttons that only mean
 /// "start", so a stale click never stops a recording.
 pub fn start_meeting(app: &AppHandle, trigger: &'static str) {
-    run_manual(app, trigger, true);
+    run_manual(app, trigger, Request::start(MeetingSource::Manual, false));
 }
 
-fn run_manual(app: &AppHandle, trigger: &'static str, start_only: bool) {
+/// Starts recording a meeting detected in `source`'s app, after the reminder
+/// like a manual start. `confirm`: show "recording started" once it runs
+/// (it started without asking).
+pub fn start_detected_meeting(app: &AppHandle, source: MeetingSource, confirm: bool) {
+    run_manual(app, "detection", Request::start(source, confirm));
+}
+
+struct Request {
+    /// Never stop a running recording.
+    start_only: bool,
+    source: MeetingSource,
+    confirm: bool,
+}
+
+impl Request {
+    fn toggle() -> Self {
+        Self {
+            start_only: false,
+            source: MeetingSource::Manual,
+            confirm: false,
+        }
+    }
+
+    fn start(source: MeetingSource, confirm: bool) -> Self {
+        Self {
+            start_only: true,
+            source,
+            confirm,
+        }
+    }
+}
+
+fn run_manual(app: &AppHandle, trigger: &'static str, request: Request) {
     if !manual_recording_supported() {
         warn!("Meeting recording toggled from {trigger}, but it is not supported here");
         return;
@@ -79,7 +113,7 @@ fn run_manual(app: &AppHandle, trigger: &'static str, start_only: bool) {
                 warn!("Meeting toggle from {trigger} before the meeting manager exists");
                 return;
             };
-            if manager.is_recording() && start_only {
+            if manager.is_recording() && request.start_only {
                 info!("Meeting start from {trigger} ignored: already recording");
             } else if manager.is_recording() {
                 info!("Stopping the meeting recording ({trigger})");
@@ -87,7 +121,7 @@ fn run_manual(app: &AppHandle, trigger: &'static str, start_only: bool) {
                     error!("Failed to stop the meeting recording: {e}");
                 }
             } else {
-                start_with_reminder(&app, &manager, trigger);
+                start_with_reminder(&app, &manager, trigger, request);
             }
         });
     if let Err(e) = spawned {
@@ -95,7 +129,7 @@ fn run_manual(app: &AppHandle, trigger: &'static str, start_only: bool) {
     }
 }
 
-fn start_with_reminder(app: &AppHandle, manager: &MeetingManager, trigger: &str) {
+fn start_with_reminder(app: &AppHandle, manager: &MeetingManager, trigger: &str, request: Request) {
     let current = settings::get_settings(app);
     let strings = get_tray_translations(Some(current.app_language));
 
@@ -115,14 +149,27 @@ fn start_with_reminder(app: &AppHandle, manager: &MeetingManager, trigger: &str)
     }
 
     info!("Starting a meeting recording ({trigger})");
-    if let Err(e) = manager.start(MeetingSource::Manual) {
-        error!("Failed to start the meeting recording: {e}");
-        app.dialog()
-            .message(e.to_string())
-            .title(strings.meeting_start_failed_title)
-            .kind(MessageDialogKind::Error)
-            .blocking_show();
+    let confirmation = match (&request.source, request.confirm) {
+        (MeetingSource::Detected { app_name, .. }, true) => Some(app_name.clone()),
+        _ => None,
+    };
+    match manager.start(request.source) {
+        Ok(_) => {
+            if let Some(app_name) = confirmation {
+                prompt::show(app, MeetingPrompt::Started { app_name });
+            }
+        }
+        Err(e) => report_start_failure(app, &strings, e),
     }
+}
+
+fn report_start_failure(app: &AppHandle, strings: &TrayStrings, e: anyhow::Error) {
+    error!("Failed to start the meeting recording: {e}");
+    app.dialog()
+        .message(e.to_string())
+        .title(&strings.meeting_start_failed_title)
+        .kind(MessageDialogKind::Error)
+        .blocking_show();
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -165,6 +212,7 @@ fn reminder_choice(result: &MessageDialogResult, start: &str, dont_show: &str) -
 /// whatever started or stopped the recording.
 pub fn init(app: &AppHandle) {
     crate::meeting::indicator::create(app);
+    crate::meeting::detection::service::init(app);
 
     let handle = app.clone();
     MeetingStateChanged::listen_any(app, move |event| {

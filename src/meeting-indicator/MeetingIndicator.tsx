@@ -41,6 +41,8 @@ const MeetingIndicator: React.FC = () => {
   const { t } = useTranslation();
   const [meeting, setMeeting] = useState<MeetingStateChanged>(IDLE);
   const [stopping, setStopping] = useState(false);
+  // Auto-stop countdown of a detected meeting whose app left the call.
+  const [countdown, setCountdown] = useState<number | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -58,13 +60,18 @@ const MeetingIndicator: React.FC = () => {
       });
       if (event.payload.state !== "recording") setStopping(false);
     });
+    const unlistenCountdown = events.meetingAutoStopCountdown.listen((event) =>
+      setCountdown(event.payload.remaining_secs),
+    );
     return () => {
       active = false;
       unlisten.then((fn) => fn());
+      unlistenCountdown.then((fn) => fn());
     };
   }, []);
 
   const busy = stopping || meeting.state === "stopping";
+  const counting = countdown !== null && meeting.state === "recording";
 
   const stop = async () => {
     if (busy) return;
@@ -92,20 +99,37 @@ const MeetingIndicator: React.FC = () => {
         data-tauri-drag-region
         aria-hidden="true"
       />
-      <span className="mi-time" data-tauri-drag-region>
-        {formatElapsed(meeting.elapsed_ms)}
-      </span>
-      <div className="mi-meters" data-tauri-drag-region>
-        <Meter
-          level={meeting.mic_level}
-          label={t("meetings.indicator.microphone")}
-        />
-        <Meter
-          level={meeting.system_level}
-          label={t("meetings.indicator.systemAudio")}
-        />
-      </div>
-      {warnings && (
+      {counting ? (
+        <>
+          <span className="mi-time mi-countdown" data-tauri-drag-region>
+            {t("meetings.indicator.autoStop", { seconds: countdown })}
+          </span>
+          <button
+            type="button"
+            className="mi-cancel"
+            onClick={() => commands.respondMeetingPrompt("keep_recording")}
+          >
+            {t("meetings.indicator.cancelAutoStop")}
+          </button>
+        </>
+      ) : (
+        <>
+          <span className="mi-time" data-tauri-drag-region>
+            {formatElapsed(meeting.elapsed_ms)}
+          </span>
+          <div className="mi-meters" data-tauri-drag-region>
+            <Meter
+              level={meeting.mic_level}
+              label={t("meetings.indicator.microphone")}
+            />
+            <Meter
+              level={meeting.system_level}
+              label={t("meetings.indicator.systemAudio")}
+            />
+          </div>
+        </>
+      )}
+      {warnings && !counting && (
         <span className="mi-warning" title={warnings} aria-label={warnings}>
           <TriangleAlert size={14} aria-hidden="true" />
         </span>

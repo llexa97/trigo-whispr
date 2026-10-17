@@ -1087,6 +1087,48 @@ async changeShowMeetingIndicatorSetting(enabled: boolean) : Promise<void> {
 async changeMeetingConsentReminderSetting(enabled: boolean) : Promise<void> {
     await TAURI_INVOKE("change_meeting_consent_reminder_setting", { enabled });
 },
+async changeMeetingDetectionEnabledSetting(enabled: boolean) : Promise<void> {
+    await TAURI_INVOKE("change_meeting_detection_enabled_setting", { enabled });
+},
+/**
+ * Per-app overrides of the detection catalog's defaults.
+ */
+async changeMeetingDetectionAppsSetting(apps: Partial<{ [key in string]: boolean }>) : Promise<void> {
+    await TAURI_INVOKE("change_meeting_detection_apps_setting", { apps });
+},
+async changeMeetingAutoStartSetting(enabled: boolean) : Promise<void> {
+    await TAURI_INVOKE("change_meeting_auto_start_setting", { enabled });
+},
+async changeMeetingAutoStopSetting(mode: MeetingAutoStop) : Promise<void> {
+    await TAURI_INVOKE("change_meeting_auto_stop_setting", { mode });
+},
+async changeMeetingCaptureSystemAudioSetting(enabled: boolean) : Promise<void> {
+    await TAURI_INVOKE("change_meeting_capture_system_audio_setting", { enabled });
+},
+async changeMeetingPromptSoundSetting(enabled: boolean) : Promise<void> {
+    await TAURI_INVOKE("change_meeting_prompt_sound_setting", { enabled });
+},
+/**
+ * The meeting apps detection knows on this platform.
+ */
+async getMeetingDetectionApps() : Promise<MeetingDetectionApp[]> {
+    return await TAURI_INVOKE("get_meeting_detection_apps");
+},
+/**
+ * Whether this platform has a backend to detect meetings yet.
+ */
+async isMeetingDetectionSupported() : Promise<boolean> {
+    return await TAURI_INVOKE("is_meeting_detection_supported");
+},
+/**
+ * What the detection popup should show (it may load after the event).
+ */
+async getMeetingPrompt() : Promise<MeetingPrompt | null> {
+    return await TAURI_INVOKE("get_meeting_prompt");
+},
+async respondMeetingPrompt(response: MeetingPromptResponse) : Promise<void> {
+    await TAURI_INVOKE("respond_meeting_prompt", { response });
+},
 /**
  * Stub implementation for non-macOS platforms
  * Always returns false since laptop detection is macOS-specific
@@ -1106,6 +1148,8 @@ async isLaptop() : Promise<Result<boolean, string>> {
 
 export const events = __makeEvents__<{
 historyUpdatePayload: HistoryUpdatePayload,
+meetingAutoStopCountdown: MeetingAutoStopCountdown,
+meetingPromptChanged: MeetingPromptChanged,
 meetingStateChanged: MeetingStateChanged,
 meetingTranscriptionProgress: MeetingTranscriptionProgress,
 meetingsRecovered: MeetingsRecovered,
@@ -1114,6 +1158,8 @@ streamPhaseEvent: StreamPhaseEvent,
 streamTextEvent: StreamTextEvent
 }>({
 historyUpdatePayload: "history-update-payload",
+meetingAutoStopCountdown: "meeting-auto-stop-countdown",
+meetingPromptChanged: "meeting-prompt-changed",
 meetingStateChanged: "meeting-state-changed",
 meetingTranscriptionProgress: "meeting-transcription-progress",
 meetingsRecovered: "meetings-recovered",
@@ -1128,6 +1174,7 @@ streamTextEvent: "stream-text-event"
 
 /** user-defined types **/
 
+export type AppKind = "native" | "browser"
 /**
  * The container-level `serde(default)` (backed by the `Default` impl below)
  * guarantees every field — including ones added in the future — falls back to
@@ -1215,7 +1262,28 @@ meeting_indicator_position?: WindowPosition | null;
  * Remind the user to tell the participants before a meeting recording
  * starts. Turned off by the reminder's "don't show again".
  */
-meeting_consent_reminder?: boolean }
+meeting_consent_reminder?: boolean; 
+/**
+ * Offer to record when a known meeting app starts using the microphone.
+ */
+meeting_detection_enabled?: boolean; 
+/**
+ * Per-app overrides of the catalog's `default_enabled`, keyed by catalog
+ * id (`meeting::detection::catalog`).
+ */
+meeting_detection_apps?: Partial<{ [key in string]: boolean }>; 
+/**
+ * Start recording a detected meeting without asking.
+ */
+meeting_auto_start?: boolean; meeting_auto_stop?: MeetingAutoStop; 
+/**
+ * Record the other participants (system audio) next to the microphone.
+ */
+meeting_capture_system_audio?: boolean; 
+/**
+ * Play a short sound when a meeting is detected.
+ */
+meeting_prompt_sound?: boolean }
 export type AudioDevice = { index: string; name: string; is_default: boolean }
 export type AutoSubmitKey = "enter" | "ctrl_enter" | "cmd_enter"
 export type AvailableAccelerators = { transcribe: string[]; gpu_devices: GpuDeviceOption[] }
@@ -1303,13 +1371,85 @@ export type MeetingAudioPaths = { mic: string | null; system: string | null }
  * transcript and the meeting itself stay.
  */
 export type MeetingAudioRetention = "forever" | "days_7" | "days_30" | "days_90" | "delete_after_transcription"
+/**
+ * What happens when the app a recording was detected from releases the
+ * microphone. Recordings started manually are never stopped automatically.
+ */
+export type MeetingAutoStop = 
+/**
+ * Ask "Stop the recording?".
+ */
+"ask" | 
+/**
+ * Stop after a cancellable countdown.
+ */
+"auto" | 
+/**
+ * Keep recording until the user stops.
+ */
+"never"
+/**
+ * Auto-stop countdown, shown in the meeting pill (or the popup when the
+ * pill is hidden). `remaining_secs` is `None` once it ended or was
+ * cancelled.
+ */
+export type MeetingAutoStopCountdown = { remaining_secs: number | null }
 export type MeetingCaptureTestReport = { 
 /**
  * Temporary directory holding `mic.wav` / `system.wav`.
  */
 out_dir: string; output: CaptureOutput }
 export type MeetingDetail = { meeting: Meeting; segments: MeetingSegment[] }
+/**
+ * A catalog app, as listed in the settings.
+ */
+export type MeetingDetectionApp = { id: string; display_name: string; kind: AppKind; default_enabled: boolean }
 export type MeetingPhase = "idle" | "recording" | "stopping"
+export type MeetingPrompt = 
+/**
+ * A meeting app is using the microphone: Record / Ignore.
+ */
+{ kind: "detected"; app_id: string; app_name: string } | 
+/**
+ * The detected meeting looks over: Stop / Keep recording.
+ */
+{ kind: "stop"; app_name: string } | 
+/**
+ * Auto-stop countdown, shown here when the meeting pill is hidden.
+ */
+{ kind: "auto_stop"; app_name: string } | 
+/**
+ * A detected meeting started recording without asking.
+ */
+{ kind: "started"; app_name: string }
+/**
+ * The prompt to show, `None` to hide the popup.
+ */
+export type MeetingPromptChanged = { prompt: MeetingPrompt | null }
+/**
+ * The user's answer in the popup.
+ */
+export type MeetingPromptResponse = 
+/**
+ * Detected meeting: record it.
+ */
+"record" | 
+/**
+ * Detected meeting: not this call.
+ */
+"ignore" | 
+/**
+ * Meeting over: stop the recording now.
+ */
+"stop" | 
+/**
+ * Meeting over: keep recording (also cancels the countdown).
+ */
+"keep_recording" | 
+/**
+ * Close the confirmation.
+ */
+"dismiss"
 export type MeetingSegment = { idx: number; speaker: Speaker; start_ms: number; end_ms: number; text: string }
 export type MeetingSource = { kind: "manual" } | { kind: "detected"; app_id: string; app_name: string }
 export type MeetingSourceKind = "manual" | "detected"

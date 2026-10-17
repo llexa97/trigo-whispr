@@ -27,6 +27,7 @@ export default defineConfig(async () => ({
           __dirname,
           "src/meeting-indicator/index.html",
         ),
+        meetingPrompt: resolve(__dirname, "src/meeting-prompt/index.html"),
       },
     },
   },

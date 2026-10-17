@@ -658,6 +658,69 @@
         "label": "Afficher les nouveautés",
         "description": "Afficher les notes de version après les mises à jour de Trigo Whispr"
       }
+    },
+    "meetings": {
+      "open": "Réglages",
+      "back": "Réunions",
+      "detection": {
+        "title": "Détection automatique",
+        "description": "Proposer d'enregistrer quand une app de visio commence à utiliser le micro.",
+        "unsupported": "La détection automatique n'est pas encore disponible sur cette plateforme. Vous pouvez toujours enregistrer les réunions manuellement."
+      },
+      "meeting_detection_enabled": {
+        "label": "Détecter les réunions",
+        "description": "Afficher une proposition quand une app de visio connue utilise le micro depuis quelques secondes."
+      },
+      "meeting_auto_start": {
+        "label": "Démarrer automatiquement sans demander",
+        "description": "Enregistrer tout de suite les réunions détectées et afficher une brève confirmation au lieu d'une proposition."
+      },
+      "meeting_auto_stop": {
+        "label": "À la fin de la réunion",
+        "description": "Que faire quand l'app d'où vient l'enregistrement a libéré le micro depuis 20 secondes. Un enregistrement lancé manuellement n'est jamais arrêté automatiquement.",
+        "options": {
+          "ask": "Demander avant d'arrêter",
+          "auto": "Arrêter après un compte à rebours de 10 s",
+          "never": "Continuer l'enregistrement"
+        }
+      },
+      "meeting_prompt_sound": {
+        "label": "Son de la proposition",
+        "description": "Jouer un son bref quand une réunion est détectée."
+      },
+      "apps": {
+        "title": "Apps détectées",
+        "description": "Apps pouvant déclencher la proposition d'enregistrement.",
+        "native": "Proposer d'enregistrer quand {{app}} utilise le micro.",
+        "browser": "Désactivé par défaut : un appel dans le navigateur ne se distingue pas d'un autre usage du micro."
+      },
+      "recording": {
+        "title": "Enregistrement"
+      },
+      "meeting_capture_system_audio": {
+        "label": "Enregistrer le son système",
+        "description": "Enregistrer ce que disent les autres participants (le son joué par l'ordinateur) en plus de votre micro."
+      },
+      "show_meeting_indicator": {
+        "label": "Afficher la pastille d'enregistrement",
+        "description": "Pastille flottante avec le minuteur, les niveaux et un bouton Arrêter pendant l'enregistrement d'une réunion."
+      },
+      "meeting_consent_reminder": {
+        "label": "Rappel de consentement",
+        "description": "Vous rappeler de prévenir les participants avant le début d'un enregistrement."
+      },
+      "meeting_audio_retention": {
+        "label": "Conserver l'audio des réunions",
+        "description": "Durée de conservation des fichiers audio. Les transcriptions sont toujours conservées.",
+        "options": {
+          "forever": "Toujours",
+          "days_7": "7 jours",
+          "days_30": "30 jours",
+          "days_90": "90 jours",
+          "delete_after_transcription": "Supprimer après la transcription"
+        }
+      },
+      "privacy": "Tout reste sur cet ordinateur : l'audio et les transcriptions ne sont jamais envoyés nulle part. Enregistrer des personnes peut nécessiter leur consentement : prévenez toujours les participants."
     }
   },
   "footer": {
@@ -752,7 +815,9 @@
         "output_muted": "Votre sortie son est coupée — le son du système risque d'être enregistré vide",
         "device_changed": "Un périphérique audio a changé — l'enregistrement a continué sur le nouveau",
         "mic_unavailable": "Micro indisponible — seul le son du système est enregistré"
-      }
+      },
+      "autoStop": "Arrêt dans {{seconds}} s",
+      "cancelAutoStop": "Annuler"
     },
     "title": "Réunions",
     "loading": "Chargement des réunions…",
@@ -856,6 +921,30 @@
       "retry": "Impossible de relancer la transcription",
       "cancelTranscription": "Impossible d'annuler la transcription",
       "delete": "Impossible de supprimer la réunion"
+    },
+    "prompt": {
+      "close": "Fermer",
+      "detected": {
+        "title": "Réunion {{app}} détectée",
+        "subtitle": "L'enregistrer et la transcrire en local ?",
+        "record": "Enregistrer",
+        "ignore": "Ignorer"
+      },
+      "stop": {
+        "title": "Appel {{app}} terminé ?",
+        "subtitle": "Arrêter l'enregistrement de la réunion ?",
+        "stop": "Arrêter",
+        "keep": "Continuer"
+      },
+      "autoStop": {
+        "title": "Arrêt de l'enregistrement dans {{seconds}} s",
+        "subtitle": "{{app}} a libéré le micro",
+        "cancel": "Continuer"
+      },
+      "started": {
+        "title": "Enregistrement de la réunion {{app}}",
+        "subtitle": "Arrêtez-le depuis la pastille ou la barre d'état"
+      }
     }
   }
 }

@@ -240,6 +240,20 @@ pub enum MeetingAudioRetention {
     DeleteAfterTranscription,
 }
 
+/// What happens when the app a recording was detected from releases the
+/// microphone. Recordings started manually are never stopped automatically.
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Default, Type)]
+#[serde(rename_all = "snake_case")]
+pub enum MeetingAutoStop {
+    /// Ask "Stop the recording?".
+    #[default]
+    Ask,
+    /// Stop after a cancellable countdown.
+    Auto,
+    /// Keep recording until the user stops.
+    Never,
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Type)]
 #[serde(rename_all = "snake_case")]
 pub enum KeyboardImplementation {
@@ -564,6 +578,24 @@ pub struct AppSettings {
     /// starts. Turned off by the reminder's "don't show again".
     #[serde(default = "default_meeting_consent_reminder")]
     pub meeting_consent_reminder: bool,
+    /// Offer to record when a known meeting app starts using the microphone.
+    #[serde(default = "default_meeting_detection_enabled")]
+    pub meeting_detection_enabled: bool,
+    /// Per-app overrides of the catalog's `default_enabled`, keyed by catalog
+    /// id (`meeting::detection::catalog`).
+    #[serde(default)]
+    pub meeting_detection_apps: HashMap<String, bool>,
+    /// Start recording a detected meeting without asking.
+    #[serde(default)]
+    pub meeting_auto_start: bool,
+    #[serde(default)]
+    pub meeting_auto_stop: MeetingAutoStop,
+    /// Record the other participants (system audio) next to the microphone.
+    #[serde(default = "default_meeting_capture_system_audio")]
+    pub meeting_capture_system_audio: bool,
+    /// Play a short sound when a meeting is detected.
+    #[serde(default = "default_meeting_prompt_sound")]
+    pub meeting_prompt_sound: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Type)]
@@ -714,6 +746,18 @@ fn default_show_meeting_indicator() -> bool {
 }
 
 fn default_meeting_consent_reminder() -> bool {
+    true
+}
+
+fn default_meeting_detection_enabled() -> bool {
+    cfg!(any(target_os = "windows", target_os = "macos"))
+}
+
+fn default_meeting_capture_system_audio() -> bool {
+    true
+}
+
+fn default_meeting_prompt_sound() -> bool {
     true
 }
 
@@ -1096,6 +1140,12 @@ pub fn get_default_settings() -> AppSettings {
         show_meeting_indicator: default_show_meeting_indicator(),
         meeting_indicator_position: None,
         meeting_consent_reminder: default_meeting_consent_reminder(),
+        meeting_detection_enabled: default_meeting_detection_enabled(),
+        meeting_detection_apps: HashMap::new(),
+        meeting_auto_start: false,
+        meeting_auto_stop: MeetingAutoStop::default(),
+        meeting_capture_system_audio: default_meeting_capture_system_audio(),
+        meeting_prompt_sound: default_meeting_prompt_sound(),
     }
 }
 

@@ -110,6 +110,7 @@ pub struct MeetingAudioPaths {
 
 struct ActiveMeeting {
     id: MeetingId,
+    source: MeetingSource,
     folder: PathBuf,
     started_at: i64,
     session: Box<dyn CaptureSession>,
@@ -225,6 +226,15 @@ impl MeetingManager {
         self.suppress_feedback.load(Ordering::SeqCst)
     }
 
+    /// The meeting being recorded and what started it; `None` when idle or
+    /// stopping.
+    pub fn recording_source(&self) -> Option<(MeetingId, MeetingSource)> {
+        match &*self.state.lock().unwrap() {
+            State::Recording(active) => Some((active.id.clone(), active.source.clone())),
+            _ => None,
+        }
+    }
+
     pub fn state(&self) -> MeetingStateChanged {
         match &*self.state.lock().unwrap() {
             State::Idle => MeetingStateChanged::idle(),
@@ -300,10 +310,10 @@ impl MeetingManager {
             bail!("A meeting is already being recorded");
         }
 
-        let (kind, source_app) = match source {
+        let (kind, source_app) = match &source {
             MeetingSource::Manual => (MeetingSourceKind::Manual, None),
             MeetingSource::Detected { app_name, .. } => {
-                (MeetingSourceKind::Detected, Some(app_name))
+                (MeetingSourceKind::Detected, Some(app_name.clone()))
             }
         };
         let started_at = now_ms();
@@ -313,7 +323,8 @@ impl MeetingManager {
         let folder_path = self.meetings_dir.join(&folder_name);
         fs::create_dir_all(&folder_path)?;
 
-        let capture_system = capture::system_capture_supported();
+        let capture_system = capture::system_capture_supported()
+            && get_settings(&self.app_handle).meeting_capture_system_audio;
         let mut meeting = Meeting {
             id: uuid::Uuid::new_v4().to_string(),
             title,
@@ -380,6 +391,7 @@ impl MeetingManager {
         let id = meeting.id.clone();
         *state = State::Recording(Box::new(ActiveMeeting {
             id: id.clone(),
+            source,
             folder: folder_path,
             started_at,
             session,

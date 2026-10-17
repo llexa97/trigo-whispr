@@ -6,9 +6,14 @@ use crate::managers::meeting::{
 };
 use crate::managers::transcription::meeting::MeetingTranscriber;
 use crate::meeting::capture::{self, CaptureConfig, CaptureOutput};
-use crate::settings::MeetingAudioRetention;
+use crate::meeting::detection::prompt::MeetingPrompt;
+use crate::meeting::detection::service::{
+    self as detection, MeetingDetectionApp, MeetingPromptResponse,
+};
+use crate::settings::{MeetingAudioRetention, MeetingAutoStop};
 use serde::Serialize;
 use specta::Type;
+use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 use tauri::{AppHandle, Manager, State};
@@ -261,4 +266,76 @@ pub fn change_meeting_consent_reminder_setting(app: AppHandle, enabled: bool) {
     let mut settings = crate::settings::get_settings(&app);
     settings.meeting_consent_reminder = enabled;
     crate::settings::write_settings(&app, settings);
+}
+
+/// Applies `change` to the settings and saves them.
+fn update_settings(app: &AppHandle, change: impl FnOnce(&mut crate::settings::AppSettings)) {
+    let mut settings = crate::settings::get_settings(app);
+    change(&mut settings);
+    crate::settings::write_settings(app, settings);
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn change_meeting_detection_enabled_setting(app: AppHandle, enabled: bool) {
+    update_settings(&app, |s| s.meeting_detection_enabled = enabled);
+    detection::sync(&app);
+}
+
+/// Per-app overrides of the detection catalog's defaults.
+#[tauri::command]
+#[specta::specta]
+pub fn change_meeting_detection_apps_setting(app: AppHandle, apps: HashMap<String, bool>) {
+    update_settings(&app, |s| s.meeting_detection_apps = apps);
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn change_meeting_auto_start_setting(app: AppHandle, enabled: bool) {
+    update_settings(&app, |s| s.meeting_auto_start = enabled);
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn change_meeting_auto_stop_setting(app: AppHandle, mode: MeetingAutoStop) {
+    update_settings(&app, |s| s.meeting_auto_stop = mode);
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn change_meeting_capture_system_audio_setting(app: AppHandle, enabled: bool) {
+    update_settings(&app, |s| s.meeting_capture_system_audio = enabled);
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn change_meeting_prompt_sound_setting(app: AppHandle, enabled: bool) {
+    update_settings(&app, |s| s.meeting_prompt_sound = enabled);
+}
+
+/// The meeting apps detection knows on this platform.
+#[tauri::command]
+#[specta::specta]
+pub fn get_meeting_detection_apps() -> Vec<MeetingDetectionApp> {
+    detection::apps()
+}
+
+/// Whether this platform has a backend to detect meetings yet.
+#[tauri::command]
+#[specta::specta]
+pub fn is_meeting_detection_supported() -> bool {
+    detection::supported()
+}
+
+/// What the detection popup should show (it may load after the event).
+#[tauri::command]
+#[specta::specta]
+pub fn get_meeting_prompt() -> Option<MeetingPrompt> {
+    crate::meeting::detection::prompt::current()
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn respond_meeting_prompt(app: AppHandle, response: MeetingPromptResponse) {
+    detection::respond(&app, response);
 }
