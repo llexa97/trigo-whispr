@@ -611,6 +611,17 @@
         "none": "keine",
         "failed": "Aufnahme fehlgeschlagen: {{error}}"
       },
+      "micUsage": {
+        "title": "Apps, die das Mikrofon nutzen",
+        "description": "Live-Ausgabe der Meeting-Erkennung: Apps, die das Mikrofon nutzen, und die jeweils zugeordnete Meeting-App.",
+        "watch": "Beobachten",
+        "stop": "Stoppen",
+        "unsupported": "Auf dieser Plattform noch nicht unterstützt.",
+        "nobody": "Keine App nutzt das Mikrofon.",
+        "own": "Trigo Whispr (ignoriert)",
+        "unknown": "keine Meeting-App",
+        "failed": "Abfrage fehlgeschlagen: {{error}}"
+      },
       "whatsNewPreview": {
         "title": "Vorschau der Neuerungen",
         "description": "Die neuesten gebündelten Versionshinweise öffnen, ohne sie als gesehen zu markieren",

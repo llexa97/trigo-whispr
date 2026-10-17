@@ -611,6 +611,17 @@
         "none": "không có",
         "failed": "Ghi thất bại: {{error}}"
       },
+      "micUsage": {
+        "title": "Ứng dụng đang dùng micrô",
+        "description": "Kết quả trực tiếp của bộ dò phát hiện cuộc họp: các ứng dụng đang dùng micrô và ứng dụng họp tương ứng.",
+        "watch": "Theo dõi",
+        "stop": "Dừng",
+        "unsupported": "Chưa được hỗ trợ trên nền tảng này.",
+        "nobody": "Không có ứng dụng nào đang dùng micrô.",
+        "own": "Trigo Whispr (bỏ qua)",
+        "unknown": "không phải ứng dụng họp",
+        "failed": "Bộ dò thất bại: {{error}}"
+      },
       "whatsNewPreview": {
         "title": "Xem trước điểm mới",
         "description": "Mở ghi chú phát hành mới nhất được đóng gói mà không đánh dấu là đã xem",

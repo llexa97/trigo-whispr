@@ -611,6 +611,17 @@
         "none": "yok",
         "failed": "Kayıt başarısız: {{error}}"
       },
+      "micUsage": {
+        "title": "Mikrofonu kullanan uygulamalar",
+        "description": "Toplantı algılama sondasının canlı çıktısı: mikrofonu kullanan uygulamalar ve her birinin karşılık geldiği toplantı uygulaması.",
+        "watch": "İzle",
+        "stop": "Durdur",
+        "unsupported": "Bu platformda henüz desteklenmiyor.",
+        "nobody": "Mikrofonu kullanan uygulama yok.",
+        "own": "Trigo Whispr (yok sayılır)",
+        "unknown": "toplantı uygulaması değil",
+        "failed": "Sonda başarısız: {{error}}"
+      },
       "whatsNewPreview": {
         "title": "Yenilikleri Önizle",
         "description": "En son paketlenmiş sürüm notunu görüldü olarak işaretlemeden aç",

@@ -611,6 +611,17 @@
         "none": "brak",
         "failed": "Nagrywanie nie powiodło się: {{error}}"
       },
+      "micUsage": {
+        "title": "Aplikacje używające mikrofonu",
+        "description": "Podgląd na żywo sondy wykrywania spotkań: aplikacje używające mikrofonu i odpowiadająca im aplikacja do spotkań.",
+        "watch": "Obserwuj",
+        "stop": "Zatrzymaj",
+        "unsupported": "Jeszcze nieobsługiwane na tej platformie.",
+        "nobody": "Żadna aplikacja nie używa mikrofonu.",
+        "own": "Trigo Whispr (ignorowane)",
+        "unknown": "nie jest aplikacją do spotkań",
+        "failed": "Błąd sondy: {{error}}"
+      },
       "whatsNewPreview": {
         "title": "Podgląd nowości",
         "description": "Otwórz najnowsze dołączone informacje o wydaniu bez oznaczania ich jako wyświetlone",

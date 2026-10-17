@@ -611,6 +611,17 @@
         "none": "inga",
         "failed": "Inspelningen misslyckades: {{error}}"
       },
+      "micUsage": {
+        "title": "Appar som använder mikrofonen",
+        "description": "Liveutdata från mötesdetekteringen: appar som använder mikrofonen och vilken mötesapp var och en motsvarar.",
+        "watch": "Bevaka",
+        "stop": "Stoppa",
+        "unsupported": "Stöds inte på den här plattformen än.",
+        "nobody": "Ingen app använder mikrofonen.",
+        "own": "Trigo Whispr (ignoreras)",
+        "unknown": "ingen mötesapp",
+        "failed": "Avläsningen misslyckades: {{error}}"
+      },
       "whatsNewPreview": {
         "title": "Förhandsvisa nyheter",
         "description": "Öppna den senaste medföljande versionsinformationen utan att markera den som visad",
