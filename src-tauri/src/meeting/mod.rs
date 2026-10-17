@@ -30,6 +30,10 @@ mod integration_tests {
     struct SessionHooks<'a>(&'a mut Session);
 
     impl TrackHooks for SessionHooks<'_> {
+        fn check_cancelled(&self) -> Result<()> {
+            Ok(())
+        }
+
         fn before_chunk(&mut self) -> Result<()> {
             Ok(())
         }

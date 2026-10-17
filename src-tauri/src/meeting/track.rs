@@ -117,6 +117,9 @@ impl SpeechGate {
 
 /// What a track decode calls around each chunk.
 pub trait TrackHooks {
+    /// Fails once the decode should stop (a cancel). Checked for every block
+    /// read and every chunk, silent ones included.
+    fn check_cancelled(&self) -> Result<()>;
     /// Before decoding a chunk: wait for the engine to be free, or fail to
     /// stop (a cancel).
     fn before_chunk(&mut self) -> Result<()>;
@@ -137,6 +140,7 @@ pub fn decode_track(
     let mut track = TrackTranscript::default();
     let mut offset = 0usize;
     loop {
+        hooks.check_cancelled()?;
         let block = read_block(&mut reader, READ_BLOCK_SAMPLES)
             .with_context(|| format!("Failed to read {}", path.display()))?;
         let end = block.is_empty();
@@ -146,6 +150,7 @@ pub fn decode_track(
             chunker.push(block)
         };
         for chunk in chunks {
+            hooks.check_cancelled()?;
             let len = chunk.len();
             if gate.has_speech(&chunk) {
                 hooks.before_chunk()?;
@@ -250,9 +255,18 @@ mod tests {
         progressed: usize,
         waits: usize,
         fail_before: Option<usize>,
+        /// Cancelled once this many chunks were decoded.
+        cancel_after: Option<usize>,
     }
 
     impl TrackHooks for FakeDecoder {
+        fn check_cancelled(&self) -> Result<()> {
+            if self.cancel_after.is_some_and(|n| self.decoded.len() >= n) {
+                bail!("cancelled");
+            }
+            Ok(())
+        }
+
         fn before_chunk(&mut self) -> Result<()> {
             if self.fail_before == Some(self.waits) {
                 bail!("cancelled");
@@ -353,6 +367,33 @@ mod tests {
         let result = decode_track(&path, chunker(), SpeechGate::new(scorer()), &mut hooks);
         assert!(result.is_err());
         assert_eq!(hooks.decoded.len(), 1);
+    }
+
+    #[test]
+    fn a_cancel_stops_a_silent_track() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = write_track(dir.path(), &[(90, false)]);
+        let mut hooks = FakeDecoder {
+            cancel_after: Some(0),
+            ..Default::default()
+        };
+        let result = decode_track(&path, chunker(), SpeechGate::new(scorer()), &mut hooks);
+        assert!(result.is_err());
+        assert_eq!(hooks.progressed, 0);
+    }
+
+    #[test]
+    fn a_cancel_after_the_last_spoken_chunk_stops_the_silent_rest() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = write_track(dir.path(), &[(35, true), (1, false), (60, false)]);
+        let mut hooks = FakeDecoder {
+            cancel_after: Some(1),
+            ..Default::default()
+        };
+        let result = decode_track(&path, chunker(), SpeechGate::new(scorer()), &mut hooks);
+        assert!(result.is_err());
+        assert_eq!(hooks.decoded.len(), 1);
+        assert!(hooks.progressed < 96 * RATE);
     }
 
     #[test]

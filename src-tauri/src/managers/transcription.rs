@@ -21,18 +21,20 @@ use policy::{batch_decode, live_decode, BatchDecode, ModelTraits};
 use serde::{Deserialize, Serialize};
 use specta::Type;
 use std::panic::{catch_unwind, AssertUnwindSafe};
-use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{mpsc, Arc, Condvar, Mutex, MutexGuard};
 use std::thread;
 use std::time::{Duration, Instant, SystemTime};
 use tauri::{AppHandle, Emitter, Manager};
 use tauri_specta::Event;
 use transcribe_cpp::{Backend, RunOptions, Task, Transcript};
+use users::EngineUsers;
 
 mod chunked;
 mod live;
 pub mod meeting;
 pub mod policy;
+mod users;
 
 const STREAM_PERF_LOG_INTERVAL: Duration = Duration::from_secs(5);
 
@@ -264,11 +266,9 @@ pub struct TranscriptionManager {
     /// yet. This prevents a second worker from starting after finalize/cancel
     /// closes the router but before the first worker has fully exited.
     active_stream_worker: Arc<AtomicU64>,
-    /// Dictations being transcribed: a meeting's transcription waits for
-    /// them between chunks.
-    foreground_runs: Arc<AtomicUsize>,
-    /// True while a meeting is transcribed, which keeps the model loaded.
-    meeting_active: Arc<AtomicBool>,
+    /// Who is using the engine: an immediate unload waits for the last of
+    /// them, and a meeting's transcription gives way to dictation.
+    users: Arc<Mutex<EngineUsers>>,
 }
 
 impl TranscriptionManager {
@@ -288,8 +288,7 @@ impl TranscriptionManager {
             stream_active: Arc::new(AtomicBool::new(false)),
             next_stream_worker_id: Arc::new(AtomicU64::new(1)),
             active_stream_worker: Arc::new(AtomicU64::new(0)),
-            foreground_runs: Arc::new(AtomicUsize::new(0)),
-            meeting_active: Arc::new(AtomicBool::new(false)),
+            users: Arc::new(Mutex::new(EngineUsers::default())),
         };
 
         // Start the idle watcher
@@ -323,7 +322,7 @@ impl TranscriptionManager {
                     let is_recording = app_handle_cloned
                         .try_state::<Arc<AudioRecordingManager>>()
                         .is_some_and(|a| a.is_recording());
-                    if is_recording || manager_cloned.is_transcribing_meeting() {
+                    if is_recording || manager_cloned.engine_in_use() {
                         manager_cloned.touch_activity();
                         continue;
                     }
@@ -492,12 +491,53 @@ impl TranscriptionManager {
     /// Unloads the model immediately if the setting is enabled and the model
     /// is loaded. Never waits for the worker to exit, so it is safe on any
     /// thread, including the event loop.
+    ///
+    /// While anyone still uses the engine (a dictation, a meeting's
+    /// transcription) the unload is left to the last of them, when it lets go.
     pub fn maybe_unload_immediately(&self, context: &str) {
-        // A meeting's transcription needs the model between its chunks; it
-        // unloads it once done.
-        if self.is_transcribing_meeting() {
+        let users = self.lock_users();
+        if users.in_use() {
+            debug!(
+                "Immediate unload after {} deferred: the engine is in use",
+                context
+            );
             return;
         }
+        // Decided under the lock, so no user can register in between.
+        self.unload_if_immediate(context);
+    }
+
+    fn lock_users(&self) -> MutexGuard<'_, EngineUsers> {
+        self.users.lock().unwrap_or_else(|e| e.into_inner())
+    }
+
+    /// Whether a dictation or a meeting's transcription is using the engine.
+    pub fn engine_in_use(&self) -> bool {
+        self.lock_users().in_use()
+    }
+
+    /// Changes who uses the engine; if that leaves it unused, applies the
+    /// immediate unload the users deferred.
+    fn update_users(&self, context: &str, change: impl FnOnce(&mut EngineUsers)) {
+        let mut users = self.lock_users();
+        change(&mut users);
+        if !users.in_use() {
+            self.unload_if_immediate(context);
+        }
+    }
+
+    /// A dictation started (before it loads the model): the model stays
+    /// loaded for it until [`end_dictation`](Self::end_dictation).
+    pub fn begin_dictation(&self) {
+        self.lock_users().set_dictation(true);
+    }
+
+    /// A dictation's pipeline finished, or it was cancelled.
+    pub fn end_dictation(&self) {
+        self.update_users("dictation", |users| users.set_dictation(false));
+    }
+
+    fn unload_if_immediate(&self, context: &str) {
         let settings = get_settings(&self.app_handle);
         if settings.model_unload_timeout == ModelUnloadTimeout::Immediately
             && self.is_model_loaded()
@@ -900,14 +940,14 @@ impl TranscriptionManager {
     /// Transcribe a whole clip in batch: a re-transcribed history entry, or
     /// a file from the CLI.
     pub fn transcribe(&self, audio: Vec<f32>) -> Result<String> {
-        let _foreground = meeting::ForegroundRun::new(&self.foreground_runs);
+        let _foreground = meeting::ForegroundRun::new(self);
         self.complete(Instant::now(), audio, None)
     }
 
     /// Transcribe a finished recording: what its live decode produced, or a
     /// batch run of the whole recording when there is no live result.
     pub fn transcribe_recording(&self, samples: Vec<f32>) -> Result<String> {
-        let _foreground = meeting::ForegroundRun::new(&self.foreground_runs);
+        let _foreground = meeting::ForegroundRun::new(self);
         let started = Instant::now();
         let live = self.finalize_live(samples.len())?;
         self.complete(started, samples, live)

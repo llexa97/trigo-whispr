@@ -8,7 +8,7 @@
 
 use std::collections::VecDeque;
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 use std::thread;
 use std::time::{Duration, Instant};
@@ -74,38 +74,40 @@ pub struct MeetingTranscriptionProgress {
     pub eta_ms: Option<u64>,
 }
 
-/// Counts a dictation in flight, from its transcription's start to its end.
-pub(super) struct ForegroundRun(Arc<AtomicUsize>);
+/// A transcription outside the meeting queue (a dictation's, a history
+/// entry's, a CLI file's), from its start to its end.
+pub(super) struct ForegroundRun<'a>(&'a TranscriptionManager);
 
-impl ForegroundRun {
-    pub(super) fn new(count: &Arc<AtomicUsize>) -> Self {
-        count.fetch_add(1, Ordering::AcqRel);
-        Self(Arc::clone(count))
+impl<'a> ForegroundRun<'a> {
+    pub(super) fn new(tm: &'a TranscriptionManager) -> Self {
+        tm.lock_users().add_foreground();
+        Self(tm)
     }
 }
 
-impl Drop for ForegroundRun {
+impl Drop for ForegroundRun<'_> {
     fn drop(&mut self) {
-        self.0.fetch_sub(1, Ordering::AcqRel);
+        self.0
+            .update_users("transcription", |users| users.remove_foreground());
     }
 }
 
-/// Keeps the model loaded while a meeting is transcribed; afterwards the
-/// usual unload rules apply again.
+/// Keeps the model loaded while a meeting is transcribed; afterwards it is
+/// unloaded per the usual rules, once no dictation uses it either.
 struct MeetingActive<'a>(&'a TranscriptionManager);
 
 impl<'a> MeetingActive<'a> {
     fn new(tm: &'a TranscriptionManager) -> Self {
-        tm.meeting_active.store(true, Ordering::Release);
+        tm.lock_users().set_meeting(true);
         Self(tm)
     }
 }
 
 impl Drop for MeetingActive<'_> {
     fn drop(&mut self) {
-        self.0.meeting_active.store(false, Ordering::Release);
         self.0.touch_activity();
-        self.0.maybe_unload_immediately("meeting transcription");
+        self.0
+            .update_users("meeting transcription", |users| users.set_meeting(false));
     }
 }
 
@@ -113,17 +115,12 @@ impl TranscriptionManager {
     /// Whether a dictation is recording or being transcribed: a meeting's
     /// transcription gives way to it.
     pub fn dictation_busy(&self) -> bool {
-        self.foreground_runs.load(Ordering::Acquire) > 0
+        self.lock_users().dictating()
             || self.is_streaming()
             || self
                 .app_handle
                 .try_state::<Arc<AudioRecordingManager>>()
                 .is_some_and(|audio| audio.is_recording())
-    }
-
-    /// Whether a meeting is being transcribed.
-    pub fn is_transcribing_meeting(&self) -> bool {
-        self.meeting_active.load(Ordering::Acquire)
     }
 
     /// Loads the selected model if none is, waiting for a load under way.
@@ -255,16 +252,16 @@ impl MeetingRun<'_> {
         let gate = SpeechGate::new(create_detector(backend, &self.tm.app_handle));
         decode_track(path, chunker, gate, self)
     }
+}
 
+impl TrackHooks for MeetingRun<'_> {
     fn check_cancelled(&self) -> Result<()> {
         if self.cancelled.load(Ordering::Acquire) {
             return Err(EngineError::Cancelled.into());
         }
         Ok(())
     }
-}
 
-impl TrackHooks for MeetingRun<'_> {
     fn before_chunk(&mut self) -> Result<()> {
         loop {
             self.check_cancelled()?;
@@ -285,7 +282,12 @@ impl TrackHooks for MeetingRun<'_> {
                 self.model_id,
             );
             match result {
-                Ok(transcript) => return Ok(transcript),
+                // A cancel that could not stop the engine (a dictation was
+                // using it) lands here, once the chunk is decoded.
+                Ok(transcript) => {
+                    self.check_cancelled()?;
+                    return Ok(transcript);
+                }
                 Err(EngineError::Cancelled)
                     if !self.cancelled.load(Ordering::Acquire) && attempt < MAX_CHUNK_ATTEMPTS =>
                 {
@@ -325,8 +327,73 @@ struct Shared {
 struct Queue {
     /// Ids of the meetings waiting, oldest first.
     pending: VecDeque<String>,
-    /// The meeting being transcribed, and its cancel flag.
-    current: Option<(String, Arc<AtomicBool>)>,
+    /// The meeting being transcribed.
+    current: Option<Current>,
+}
+
+struct Current {
+    id: String,
+    cancelled: Arc<AtomicBool>,
+    /// Past the point of no return: its result is being saved, a cancel
+    /// comes too late.
+    committed: bool,
+}
+
+/// What a cancel did.
+#[derive(Debug, PartialEq, Eq)]
+enum CancelOutcome {
+    /// Taken out of the queue.
+    Dequeued,
+    /// Being transcribed: flagged to stop.
+    Stopping,
+    /// Its result is already being saved.
+    TooLate,
+    NotQueued,
+}
+
+impl Queue {
+    fn contains(&self, id: &str) -> bool {
+        self.pending.iter().any(|p| p == id) || self.current.as_ref().is_some_and(|c| c.id == id)
+    }
+
+    /// Takes the next meeting, if any, as the current one.
+    fn start_next(&mut self) -> Option<(String, Arc<AtomicBool>)> {
+        let id = self.pending.pop_front()?;
+        let cancelled = Arc::new(AtomicBool::new(false));
+        self.current = Some(Current {
+            id: id.clone(),
+            cancelled: Arc::clone(&cancelled),
+            committed: false,
+        });
+        Some((id, cancelled))
+    }
+
+    fn cancel(&mut self, id: &str) -> CancelOutcome {
+        if let Some(at) = self.pending.iter().position(|p| p == id) {
+            self.pending.remove(at);
+            return CancelOutcome::Dequeued;
+        }
+        match self.current.as_mut().filter(|c| c.id == id) {
+            Some(current) if current.committed => CancelOutcome::TooLate,
+            Some(current) => {
+                current.cancelled.store(true, Ordering::Release);
+                CancelOutcome::Stopping
+            }
+            None => CancelOutcome::NotQueued,
+        }
+    }
+
+    /// The point of no return for the current meeting's result: false if it
+    /// was cancelled first, else no cancel is accepted from now on.
+    fn commit(&mut self) -> bool {
+        match self.current.as_mut() {
+            Some(current) if !current.cancelled.load(Ordering::Acquire) => {
+                current.committed = true;
+                true
+            }
+            _ => false,
+        }
+    }
 }
 
 impl MeetingTranscriber {
@@ -349,12 +416,7 @@ impl MeetingTranscriber {
     /// Its status is the store's: `pending` or `recovered` until it starts.
     pub fn enqueue(&self, meeting_id: &str) {
         let mut queue = self.shared.lock();
-        let queued = queue.pending.iter().any(|id| id == meeting_id)
-            || queue
-                .current
-                .as_ref()
-                .is_some_and(|(current, _)| current == meeting_id);
-        if queued {
+        if queue.contains(meeting_id) {
             return;
         }
         queue.pending.push_back(meeting_id.to_string());
@@ -362,31 +424,24 @@ impl MeetingTranscriber {
     }
 
     /// Stops a meeting's transcription, or takes it out of the queue; either
-    /// way it is left `pending`, to be retried. Returns whether it was queued
-    /// or running.
+    /// way it is left `pending`, its tracks kept, to be retried. Returns
+    /// false if it was not queued, or its result is already being saved.
     pub fn cancel(&self, meeting_id: &str) -> bool {
-        let mut queue = self.shared.lock();
-        if let Some(at) = queue.pending.iter().position(|id| id == meeting_id) {
-            queue.pending.remove(at);
-            return true;
-        }
-        let Some((_, cancelled)) = queue
-            .current
-            .as_ref()
-            .filter(|(current, _)| current == meeting_id)
-        else {
-            return false;
-        };
-        cancelled.store(true, Ordering::Release);
-        drop(queue);
-        // Free the engine now, unless that would also stop a dictation: then
-        // the meeting stops before its next chunk.
-        if let Some(tm) = self.shared.app.try_state::<Arc<TranscriptionManager>>() {
-            if !tm.dictation_busy() {
-                tm.cancel_transcription();
+        let outcome = self.shared.lock().cancel(meeting_id);
+        match outcome {
+            CancelOutcome::Dequeued => true,
+            CancelOutcome::Stopping => {
+                // Free the engine now, unless that would also stop a
+                // dictation: then the meeting stops once its chunk is done.
+                if let Some(tm) = self.shared.app.try_state::<Arc<TranscriptionManager>>() {
+                    if !tm.dictation_busy() {
+                        tm.cancel_transcription();
+                    }
+                }
+                true
             }
+            CancelOutcome::TooLate | CancelOutcome::NotQueued => false,
         }
-        true
     }
 }
 
@@ -399,15 +454,12 @@ impl Shared {
         loop {
             let (id, cancelled) = {
                 let mut queue = self.lock();
-                let id = loop {
-                    match queue.pending.pop_front() {
-                        Some(id) => break id,
+                loop {
+                    match queue.start_next() {
+                        Some(next) => break next,
                         None => queue = self.wake.wait(queue).unwrap_or_else(|e| e.into_inner()),
                     }
-                };
-                let cancelled = Arc::new(AtomicBool::new(false));
-                queue.current = Some((id.clone(), Arc::clone(&cancelled)));
-                (id, cancelled)
+                }
             };
             match self.store.job(&id) {
                 Ok(job) => self.transcribe(&job, &cancelled),
@@ -448,6 +500,11 @@ impl Shared {
             ))
         })
         .and_then(|file| {
+            // Nothing is saved for a meeting cancelled before this point,
+            // and no cancel is accepted after it.
+            if !self.lock().commit() {
+                return Err(EngineError::Cancelled.into());
+            }
             write_transcript_files(&job.dir, &file)?;
             self.store.save_transcript(id, &file)?;
             Ok(file)
@@ -482,5 +539,53 @@ impl Shared {
             eta_ms,
         }
         .emit(&self.app);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn queue(ids: &[&str]) -> Queue {
+        Queue {
+            pending: ids.iter().map(|id| id.to_string()).collect(),
+            current: None,
+        }
+    }
+
+    #[test]
+    fn a_queued_meeting_is_dequeued() {
+        let mut q = queue(&["a", "b"]);
+        assert_eq!(q.cancel("b"), CancelOutcome::Dequeued);
+        assert!(!q.contains("b"));
+        assert_eq!(q.cancel("c"), CancelOutcome::NotQueued);
+    }
+
+    #[test]
+    fn a_cancelled_meeting_saves_nothing() {
+        let mut q = queue(&["a"]);
+        let (_, cancelled) = q.start_next().unwrap();
+        assert_eq!(q.cancel("a"), CancelOutcome::Stopping);
+        assert!(cancelled.load(Ordering::Acquire));
+        // Its decode may still finish (a dictation kept the engine from
+        // stopping): the result is not committed.
+        assert!(!q.commit());
+    }
+
+    #[test]
+    fn a_cancel_after_the_commit_is_refused() {
+        let mut q = queue(&["a"]);
+        let (_, cancelled) = q.start_next().unwrap();
+        assert!(q.commit());
+        assert_eq!(q.cancel("a"), CancelOutcome::TooLate);
+        assert!(!cancelled.load(Ordering::Acquire));
+    }
+
+    #[test]
+    fn a_running_meeting_is_not_queued_twice() {
+        let mut q = queue(&["a"]);
+        q.start_next().unwrap();
+        assert!(q.contains("a"));
+        assert!(q.start_next().is_none());
     }
 }

@@ -1,5 +1,6 @@
 use crate::actions::ACTION_MAP;
 use crate::managers::audio::AudioRecordingManager;
+use crate::managers::transcription::TranscriptionManager;
 use crate::settings::ShortcutActivation;
 use log::{debug, error, warn};
 use std::sync::mpsc::{self, Sender};
@@ -545,15 +546,16 @@ impl TranscriptionCoordinator {
         thread::spawn(move || {
             let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
                 let mut state = CoordinatorState::new();
+                // Mirrors whether `state` has a dictation under way.
+                let mut dictating = false;
 
                 loop {
                     let cmd = if let Some(deadline) = state.grace_deadline() {
                         match rx.recv_timeout(deadline.saturating_duration_since(Instant::now())) {
                             Ok(cmd) => cmd,
                             Err(mpsc::RecvTimeoutError::Timeout) => {
-                                if let Some(effect) = state.on_grace_expired() {
-                                    run_effect(&app, &mut state, effect);
-                                }
+                                let effect = state.on_grace_expired();
+                                apply(&app, &mut state, &mut dictating, effect);
                                 continue;
                             }
                             Err(mpsc::RecvTimeoutError::Disconnected) => break,
@@ -565,21 +567,17 @@ impl TranscriptionCoordinator {
                         }
                     };
 
-                    match cmd {
-                        Command::Input(input) => {
-                            if let Some(effect) = state.on_input(input, Instant::now()) {
-                                run_effect(&app, &mut state, effect);
-                            }
-                        }
+                    let effect = match cmd {
+                        Command::Input(input) => state.on_input(input, Instant::now()),
                         Command::Cancel {
                             recording_was_active,
-                        } => state.on_cancel(recording_was_active),
-                        Command::ProcessingFinished => {
-                            if let Some(effect) = state.on_processing_finished() {
-                                run_effect(&app, &mut state, effect);
-                            }
+                        } => {
+                            state.on_cancel(recording_was_active);
+                            None
                         }
-                    }
+                        Command::ProcessingFinished => state.on_processing_finished(),
+                    };
+                    apply(&app, &mut state, &mut dictating, effect);
                 }
                 debug!("Transcription coordinator exited");
             }));
@@ -664,6 +662,38 @@ impl TranscriptionCoordinator {
     pub fn notify_processing_finished(&self) {
         if self.tx.send(Command::ProcessingFinished).is_err() {
             warn!("Transcription coordinator channel closed");
+        }
+    }
+}
+
+/// Runs the effect of a state change, telling the transcription manager
+/// whenever a dictation begins or ends: the stage turns non-idle before the
+/// effect starts it (so before it loads the model), and idle once its
+/// pipeline finished, it was cancelled or it failed to start.
+fn apply(
+    app: &AppHandle,
+    state: &mut CoordinatorState,
+    dictating: &mut bool,
+    effect: Option<Effect>,
+) {
+    sync_dictation(app, state, dictating);
+    if let Some(effect) = effect {
+        run_effect(app, state, effect);
+        sync_dictation(app, state, dictating);
+    }
+}
+
+fn sync_dictation(app: &AppHandle, state: &CoordinatorState, dictating: &mut bool) {
+    let busy = state.stage != Stage::Idle;
+    if busy == *dictating {
+        return;
+    }
+    *dictating = busy;
+    if let Some(tm) = app.try_state::<Arc<TranscriptionManager>>() {
+        if busy {
+            tm.begin_dictation();
+        } else {
+            tm.end_dictation();
         }
     }
 }
