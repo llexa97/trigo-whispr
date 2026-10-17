@@ -12,7 +12,15 @@
     "meetingTitleManual": "اجتماع — {{date}}",
     "quitMeetingTitle": "اجتماع قيد التقدم",
     "quitMeetingMessage": "يجري تسجيل اجتماع. هل تريد إيقاف التسجيل والخروج؟",
-    "quitMeetingConfirm": "إيقاف وخروج"
+    "quitMeetingConfirm": "إيقاف وخروج",
+    "recordMeeting": "تسجيل اجتماع",
+    "stopMeeting": "إيقاف التسجيل ({{time}})",
+    "stoppingMeeting": "جارٍ إيقاف التسجيل…",
+    "meetingReminderTitle": "جارٍ تسجيل اجتماع",
+    "meetingReminderMessage": "أبلغ المشاركين بأنك تسجّل هذا الاجتماع.",
+    "meetingReminderStart": "بدء التسجيل",
+    "meetingReminderDontShow": "بدء وعدم الإظهار مجددًا",
+    "meetingStartFailedTitle": "تعذّر تسجيل الاجتماع"
   },
   "sidebar": {
     "general": "عام",
@@ -146,6 +154,10 @@
           "transcribe_with_post_process": {
             "name": "مفتاح المعالجة اللاحقة",
             "description": "اختياري: مفتاح اختصار مخصص يطبق دائماً المعالجة اللاحقة بالذكاء الاصطناعي على التفريغ الصوتي."
+          },
+          "toggle_meeting_recording": {
+            "name": "اختصار تسجيل الاجتماع",
+            "description": "اختياري: اختصار لوحة مفاتيح لبدء تسجيل اجتماع أو إيقافه."
           }
         },
         "errors": {
@@ -727,6 +739,19 @@
     "dismiss": "تجاهل"
   },
   "meetings": {
-    "recoveredNotice": "تم استرداد اجتماعات بعد إيقاف غير متوقع: {{total}}"
+    "recoveredNotice": "تم استرداد اجتماعات بعد إيقاف غير متوقع: {{total}}",
+    "indicator": {
+      "stop": "إيقاف",
+      "recording": "جارٍ تسجيل اجتماع",
+      "microphone": "الميكروفون",
+      "systemAudio": "صوت النظام",
+      "warnings": {
+        "system_audio_unavailable": "صوت النظام غير متاح — يُسجَّل الميكروفون فقط",
+        "system_audio_silent": "لم يُستقبل صوت النظام منذ مدة — تحقّق من مخرج تطبيق الاجتماع",
+        "output_muted": "مخرج الصوت مكتوم — قد يُسجَّل صوت النظام صامتًا",
+        "device_changed": "تغيّر جهاز صوت — استمر التسجيل على الجهاز الجديد",
+        "mic_unavailable": "الميكروفون غير متاح — يُسجَّل صوت النظام فقط"
+      }
+    }
   }
 }

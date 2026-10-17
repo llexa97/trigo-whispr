@@ -12,7 +12,15 @@
     "meetingTitleManual": "Riunione — {{date}}",
     "quitMeetingTitle": "Riunione in corso",
     "quitMeetingMessage": "È in corso la registrazione di una riunione. Interrompere la registrazione e uscire?",
-    "quitMeetingConfirm": "Interrompi ed esci"
+    "quitMeetingConfirm": "Interrompi ed esci",
+    "recordMeeting": "Registra una riunione",
+    "stopMeeting": "Interrompi registrazione ({{time}})",
+    "stoppingMeeting": "Interruzione della registrazione…",
+    "meetingReminderTitle": "Registrazione di una riunione",
+    "meetingReminderMessage": "Informa i partecipanti che stai registrando questa riunione.",
+    "meetingReminderStart": "Avvia registrazione",
+    "meetingReminderDontShow": "Avvia, non mostrare più",
+    "meetingStartFailedTitle": "Impossibile registrare la riunione"
   },
   "sidebar": {
     "general": "Generale",
@@ -176,6 +184,10 @@
           "transcribe_with_post_process": {
             "name": "Tasto di post-elaborazione",
             "description": "Facoltativo: Un tasto di scelta rapida dedicato che applica sempre la post-elaborazione IA alla trascrizione."
+          },
+          "toggle_meeting_recording": {
+            "name": "Scorciatoia registrazione riunione",
+            "description": "Facoltativa: una scorciatoia da tastiera per avviare o interrompere la registrazione di una riunione."
           }
         },
         "errors": {
@@ -727,6 +739,19 @@
     "dismiss": "Ignora"
   },
   "meetings": {
-    "recoveredNotice": "{{total}} riunione/i recuperata/e dopo una chiusura imprevista"
+    "recoveredNotice": "{{total}} riunione/i recuperata/e dopo una chiusura imprevista",
+    "indicator": {
+      "stop": "Interrompi",
+      "recording": "Registrazione di una riunione",
+      "microphone": "Microfono",
+      "systemAudio": "Audio di sistema",
+      "warnings": {
+        "system_audio_unavailable": "Audio di sistema non disponibile: viene registrato solo il microfono",
+        "system_audio_silent": "Nessun audio di sistema ricevuto da un po': controlla l'uscita dell'app della riunione",
+        "output_muted": "L'uscita audio è disattivata: l'audio di sistema potrebbe essere registrato come silenzio",
+        "device_changed": "Un dispositivo audio è cambiato: la registrazione è proseguita su quello nuovo",
+        "mic_unavailable": "Microfono non disponibile: viene registrato solo l'audio di sistema"
+      }
+    }
   }
 }

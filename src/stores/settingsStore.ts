@@ -193,6 +193,10 @@ const settingUpdaters: {
     commands.changeChineseScriptSetting(value as ChineseScript),
   show_tray_icon: (value) =>
     commands.changeShowTrayIconSetting(value as boolean),
+  show_meeting_indicator: (value) =>
+    commands.changeShowMeetingIndicatorSetting(value as boolean),
+  meeting_consent_reminder: (value) =>
+    commands.changeMeetingConsentReminderSetting(value as boolean),
   transcribe_accelerator: (value) =>
     commands.changeTranscribeAcceleratorSetting(
       value as TranscribeAcceleratorSetting,

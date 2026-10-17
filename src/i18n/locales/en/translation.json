@@ -12,7 +12,15 @@
     "meetingTitleManual": "Meeting — {{date}}",
     "quitMeetingTitle": "Meeting in progress",
     "quitMeetingMessage": "A meeting is being recorded. Stop the recording and quit?",
-    "quitMeetingConfirm": "Stop and Quit"
+    "quitMeetingConfirm": "Stop and Quit",
+    "recordMeeting": "Record a Meeting",
+    "stopMeeting": "Stop Recording ({{time}})",
+    "stoppingMeeting": "Stopping Recording…",
+    "meetingReminderTitle": "Recording a meeting",
+    "meetingReminderMessage": "Let the participants know that you are recording this meeting.",
+    "meetingReminderStart": "Start Recording",
+    "meetingReminderDontShow": "Start, Don't Show Again",
+    "meetingStartFailedTitle": "Could not record the meeting"
   },
   "sidebar": {
     "general": "General",
@@ -149,6 +157,10 @@
           "transcribe_with_post_process": {
             "name": "Post-Processing Hotkey",
             "description": "Optional: A dedicated hotkey that always applies AI post-processing to your transcription."
+          },
+          "toggle_meeting_recording": {
+            "name": "Meeting Recording Shortcut",
+            "description": "Optional: a keyboard shortcut to start or stop recording a meeting."
           }
         },
         "errors": {
@@ -727,6 +739,19 @@
     "dismiss": "Dismiss"
   },
   "meetings": {
-    "recoveredNotice": "{{total}} meeting(s) recovered after an unexpected shutdown"
+    "recoveredNotice": "{{total}} meeting(s) recovered after an unexpected shutdown",
+    "indicator": {
+      "stop": "Stop",
+      "recording": "Recording a meeting",
+      "microphone": "Microphone",
+      "systemAudio": "System audio",
+      "warnings": {
+        "system_audio_unavailable": "System audio unavailable — only your microphone is recorded",
+        "system_audio_silent": "No system audio received for a while — check the meeting app's output",
+        "output_muted": "Your sound output is muted — system audio may be recorded as silence",
+        "device_changed": "An audio device changed — the recording continued on the new one",
+        "mic_unavailable": "Microphone unavailable — only system audio is recorded"
+      }
+    }
   }
 }

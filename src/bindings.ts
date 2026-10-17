@@ -1042,6 +1042,12 @@ async updateMeetingAudioRetention(retention: MeetingAudioRetention) : Promise<Re
     else return { status: "error", error: e  as any };
 }
 },
+async changeShowMeetingIndicatorSetting(enabled: boolean) : Promise<void> {
+    await TAURI_INVOKE("change_show_meeting_indicator_setting", { enabled });
+},
+async changeMeetingConsentReminderSetting(enabled: boolean) : Promise<void> {
+    await TAURI_INVOKE("change_meeting_consent_reminder_setting", { enabled });
+},
 /**
  * Stub implementation for non-macOS platforms
  * Always returns false since laptop detection is macOS-specific
@@ -1156,7 +1162,21 @@ long_form_chunking?: boolean;
  * not gated on this — that follows model capability. Migrated from the old
  * `overlay_position` (position `none` → style `None`).
  */
-overlay_style?: OverlayStyle }
+overlay_style?: OverlayStyle; 
+/**
+ * Floating pill (timer, levels, Stop) shown while a meeting records.
+ */
+show_meeting_indicator?: boolean; 
+/**
+ * Where the user last dragged the meeting pill, in physical pixels.
+ * `None` until it is moved: the pill then sits in its default corner.
+ */
+meeting_indicator_position?: WindowPosition | null; 
+/**
+ * Remind the user to tell the participants before a meeting recording
+ * starts. Turned off by the reminder's "don't show again".
+ */
+meeting_consent_reminder?: boolean }
 export type AudioDevice = { index: string; name: string; is_default: boolean }
 export type AutoSubmitKey = "enter" | "ctrl_enter" | "cmd_enter"
 export type AvailableAccelerators = { transcribe: string[]; gpu_devices: GpuDeviceOption[] }
@@ -1491,6 +1511,7 @@ export type Theme = "system" | "light" | "dark"
 export type TranscribeAcceleratorSetting = "auto" | "cpu" | "gpu"
 export type TypingTool = "auto" | "wtype" | "kwtype" | "dotool" | "ydotool" | "xdotool"
 export type VadBackend = "silero" | "earshot"
+export type WindowPosition = { x: number; y: number }
 export type WindowsMicrophonePermissionStatus = { supported: boolean; overall_access: PermissionAccess; device_access: PermissionAccess; app_access: PermissionAccess; desktop_app_access: PermissionAccess }
 
 /** tauri-specta globals **/

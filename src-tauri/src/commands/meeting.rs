@@ -197,3 +197,20 @@ pub async fn update_meeting_audio_retention(
     crate::settings::write_settings(&app, settings);
     blocking(&meeting_manager, |m| m.apply_retention()).await
 }
+
+#[tauri::command]
+#[specta::specta]
+pub fn change_show_meeting_indicator_setting(app: AppHandle, enabled: bool) {
+    let mut settings = crate::settings::get_settings(&app);
+    settings.show_meeting_indicator = enabled;
+    crate::settings::write_settings(&app, settings);
+    crate::meeting::indicator::refresh(&app);
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn change_meeting_consent_reminder_setting(app: AppHandle, enabled: bool) {
+    let mut settings = crate::settings::get_settings(&app);
+    settings.meeting_consent_reminder = enabled;
+    crate::settings::write_settings(&app, settings);
+}

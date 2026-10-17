@@ -12,7 +12,15 @@
     "meetingTitleManual": "會議 — {{date}}",
     "quitMeetingTitle": "會議進行中",
     "quitMeetingMessage": "正在錄製會議。要停止錄製並結束嗎？",
-    "quitMeetingConfirm": "停止並結束"
+    "quitMeetingConfirm": "停止並結束",
+    "recordMeeting": "錄製會議",
+    "stopMeeting": "停止錄製 ({{time}})",
+    "stoppingMeeting": "正在停止錄製…",
+    "meetingReminderTitle": "正在錄製會議",
+    "meetingReminderMessage": "請告知與會者你正在錄製本次會議。",
+    "meetingReminderStart": "開始錄製",
+    "meetingReminderDontShow": "開始，不再顯示",
+    "meetingStartFailedTitle": "無法錄製會議"
   },
   "sidebar": {
     "general": "一般",
@@ -149,6 +157,10 @@
           "transcribe_with_post_process": {
             "name": "後處理快捷鍵",
             "description": "可選：專用快捷鍵，使用時一律對轉錄結果套用 AI 後處理"
+          },
+          "toggle_meeting_recording": {
+            "name": "會議錄製快捷鍵",
+            "description": "選用：用於開始或停止錄製會議的鍵盤快捷鍵。"
           }
         },
         "errors": {
@@ -727,6 +739,19 @@
     "dismiss": "關閉"
   },
   "meetings": {
-    "recoveredNotice": "意外關閉後已復原 {{total}} 個會議"
+    "recoveredNotice": "意外關閉後已復原 {{total}} 個會議",
+    "indicator": {
+      "stop": "停止",
+      "recording": "正在錄製會議",
+      "microphone": "麥克風",
+      "systemAudio": "系統音訊",
+      "warnings": {
+        "system_audio_unavailable": "系統音訊無法使用 — 僅錄製你的麥克風",
+        "system_audio_silent": "一段時間內未收到系統音訊 — 請檢查會議應用程式的輸出",
+        "output_muted": "聲音輸出已靜音 — 系統音訊可能被錄成靜音",
+        "device_changed": "音訊裝置已變更 — 已在新裝置上繼續錄製",
+        "mic_unavailable": "麥克風無法使用 — 僅錄製系統音訊"
+      }
+    }
   }
 }

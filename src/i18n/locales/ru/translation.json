@@ -12,7 +12,15 @@
     "meetingTitleManual": "Встреча — {{date}}",
     "quitMeetingTitle": "Идёт встреча",
     "quitMeetingMessage": "Идёт запись встречи. Остановить запись и выйти?",
-    "quitMeetingConfirm": "Остановить и выйти"
+    "quitMeetingConfirm": "Остановить и выйти",
+    "recordMeeting": "Записать встречу",
+    "stopMeeting": "Остановить запись ({{time}})",
+    "stoppingMeeting": "Остановка записи…",
+    "meetingReminderTitle": "Идёт запись встречи",
+    "meetingReminderMessage": "Сообщите участникам, что вы записываете эту встречу.",
+    "meetingReminderStart": "Начать запись",
+    "meetingReminderDontShow": "Начать и больше не показывать",
+    "meetingStartFailedTitle": "Не удалось записать встречу"
   },
   "sidebar": {
     "general": "Общие",
@@ -176,6 +184,10 @@
           "transcribe_with_post_process": {
             "name": "Горячая клавиша постобработки",
             "description": "Специальное сочетание клавиш для ИИ-постобработки вашей транскрипции."
+          },
+          "toggle_meeting_recording": {
+            "name": "Сочетание клавиш для записи встречи",
+            "description": "Необязательно: сочетание клавиш, чтобы начать или остановить запись встречи."
           }
         },
         "errors": {
@@ -727,6 +739,19 @@
     "dismiss": "Скрыть"
   },
   "meetings": {
-    "recoveredNotice": "Восстановлено встреч после непредвиденного завершения: {{total}}"
+    "recoveredNotice": "Восстановлено встреч после непредвиденного завершения: {{total}}",
+    "indicator": {
+      "stop": "Остановить",
+      "recording": "Идёт запись встречи",
+      "microphone": "Микрофон",
+      "systemAudio": "Системный звук",
+      "warnings": {
+        "system_audio_unavailable": "Системный звук недоступен — записывается только микрофон",
+        "system_audio_silent": "Системный звук давно не поступает — проверьте вывод приложения для встреч",
+        "output_muted": "Звуковой выход отключён — системный звук может записаться как тишина",
+        "device_changed": "Аудиоустройство изменилось — запись продолжилась на новом",
+        "mic_unavailable": "Микрофон недоступен — записывается только системный звук"
+      }
+    }
   }
 }

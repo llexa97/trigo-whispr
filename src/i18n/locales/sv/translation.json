@@ -12,7 +12,15 @@
     "meetingTitleManual": "Möte — {{date}}",
     "quitMeetingTitle": "Möte pågår",
     "quitMeetingMessage": "Ett möte spelas in. Stoppa inspelningen och avsluta?",
-    "quitMeetingConfirm": "Stoppa och avsluta"
+    "quitMeetingConfirm": "Stoppa och avsluta",
+    "recordMeeting": "Spela in ett möte",
+    "stopMeeting": "Stoppa inspelning ({{time}})",
+    "stoppingMeeting": "Stoppar inspelningen…",
+    "meetingReminderTitle": "Spelar in ett möte",
+    "meetingReminderMessage": "Meddela deltagarna att du spelar in det här mötet.",
+    "meetingReminderStart": "Starta inspelning",
+    "meetingReminderDontShow": "Starta, visa inte igen",
+    "meetingStartFailedTitle": "Mötet kunde inte spelas in"
   },
   "sidebar": {
     "general": "Allmänt",
@@ -149,6 +157,10 @@
           "transcribe_with_post_process": {
             "name": "Snabbkommando för efterbearbetning",
             "description": "Valfritt: En dedikerad snabbknapp som alltid tillämpar AI-efterbearbetning på din transkription."
+          },
+          "toggle_meeting_recording": {
+            "name": "Kortkommando för mötesinspelning",
+            "description": "Valfritt: ett kortkommando för att starta eller stoppa inspelningen av ett möte."
           }
         },
         "errors": {
@@ -727,6 +739,19 @@
     "dismiss": "Avfärda"
   },
   "meetings": {
-    "recoveredNotice": "{{total}} möte(n) återställda efter en oväntad avstängning"
+    "recoveredNotice": "{{total}} möte(n) återställda efter en oväntad avstängning",
+    "indicator": {
+      "stop": "Stoppa",
+      "recording": "Spelar in ett möte",
+      "microphone": "Mikrofon",
+      "systemAudio": "Systemljud",
+      "warnings": {
+        "system_audio_unavailable": "Systemljud är inte tillgängligt — endast din mikrofon spelas in",
+        "system_audio_silent": "Inget systemljud har tagits emot på ett tag — kontrollera mötesappens utgång",
+        "output_muted": "Din ljudutgång är avstängd — systemljudet kan spelas in som tystnad",
+        "device_changed": "En ljudenhet ändrades — inspelningen fortsatte på den nya",
+        "mic_unavailable": "Mikrofonen är inte tillgänglig — endast systemljud spelas in"
+      }
+    }
   }
 }

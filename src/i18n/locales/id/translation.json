@@ -12,7 +12,15 @@
     "meetingTitleManual": "Rapat — {{date}}",
     "quitMeetingTitle": "Rapat sedang berlangsung",
     "quitMeetingMessage": "Rapat sedang direkam. Hentikan perekaman dan keluar?",
-    "quitMeetingConfirm": "Hentikan dan keluar"
+    "quitMeetingConfirm": "Hentikan dan keluar",
+    "recordMeeting": "Rekam Rapat",
+    "stopMeeting": "Hentikan Rekaman ({{time}})",
+    "stoppingMeeting": "Menghentikan rekaman…",
+    "meetingReminderTitle": "Merekam rapat",
+    "meetingReminderMessage": "Beri tahu peserta bahwa Anda merekam rapat ini.",
+    "meetingReminderStart": "Mulai Merekam",
+    "meetingReminderDontShow": "Mulai, Jangan Tampilkan Lagi",
+    "meetingStartFailedTitle": "Rapat tidak dapat direkam"
   },
   "sidebar": {
     "general": "Umum",
@@ -149,6 +157,10 @@
           "transcribe_with_post_process": {
             "name": "Pintasan Pascaproses",
             "description": "Opsional: pintasan khusus yang selalu menerapkan pascaproses AI pada transkripsi Anda."
+          },
+          "toggle_meeting_recording": {
+            "name": "Pintasan Perekaman Rapat",
+            "description": "Opsional: pintasan keyboard untuk memulai atau menghentikan perekaman rapat."
           }
         },
         "errors": {
@@ -727,6 +739,19 @@
     "dismiss": "Tutup"
   },
   "meetings": {
-    "recoveredNotice": "{{total}} rapat dipulihkan setelah penutupan tak terduga"
+    "recoveredNotice": "{{total}} rapat dipulihkan setelah penutupan tak terduga",
+    "indicator": {
+      "stop": "Hentikan",
+      "recording": "Merekam rapat",
+      "microphone": "Mikrofon",
+      "systemAudio": "Audio sistem",
+      "warnings": {
+        "system_audio_unavailable": "Audio sistem tidak tersedia — hanya mikrofon Anda yang direkam",
+        "system_audio_silent": "Tidak ada audio sistem yang diterima selama beberapa waktu — periksa output aplikasi rapat",
+        "output_muted": "Output suara Anda dibisukan — audio sistem mungkin terekam sebagai hening",
+        "device_changed": "Perangkat audio berubah — perekaman berlanjut di perangkat baru",
+        "mic_unavailable": "Mikrofon tidak tersedia — hanya audio sistem yang direkam"
+      }
+    }
   }
 }

@@ -1,6 +1,8 @@
 //! Meeting recording and transcription. `capture` records the microphone
 //! and the system audio as two aligned tracks on disk; storage and lifecycle
-//! live in `managers::meeting`, which builds on it.
+//! live in `managers::meeting`, which builds on it. `control` and `indicator`
+//! are the manual controls (tray, shortcut, CLI) and the floating recording
+//! pill.
 //!
 //! Transcription is engine-independent here: each track is decoded on its
 //! own ([`track`]), the mic's echo of the system track is removed
@@ -9,7 +11,9 @@
 //! `managers::transcription::meeting`.
 
 pub mod capture;
+pub mod control;
 pub mod crosstalk;
+pub mod indicator;
 pub mod power;
 pub mod track;
 pub mod transcript;

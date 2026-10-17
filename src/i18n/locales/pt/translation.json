@@ -12,7 +12,15 @@
     "meetingTitleManual": "Reunião — {{date}}",
     "quitMeetingTitle": "Reunião em andamento",
     "quitMeetingMessage": "Uma reunião está sendo gravada. Parar a gravação e sair?",
-    "quitMeetingConfirm": "Parar e sair"
+    "quitMeetingConfirm": "Parar e sair",
+    "recordMeeting": "Gravar uma reunião",
+    "stopMeeting": "Parar gravação ({{time}})",
+    "stoppingMeeting": "A parar a gravação…",
+    "meetingReminderTitle": "Gravando uma reunião",
+    "meetingReminderMessage": "Avise os participantes de que você está gravando esta reunião.",
+    "meetingReminderStart": "Iniciar gravação",
+    "meetingReminderDontShow": "Iniciar e não mostrar novamente",
+    "meetingStartFailedTitle": "Não foi possível gravar a reunião"
   },
   "sidebar": {
     "general": "Geral",
@@ -149,6 +157,10 @@
           "transcribe_with_post_process": {
             "name": "Tecla de Pós-Processamento",
             "description": "Opcional: Uma tecla de atalho dedicada que sempre aplica pós-processamento com IA à sua transcrição."
+          },
+          "toggle_meeting_recording": {
+            "name": "Atalho de gravação de reunião",
+            "description": "Opcional: um atalho de teclado para iniciar ou parar a gravação de uma reunião."
           }
         },
         "errors": {
@@ -727,6 +739,19 @@
     "dismiss": "Dispensar"
   },
   "meetings": {
-    "recoveredNotice": "{{total}} reunião(ões) recuperada(s) após um encerramento inesperado"
+    "recoveredNotice": "{{total}} reunião(ões) recuperada(s) após um encerramento inesperado",
+    "indicator": {
+      "stop": "Parar",
+      "recording": "Gravando uma reunião",
+      "microphone": "Microfone",
+      "systemAudio": "Áudio do sistema",
+      "warnings": {
+        "system_audio_unavailable": "Áudio do sistema indisponível — apenas o seu microfone é gravado",
+        "system_audio_silent": "Nenhum áudio do sistema recebido há algum tempo — verifique a saída do aplicativo de reunião",
+        "output_muted": "A sua saída de som está sem áudio — o áudio do sistema pode ser gravado como silêncio",
+        "device_changed": "Um dispositivo de áudio mudou — a gravação continuou no novo",
+        "mic_unavailable": "Microfone indisponível — apenas o áudio do sistema é gravado"
+      }
+    }
   }
 }

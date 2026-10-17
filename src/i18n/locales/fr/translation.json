@@ -12,7 +12,15 @@
     "meetingTitleManual": "Réunion — {{date}}",
     "quitMeetingTitle": "Réunion en cours",
     "quitMeetingMessage": "Une réunion est en cours d'enregistrement. Arrêter l'enregistrement et quitter ?",
-    "quitMeetingConfirm": "Arrêter et quitter"
+    "quitMeetingConfirm": "Arrêter et quitter",
+    "recordMeeting": "Enregistrer une réunion",
+    "stopMeeting": "Arrêter l'enregistrement ({{time}})",
+    "stoppingMeeting": "Arrêt de l'enregistrement…",
+    "meetingReminderTitle": "Enregistrement d'une réunion",
+    "meetingReminderMessage": "Informez les participants que vous enregistrez cette réunion.",
+    "meetingReminderStart": "Démarrer l'enregistrement",
+    "meetingReminderDontShow": "Démarrer, ne plus afficher",
+    "meetingStartFailedTitle": "Impossible d'enregistrer la réunion"
   },
   "sidebar": {
     "general": "Général",
@@ -176,6 +184,10 @@
           "transcribe_with_post_process": {
             "name": "Raccourci de post-traitement",
             "description": "Facultatif : Un raccourci dédié qui applique toujours le post-traitement IA à votre transcription."
+          },
+          "toggle_meeting_recording": {
+            "name": "Raccourci d'enregistrement de réunion",
+            "description": "Facultatif : un raccourci clavier pour démarrer ou arrêter l'enregistrement d'une réunion."
           }
         },
         "errors": {
@@ -727,6 +739,19 @@
     "dismiss": "Ignorer"
   },
   "meetings": {
-    "recoveredNotice": "{{total}} réunion(s) récupérée(s) après un arrêt inattendu"
+    "recoveredNotice": "{{total}} réunion(s) récupérée(s) après un arrêt inattendu",
+    "indicator": {
+      "stop": "Arrêter",
+      "recording": "Enregistrement d'une réunion",
+      "microphone": "Micro",
+      "systemAudio": "Son du système",
+      "warnings": {
+        "system_audio_unavailable": "Son du système indisponible — seul votre micro est enregistré",
+        "system_audio_silent": "Aucun son du système reçu depuis un moment — vérifiez la sortie de l'application de réunion",
+        "output_muted": "Votre sortie son est coupée — le son du système risque d'être enregistré vide",
+        "device_changed": "Un périphérique audio a changé — l'enregistrement a continué sur le nouveau",
+        "mic_unavailable": "Micro indisponible — seul le son du système est enregistré"
+      }
+    }
   }
 }
