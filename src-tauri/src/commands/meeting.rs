@@ -331,6 +331,15 @@ pub fn is_meeting_detection_supported() -> bool {
     detection::supported()
 }
 
+/// Whether this machine can record the system track of a meeting (macOS
+/// version, platform). Whether the tap really delivers audio is only known
+/// once a capture runs.
+#[tauri::command]
+#[specta::specta]
+pub fn get_system_audio_capture_support() -> capture::SystemAudioCaptureSupport {
+    capture::system_audio_capture_support()
+}
+
 /// What the detection popup should show (it may load after the event).
 #[tauri::command]
 #[specta::specta]
