@@ -12,7 +12,15 @@
     "meetingTitleManual": "פגישה — {{date}}",
     "quitMeetingTitle": "פגישה בתהליך",
     "quitMeetingMessage": "מתבצעת הקלטה של פגישה. לעצור את ההקלטה ולצאת?",
-    "quitMeetingConfirm": "עצור וצא"
+    "quitMeetingConfirm": "עצור וצא",
+    "recordMeeting": "הקלטת פגישה",
+    "stopMeeting": "עצירת ההקלטה ({{time}})",
+    "stoppingMeeting": "ההקלטה נעצרת…",
+    "meetingReminderTitle": "מתבצעת הקלטת פגישה",
+    "meetingReminderMessage": "יש ליידע את המשתתפים שהפגישה מוקלטת.",
+    "meetingReminderStart": "התחלת הקלטה",
+    "meetingReminderDontShow": "התחלה, לא להציג שוב",
+    "meetingStartFailedTitle": "לא ניתן היה להקליט את הפגישה"
   },
   "sidebar": {
     "general": "כללי",
@@ -150,6 +158,10 @@
           "transcribe_with_post_process": {
             "name": "קיצור לעיבוד משלים",
             "description": "אופציונלי: קיצור מקשים ייעודי שתמיד מפעיל עיבוד AI על התמלול."
+          },
+          "toggle_meeting_recording": {
+            "name": "קיצור דרך להקלטת פגישה",
+            "description": "אופציונלי: קיצור מקלדת להתחלה או לעצירה של הקלטת פגישה."
           }
         },
         "errors": {
@@ -729,6 +741,19 @@
   },
   "meetings": {
     "recoveredNotice": "פגישות ששוחזרו לאחר כיבוי לא צפוי: {{total}}",
+    "indicator": {
+      "stop": "עצירה",
+      "recording": "מתבצעת הקלטת פגישה",
+      "microphone": "מיקרופון",
+      "systemAudio": "שמע המערכת",
+      "warnings": {
+        "system_audio_unavailable": "שמע המערכת אינו זמין — רק המיקרופון מוקלט",
+        "system_audio_silent": "לא התקבל שמע מערכת כבר זמן מה — בדקו את הפלט של אפליקציית הפגישות",
+        "output_muted": "פלט השמע מושתק — שמע המערכת עלול להיות מוקלט כשקט",
+        "device_changed": "התקן שמע השתנה — ההקלטה המשיכה בהתקן החדש",
+        "mic_unavailable": "המיקרופון אינו זמין — רק שמע המערכת מוקלט"
+      }
+    },
     "title": "Meetings",
     "loading": "Loading meetings…",
     "empty": {

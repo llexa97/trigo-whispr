@@ -63,6 +63,8 @@ Trigo Whispr is a cross-platform desktop speech-to-text application built with T
   - `history.rs` - Transcription history storage
   - `meeting.rs` - Meeting recording lifecycle, `meetings.db` + per-meeting folders, crash recovery (`self_heal`), audio retention
 - `meeting/power.rs` - Keeps the system awake while a meeting is recorded
+- `meeting/control.rs` - Manual meeting start/stop shared by the tray, the `toggle_meeting_recording` shortcut (unbound by default), `--toggle-meeting` and the pill; first-recording consent reminder
+- `meeting/indicator.rs` - Floating meeting pill window (`src/meeting-indicator/`): timer, level meters, capture warnings, Stop; draggable, position remembered
 - `audio_toolkit/` - Low-level audio processing:
   - `audio/` - Recording sink (VAD, levels, live streaming feed), output devices, WAV I/O
   - `vad/` - Voice Activity Detection (Silero VAD)
@@ -180,6 +182,7 @@ Trigo Whispr supports command-line parameters on all platforms for integration w
 | ------------------------ | ---------------------------------------------------------- |
 | `--toggle-transcription` | Toggle recording on/off on a running instance              |
 | `--toggle-post-process`  | Toggle recording with post-processing on/off               |
+| `--toggle-meeting`       | Start/stop recording a meeting on a running instance       |
 | `--cancel`               | Cancel the current operation on a running instance         |
 | `--start-hidden`         | Launch without showing the main window (tray icon visible) |
 | `--no-tray`              | Launch without system tray (closing window quits the app)  |

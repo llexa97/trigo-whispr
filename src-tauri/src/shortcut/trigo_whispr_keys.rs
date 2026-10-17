@@ -430,19 +430,14 @@ pub fn init_shortcuts(app: &AppHandle) -> Result<(), String> {
 
     // Register all bindings except cancel (which is dynamic)
     for (id, default_binding) in default_bindings {
-        if id == "cancel" {
-            continue;
-        }
-        // Skip post-processing shortcut when the feature is disabled
-        if id == "transcribe_with_post_process" && !user_settings.post_process_enabled {
-            continue;
-        }
-
         let binding = user_settings
             .bindings
             .get(&id)
             .cloned()
             .unwrap_or(default_binding);
+        if !settings::binding_is_registrable(&id, &binding, &user_settings) {
+            continue;
+        }
 
         if let Err(e) = state.register(&binding) {
             error!(

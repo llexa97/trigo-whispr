@@ -2,19 +2,23 @@
 //! (folder + manifest + `meetings.db`), queue it for transcription and make
 //! sure no meeting is lost across crashes or a corrupted database.
 //!
-//! The capture itself lives in `crate::meeting::capture` (#3); transcription
-//! of queued meetings (status `pending` or `recovered`) is done by #5, which
-//! registers itself with [`MeetingManager::set_transcription_listener`].
+//! The capture itself lives in `crate::meeting::capture` (#3); queued
+//! meetings (status `pending` or `recovered`) are transcribed by the
+//! `MeetingTranscriber` (#5), which registers itself with
+//! [`MeetingManager::set_transcription_listener`] and reads and updates the
+//! meetings through this manager's [`MeetingStore`] implementation.
 
 pub mod folder;
 pub mod store;
 
 use crate::managers::audio::AudioRecordingManager;
+use crate::managers::transcription::meeting::{MeetingJob, MeetingStore};
 use crate::meeting::capture::{
     self, CaptureConfig, CaptureError, CaptureSession, CaptureWarning, SystemCaptureMode,
     MIC_FILE_NAME, SYSTEM_FILE_NAME,
 };
 use crate::meeting::power::SleepGuard;
+use crate::meeting::transcript::{MeetingInfo, TranscriptFile};
 use crate::settings::{get_settings, MeetingAudioRetention};
 use crate::tray_i18n::get_tray_translations;
 use anyhow::{anyhow, bail, Result};
@@ -646,7 +650,6 @@ impl MeetingManager {
     /* ---------- transcription queue (#5) ----------------------------------- */
 
     /// Meetings waiting for transcription, oldest first.
-    #[allow(dead_code)] // Consumed by the transcription pipeline (#5).
     pub fn queued_meetings(&self) -> Result<Vec<Meeting>> {
         store::list_by_status(
             &self.conn()?,
@@ -657,7 +660,6 @@ impl MeetingManager {
     /// Called with the meeting id whenever a meeting is queued. Meetings
     /// queued before registration (e.g. recovered at startup) are listed by
     /// [`Self::queued_meetings`].
-    #[allow(dead_code)] // Registered by the transcription pipeline (#5).
     pub fn set_transcription_listener(&self, listener: impl Fn(&str) + Send + Sync + 'static) {
         *self.transcription_listener.lock().unwrap() = Some(Arc::new(listener));
     }
@@ -724,5 +726,51 @@ impl MeetingManager {
         if let Err(e) = spawned {
             warn!("Failed to spawn meeting retention timer: {e}");
         }
+    }
+}
+
+impl MeetingStore for MeetingManager {
+    fn job(&self, meeting_id: &str) -> Result<MeetingJob> {
+        let m = store::get(&self.conn()?, meeting_id)?
+            .ok_or_else(|| anyhow!("Meeting {meeting_id} not found"))?;
+        if !m.has_audio {
+            bail!("The audio of meeting {meeting_id} was deleted");
+        }
+        Ok(MeetingJob {
+            dir: self.meetings_dir.join(&m.folder),
+            meeting: MeetingInfo {
+                id: m.id,
+                title: m.title,
+                started_at: m.started_at,
+                duration_ms: m.duration_ms.unwrap_or(0).max(0) as u64,
+                source_app: m.source_app,
+            },
+        })
+    }
+
+    fn set_status(&self, meeting_id: &str, status: MeetingStatus, error: Option<&str>) {
+        if let Err(e) = self
+            .conn()
+            .and_then(|c| store::set_status(&c, meeting_id, status, error))
+        {
+            error!(
+                "Failed to set meeting {meeting_id} to {}: {e}",
+                status.as_str()
+            );
+            return;
+        }
+        self.emit_meeting(meeting_id, false);
+        // `delete_after_transcription` applies as soon as the transcript is in.
+        if status == MeetingStatus::Done {
+            if let Err(e) = self.apply_retention() {
+                error!("Meeting retention failed: {e}");
+            }
+        }
+    }
+
+    fn save_transcript(&self, meeting_id: &str, transcript: &TranscriptFile) -> Result<()> {
+        let mut conn = self.conn()?;
+        store::replace_segments(&mut conn, meeting_id, &transcript.segments)?;
+        store::set_model_id(&conn, meeting_id, &transcript.model_id)
     }
 }

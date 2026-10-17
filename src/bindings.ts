@@ -1041,6 +1041,13 @@ async retryMeetingTranscription(id: string) : Promise<Result<null, string>> {
 }
 },
 /**
+ * Stops a meeting's transcription (or takes it out of the queue); it is left
+ * `pending`, to be retried. Returns whether it was queued or running.
+ */
+async cancelMeetingTranscription(id: string) : Promise<boolean> {
+    return await TAURI_INVOKE("cancel_meeting_transcription", { id });
+},
+/**
  * Report of the meetings recovered at startup, returned only once.
  */
 async takeMeetingRecoveryNotice() : Promise<RecoveryReport | null> {
@@ -1053,6 +1060,12 @@ async updateMeetingAudioRetention(retention: MeetingAudioRetention) : Promise<Re
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+async changeShowMeetingIndicatorSetting(enabled: boolean) : Promise<void> {
+    await TAURI_INVOKE("change_show_meeting_indicator_setting", { enabled });
+},
+async changeMeetingConsentReminderSetting(enabled: boolean) : Promise<void> {
+    await TAURI_INVOKE("change_meeting_consent_reminder_setting", { enabled });
 },
 /**
  * Stub implementation for non-macOS platforms
@@ -1074,6 +1087,7 @@ async isLaptop() : Promise<Result<boolean, string>> {
 export const events = __makeEvents__<{
 historyUpdatePayload: HistoryUpdatePayload,
 meetingStateChanged: MeetingStateChanged,
+meetingTranscriptionProgress: MeetingTranscriptionProgress,
 meetingsRecovered: MeetingsRecovered,
 meetingsUpdated: MeetingsUpdated,
 streamPhaseEvent: StreamPhaseEvent,
@@ -1081,6 +1095,7 @@ streamTextEvent: StreamTextEvent
 }>({
 historyUpdatePayload: "history-update-payload",
 meetingStateChanged: "meeting-state-changed",
+meetingTranscriptionProgress: "meeting-transcription-progress",
 meetingsRecovered: "meetings-recovered",
 meetingsUpdated: "meetings-updated",
 streamPhaseEvent: "stream-phase-event",
@@ -1166,7 +1181,21 @@ long_form_chunking?: boolean;
  * not gated on this — that follows model capability. Migrated from the old
  * `overlay_position` (position `none` → style `None`).
  */
-overlay_style?: OverlayStyle }
+overlay_style?: OverlayStyle; 
+/**
+ * Floating pill (timer, levels, Stop) shown while a meeting records.
+ */
+show_meeting_indicator?: boolean; 
+/**
+ * Where the user last dragged the meeting pill, in physical pixels.
+ * `None` until it is moved: the pill then sits in its default corner.
+ */
+meeting_indicator_position?: WindowPosition | null; 
+/**
+ * Remind the user to tell the participants before a meeting recording
+ * starts. Turned off by the reminder's "don't show again".
+ */
+meeting_consent_reminder?: boolean }
 export type AudioDevice = { index: string; name: string; is_default: boolean }
 export type AutoSubmitKey = "enter" | "ctrl_enter" | "cmd_enter"
 export type AvailableAccelerators = { transcribe: string[]; gpu_devices: GpuDeviceOption[] }
@@ -1274,6 +1303,18 @@ export type MeetingStatus = "recording" | "pending" | "transcribing" | "done" | 
  * Recovered after a crash; queued for transcription like `Pending`.
  */
 "recovered"
+/**
+ * Emitted after each chunk of a meeting's transcription.
+ */
+export type MeetingTranscriptionProgress = { meeting_id: string; 
+/**
+ * 0 to 1.
+ */
+progress: number; 
+/**
+ * Estimated time left, once a chunk is done.
+ */
+eta_ms: number | null }
 /**
  * Emitted when meetings were recovered after a crash or rebuilt from their
  * folders. Also available through `take_meeting_recovery_notice` for the
@@ -1412,7 +1453,23 @@ export type ShortcutActivation =
 "hold_or_toggle"
 export type ShortcutBinding = { id: string; name: string; description: string; default_binding: string; current_binding: string }
 export type SoundTheme = "marimba" | "pop" | "custom"
-export type Speaker = "me" | "others"
+/**
+ * Who a segment is attributed to. V1 attributes by track.
+ */
+export type Speaker = 
+/**
+ * The mic track, with a system track to tell the user apart.
+ */
+"me" | 
+/**
+ * The system track.
+ */
+"others" | 
+/**
+ * The mic track of a meeting recorded without system audio: it holds
+ * everyone in the room, so it is not labelled as the user.
+ */
+"mic_only"
 /**
  * Phase of the streaming overlay card, emitted to drive its UI state.
  */
@@ -1473,6 +1530,7 @@ export type Theme = "system" | "light" | "dark"
 export type TranscribeAcceleratorSetting = "auto" | "cpu" | "gpu"
 export type TypingTool = "auto" | "wtype" | "kwtype" | "dotool" | "ydotool" | "xdotool"
 export type VadBackend = "silero" | "earshot"
+export type WindowPosition = { x: number; y: number }
 export type WindowsMicrophonePermissionStatus = { supported: boolean; overall_access: PermissionAccess; device_access: PermissionAccess; app_access: PermissionAccess; desktop_app_access: PermissionAccess }
 
 /** tauri-specta globals **/

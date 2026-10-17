@@ -12,7 +12,15 @@
     "meetingTitleManual": "会議 — {{date}}",
     "quitMeetingTitle": "会議を録音中",
     "quitMeetingMessage": "会議を録音しています。録音を停止して終了しますか？",
-    "quitMeetingConfirm": "停止して終了"
+    "quitMeetingConfirm": "停止して終了",
+    "recordMeeting": "会議を録音",
+    "stopMeeting": "録音を停止 ({{time}})",
+    "stoppingMeeting": "録音を停止しています…",
+    "meetingReminderTitle": "会議を録音中",
+    "meetingReminderMessage": "この会議を録音していることを参加者に伝えてください。",
+    "meetingReminderStart": "録音を開始",
+    "meetingReminderDontShow": "開始して今後は表示しない",
+    "meetingStartFailedTitle": "会議を録音できませんでした"
   },
   "sidebar": {
     "general": "一般",
@@ -177,6 +185,10 @@
           "transcribe_with_post_process": {
             "name": "後処理のショートカット",
             "description": "文字起こしに常に AI 後処理を適用するキーボードショートカット。 (任意)"
+          },
+          "toggle_meeting_recording": {
+            "name": "会議録音ショートカット",
+            "description": "任意: 会議の録音を開始・停止するキーボードショートカット。"
           }
         },
         "errors": {
@@ -729,6 +741,19 @@
   },
   "meetings": {
     "recoveredNotice": "予期しない終了の後に {{total}} 件の会議を復元しました",
+    "indicator": {
+      "stop": "停止",
+      "recording": "会議を録音中",
+      "microphone": "マイク",
+      "systemAudio": "システム音声",
+      "warnings": {
+        "system_audio_unavailable": "システム音声を利用できません — マイクのみ録音されています",
+        "system_audio_silent": "しばらくシステム音声を受信していません — 会議アプリの出力を確認してください",
+        "output_muted": "サウンド出力がミュートされています — システム音声が無音で録音される可能性があります",
+        "device_changed": "オーディオデバイスが変更されました — 新しいデバイスで録音を続けています",
+        "mic_unavailable": "マイクを利用できません — システム音声のみ録音されています"
+      }
+    },
     "title": "Meetings",
     "loading": "Loading meetings…",
     "empty": {

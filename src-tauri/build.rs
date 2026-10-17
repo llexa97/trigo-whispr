@@ -327,7 +327,13 @@ fn generate_tray_translations() {
     for (lang, tray) in &translations {
         out.push_str(&format!("    m.insert(\"{lang}\", TrayStrings {{\n"));
         for (rust_field, json_key) in &fields {
-            let val = tray.get(json_key).and_then(|v| v.as_str()).unwrap_or("");
+            // Untranslated keys fall back to English rather than a blank item.
+            let val = tray
+                .get(json_key)
+                .and_then(|v| v.as_str())
+                .filter(|v| !v.is_empty())
+                .or_else(|| english.get(json_key).and_then(|v| v.as_str()))
+                .unwrap_or("");
             out.push_str(&format!(
                 "        {rust_field}: \"{}\".to_string(),\n",
                 escape_string(val)

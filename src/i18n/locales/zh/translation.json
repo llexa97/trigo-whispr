@@ -12,7 +12,15 @@
     "meetingTitleManual": "会议 — {{date}}",
     "quitMeetingTitle": "会议进行中",
     "quitMeetingMessage": "正在录制会议。要停止录制并退出吗？",
-    "quitMeetingConfirm": "停止并退出"
+    "quitMeetingConfirm": "停止并退出",
+    "recordMeeting": "录制会议",
+    "stopMeeting": "停止录制 ({{time}})",
+    "stoppingMeeting": "正在停止录制…",
+    "meetingReminderTitle": "正在录制会议",
+    "meetingReminderMessage": "请告知参会者你正在录制本次会议。",
+    "meetingReminderStart": "开始录制",
+    "meetingReminderDontShow": "开始，不再显示",
+    "meetingStartFailedTitle": "无法录制会议"
   },
   "sidebar": {
     "general": "通用",
@@ -177,6 +185,10 @@
           "transcribe_with_post_process": {
             "name": "后处理快捷键",
             "description": "可选：一个专用快捷键，始终对您的转录应用 AI 后处理。"
+          },
+          "toggle_meeting_recording": {
+            "name": "会议录制快捷键",
+            "description": "可选：用于开始或停止录制会议的键盘快捷键。"
           }
         },
         "errors": {
@@ -729,6 +741,19 @@
   },
   "meetings": {
     "recoveredNotice": "意外关闭后已恢复 {{total}} 个会议",
+    "indicator": {
+      "stop": "停止",
+      "recording": "正在录制会议",
+      "microphone": "麦克风",
+      "systemAudio": "系统音频",
+      "warnings": {
+        "system_audio_unavailable": "系统音频不可用 — 仅录制你的麦克风",
+        "system_audio_silent": "一段时间内未收到系统音频 — 请检查会议应用的输出",
+        "output_muted": "声音输出已静音 — 系统音频可能被录成静音",
+        "device_changed": "音频设备已更改 — 已在新设备上继续录制",
+        "mic_unavailable": "麦克风不可用 — 仅录制系统音频"
+      }
+    },
     "title": "Meetings",
     "loading": "Loading meetings…",
     "empty": {

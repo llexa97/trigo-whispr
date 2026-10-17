@@ -4,6 +4,7 @@ use crate::managers::meeting::store::{MeetingDetail, PaginatedMeetings};
 use crate::managers::meeting::{
     MeetingAudioPaths, MeetingManager, MeetingSource, MeetingStateChanged,
 };
+use crate::managers::transcription::meeting::MeetingTranscriber;
 use crate::meeting::capture::{self, CaptureConfig, CaptureOutput};
 use crate::settings::MeetingAudioRetention;
 use serde::Serialize;
@@ -192,6 +193,17 @@ pub async fn retry_meeting_transcription(
     blocking(&meeting_manager, move |m| m.retry_transcription(&id)).await
 }
 
+/// Stops a meeting's transcription (or takes it out of the queue); it is left
+/// `pending`, to be retried. Returns whether it was queued or running.
+#[tauri::command]
+#[specta::specta]
+pub fn cancel_meeting_transcription(
+    transcriber: State<'_, MeetingTranscriber>,
+    id: String,
+) -> bool {
+    transcriber.cancel(&id)
+}
+
 /// Report of the meetings recovered at startup, returned only once.
 #[tauri::command]
 #[specta::specta]
@@ -212,4 +224,21 @@ pub async fn update_meeting_audio_retention(
     settings.meeting_audio_retention = retention;
     crate::settings::write_settings(&app, settings);
     blocking(&meeting_manager, |m| m.apply_retention()).await
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn change_show_meeting_indicator_setting(app: AppHandle, enabled: bool) {
+    let mut settings = crate::settings::get_settings(&app);
+    settings.show_meeting_indicator = enabled;
+    crate::settings::write_settings(&app, settings);
+    crate::meeting::indicator::refresh(&app);
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn change_meeting_consent_reminder_setting(app: AppHandle, enabled: bool) {
+    let mut settings = crate::settings::get_settings(&app);
+    settings.meeting_consent_reminder = enabled;
+    crate::settings::write_settings(&app, settings);
 }

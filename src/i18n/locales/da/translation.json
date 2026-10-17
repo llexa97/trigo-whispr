@@ -12,7 +12,15 @@
     "meetingTitleManual": "Møde — {{date}}",
     "quitMeetingTitle": "Møde i gang",
     "quitMeetingMessage": "Et møde optages. Stop optagelsen og afslut?",
-    "quitMeetingConfirm": "Stop og afslut"
+    "quitMeetingConfirm": "Stop og afslut",
+    "recordMeeting": "Optag et møde",
+    "stopMeeting": "Stop optagelse ({{time}})",
+    "stoppingMeeting": "Stopper optagelsen…",
+    "meetingReminderTitle": "Optager et møde",
+    "meetingReminderMessage": "Fortæl deltagerne, at du optager dette møde.",
+    "meetingReminderStart": "Start optagelse",
+    "meetingReminderDontShow": "Start, vis ikke igen",
+    "meetingStartFailedTitle": "Mødet kunne ikke optages"
   },
   "sidebar": {
     "general": "Generelt",
@@ -150,6 +158,10 @@
           "transcribe_with_post_process": {
             "name": "Genvej til efterbehandling",
             "description": "Valgfrit: En dedikeret genvej, der altid anvender AI-efterbehandling på din transskription."
+          },
+          "toggle_meeting_recording": {
+            "name": "Genvej til mødeoptagelse",
+            "description": "Valgfri: en tastaturgenvej til at starte eller stoppe optagelsen af et møde."
           }
         },
         "errors": {
@@ -729,6 +741,19 @@
   },
   "meetings": {
     "recoveredNotice": "{{total}} møde(r) gendannet efter en uventet lukning",
+    "indicator": {
+      "stop": "Stop",
+      "recording": "Optager et møde",
+      "microphone": "Mikrofon",
+      "systemAudio": "Systemlyd",
+      "warnings": {
+        "system_audio_unavailable": "Systemlyd er ikke tilgængelig — kun din mikrofon optages",
+        "system_audio_silent": "Ingen systemlyd modtaget i et stykke tid — tjek mødeappens output",
+        "output_muted": "Din lydudgang er slået fra — systemlyd optages muligvis som stilhed",
+        "device_changed": "En lydenhed blev ændret — optagelsen fortsatte på den nye",
+        "mic_unavailable": "Mikrofonen er ikke tilgængelig — kun systemlyd optages"
+      }
+    },
     "title": "Meetings",
     "loading": "Loading meetings…",
     "empty": {

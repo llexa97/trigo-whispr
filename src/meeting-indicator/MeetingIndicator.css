@@ -1,0 +1,120 @@
+@import "../styles/theme.css";
+
+/* Sized to fit the native window created in meeting/indicator.rs
+   (248x44 logical): keep both in sync. */
+:root {
+  --mi-surface: color-mix(in srgb, var(--color-background) 96%, transparent);
+  --mi-border: color-mix(in srgb, var(--color-mid-gray) 30%, transparent);
+  --mi-red: #e5484d;
+  --mi-warning: #e5a000;
+}
+
+html,
+body {
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: default;
+}
+
+.mi-pill {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: calc(100% - 4px);
+  height: 40px;
+  margin: 2px;
+  padding: 0 6px 0 14px;
+  border-radius: 20px;
+  background: var(--mi-surface);
+  border: 1px solid var(--mi-border);
+  color: var(--color-text);
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+}
+
+.mi-dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--mi-red);
+  animation: mi-pulse 1.6s ease-in-out infinite;
+}
+
+.mi-dot-idle {
+  animation: none;
+  opacity: 0.4;
+}
+
+@keyframes mi-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.mi-time {
+  flex: 1;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.mi-meters {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 18px;
+}
+
+.mi-meter {
+  position: relative;
+  width: 5px;
+  height: 100%;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--color-mid-gray) 25%, transparent);
+  overflow: hidden;
+}
+
+.mi-meter-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--color-logo-primary);
+  transition: height 0.25s ease-out;
+}
+
+.mi-warning {
+  display: flex;
+  color: var(--mi-warning);
+}
+
+.mi-stop {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--mi-red) 16%, transparent);
+  cursor: pointer;
+}
+
+.mi-stop:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--mi-red) 28%, transparent);
+}
+
+.mi-stop:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.mi-stop-square {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--mi-red);
+}

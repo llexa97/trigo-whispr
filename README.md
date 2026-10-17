@@ -98,6 +98,7 @@ Trigo Whispr supports command-line flags for controlling a running instance and 
 ```bash
 trigo-whispr --toggle-transcription    # Toggle recording on/off
 trigo-whispr --toggle-post-process     # Toggle recording with post-processing on/off
+trigo-whispr --toggle-meeting          # Start/stop recording a meeting (Windows, macOS)
 trigo-whispr --cancel                  # Cancel the current operation
 ```
 

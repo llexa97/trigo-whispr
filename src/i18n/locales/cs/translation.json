@@ -12,7 +12,15 @@
     "meetingTitleManual": "Schůzka — {{date}}",
     "quitMeetingTitle": "Probíhá schůzka",
     "quitMeetingMessage": "Probíhá nahrávání schůzky. Zastavit nahrávání a ukončit?",
-    "quitMeetingConfirm": "Zastavit a ukončit"
+    "quitMeetingConfirm": "Zastavit a ukončit",
+    "recordMeeting": "Nahrát schůzku",
+    "stopMeeting": "Zastavit nahrávání ({{time}})",
+    "stoppingMeeting": "Zastavování nahrávání…",
+    "meetingReminderTitle": "Nahrávání schůzky",
+    "meetingReminderMessage": "Dejte účastníkům vědět, že tuto schůzku nahráváte.",
+    "meetingReminderStart": "Spustit nahrávání",
+    "meetingReminderDontShow": "Spustit a už nezobrazovat",
+    "meetingStartFailedTitle": "Schůzku se nepodařilo nahrát"
   },
   "sidebar": {
     "general": "Obecné",
@@ -177,6 +185,10 @@
           "transcribe_with_post_process": {
             "name": "Klávesa pro následné zpracování",
             "description": "Volitelné: Vyhrazená klávesová zkratka, která vždy použije AI následné zpracování na váš přepis."
+          },
+          "toggle_meeting_recording": {
+            "name": "Zkratka pro nahrávání schůzky",
+            "description": "Volitelné: klávesová zkratka pro spuštění nebo zastavení nahrávání schůzky."
           }
         },
         "errors": {
@@ -729,6 +741,19 @@
   },
   "meetings": {
     "recoveredNotice": "Obnovené schůzky po neočekávaném ukončení: {{total}}",
+    "indicator": {
+      "stop": "Zastavit",
+      "recording": "Nahrávání schůzky",
+      "microphone": "Mikrofon",
+      "systemAudio": "Systémový zvuk",
+      "warnings": {
+        "system_audio_unavailable": "Systémový zvuk není k dispozici — nahrává se pouze mikrofon",
+        "system_audio_silent": "Už nějakou dobu nepřichází systémový zvuk — zkontrolujte výstup aplikace pro schůzky",
+        "output_muted": "Zvukový výstup je ztlumený — systémový zvuk se může nahrát jako ticho",
+        "device_changed": "Zvukové zařízení se změnilo — nahrávání pokračovalo na novém",
+        "mic_unavailable": "Mikrofon není k dispozici — nahrává se pouze systémový zvuk"
+      }
+    },
     "title": "Meetings",
     "loading": "Loading meetings…",
     "empty": {

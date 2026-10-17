@@ -12,7 +12,15 @@
     "meetingTitleManual": "Reunión — {{date}}",
     "quitMeetingTitle": "Reunión en curso",
     "quitMeetingMessage": "Se está grabando una reunión. ¿Detener la grabación y salir?",
-    "quitMeetingConfirm": "Detener y salir"
+    "quitMeetingConfirm": "Detener y salir",
+    "recordMeeting": "Grabar una reunión",
+    "stopMeeting": "Detener grabación ({{time}})",
+    "stoppingMeeting": "Deteniendo la grabación…",
+    "meetingReminderTitle": "Grabando una reunión",
+    "meetingReminderMessage": "Informa a los participantes de que estás grabando esta reunión.",
+    "meetingReminderStart": "Iniciar grabación",
+    "meetingReminderDontShow": "Iniciar y no volver a mostrar",
+    "meetingStartFailedTitle": "No se pudo grabar la reunión"
   },
   "sidebar": {
     "general": "General",
@@ -177,6 +185,10 @@
           "transcribe_with_post_process": {
             "name": "Tecla de post procesamiento",
             "description": "Opcional: Una tecla de acceso rápido dedicada que siempre aplica post procesamiento con IA a tu transcripción."
+          },
+          "toggle_meeting_recording": {
+            "name": "Atajo de grabación de reuniones",
+            "description": "Opcional: un atajo de teclado para iniciar o detener la grabación de una reunión."
           }
         },
         "errors": {
@@ -729,6 +741,19 @@
   },
   "meetings": {
     "recoveredNotice": "{{total}} reunión(es) recuperada(s) tras un cierre inesperado",
+    "indicator": {
+      "stop": "Detener",
+      "recording": "Grabando una reunión",
+      "microphone": "Micrófono",
+      "systemAudio": "Audio del sistema",
+      "warnings": {
+        "system_audio_unavailable": "Audio del sistema no disponible: solo se graba tu micrófono",
+        "system_audio_silent": "No se recibe audio del sistema desde hace un rato: revisa la salida de la aplicación de reuniones",
+        "output_muted": "Tu salida de sonido está silenciada: el audio del sistema podría grabarse como silencio",
+        "device_changed": "Un dispositivo de audio cambió: la grabación continuó en el nuevo",
+        "mic_unavailable": "Micrófono no disponible: solo se graba el audio del sistema"
+      }
+    },
     "title": "Meetings",
     "loading": "Loading meetings…",
     "empty": {

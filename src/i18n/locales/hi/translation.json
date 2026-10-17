@@ -12,7 +12,15 @@
     "meetingTitleManual": "मीटिंग — {{date}}",
     "quitMeetingTitle": "मीटिंग जारी है",
     "quitMeetingMessage": "एक मीटिंग रिकॉर्ड हो रही है। रिकॉर्डिंग रोककर बाहर निकलें?",
-    "quitMeetingConfirm": "रोकें और बाहर निकलें"
+    "quitMeetingConfirm": "रोकें और बाहर निकलें",
+    "recordMeeting": "मीटिंग रिकॉर्ड करें",
+    "stopMeeting": "रिकॉर्डिंग रोकें ({{time}})",
+    "stoppingMeeting": "रिकॉर्डिंग रोकी जा रही है…",
+    "meetingReminderTitle": "मीटिंग रिकॉर्ड हो रही है",
+    "meetingReminderMessage": "प्रतिभागियों को बताएं कि आप यह मीटिंग रिकॉर्ड कर रहे हैं।",
+    "meetingReminderStart": "रिकॉर्डिंग शुरू करें",
+    "meetingReminderDontShow": "शुरू करें, फिर न दिखाएं",
+    "meetingStartFailedTitle": "मीटिंग रिकॉर्ड नहीं हो सकी"
   },
   "sidebar": {
     "general": "सामान्य",
@@ -150,6 +158,10 @@
           "transcribe_with_post_process": {
             "name": "पोस्ट-प्रोसेसिंग हॉटकी",
             "description": "वैकल्पिक: एक अलग हॉटकी जो आपके ट्रांसक्रिप्शन पर हमेशा AI पोस्ट-प्रोसेसिंग लागू करती है."
+          },
+          "toggle_meeting_recording": {
+            "name": "मीटिंग रिकॉर्डिंग शॉर्टकट",
+            "description": "वैकल्पिक: मीटिंग की रिकॉर्डिंग शुरू करने या रोकने के लिए कीबोर्ड शॉर्टकट।"
           }
         },
         "errors": {
@@ -729,6 +741,19 @@
   },
   "meetings": {
     "recoveredNotice": "अप्रत्याशित बंद होने के बाद पुनर्प्राप्त मीटिंग: {{total}}",
+    "indicator": {
+      "stop": "रोकें",
+      "recording": "मीटिंग रिकॉर्ड हो रही है",
+      "microphone": "माइक्रोफ़ोन",
+      "systemAudio": "सिस्टम ऑडियो",
+      "warnings": {
+        "system_audio_unavailable": "सिस्टम ऑडियो उपलब्ध नहीं — केवल आपका माइक्रोफ़ोन रिकॉर्ड हो रहा है",
+        "system_audio_silent": "कुछ समय से सिस्टम ऑडियो नहीं मिला — मीटिंग ऐप का आउटपुट जांचें",
+        "output_muted": "आपका साउंड आउटपुट म्यूट है — सिस्टम ऑडियो खामोशी के रूप में रिकॉर्ड हो सकता है",
+        "device_changed": "एक ऑडियो डिवाइस बदल गया — रिकॉर्डिंग नए डिवाइस पर जारी रही",
+        "mic_unavailable": "माइक्रोफ़ोन उपलब्ध नहीं — केवल सिस्टम ऑडियो रिकॉर्ड हो रहा है"
+      }
+    },
     "title": "Meetings",
     "loading": "Loading meetings…",
     "empty": {

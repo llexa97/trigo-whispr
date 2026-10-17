@@ -12,7 +12,15 @@
     "meetingTitleManual": "Spotkanie — {{date}}",
     "quitMeetingTitle": "Trwa spotkanie",
     "quitMeetingMessage": "Trwa nagrywanie spotkania. Zatrzymać nagrywanie i zakończyć?",
-    "quitMeetingConfirm": "Zatrzymaj i zakończ"
+    "quitMeetingConfirm": "Zatrzymaj i zakończ",
+    "recordMeeting": "Nagraj spotkanie",
+    "stopMeeting": "Zatrzymaj nagrywanie ({{time}})",
+    "stoppingMeeting": "Zatrzymywanie nagrywania…",
+    "meetingReminderTitle": "Nagrywanie spotkania",
+    "meetingReminderMessage": "Poinformuj uczestników, że nagrywasz to spotkanie.",
+    "meetingReminderStart": "Rozpocznij nagrywanie",
+    "meetingReminderDontShow": "Rozpocznij, nie pokazuj ponownie",
+    "meetingStartFailedTitle": "Nie udało się nagrać spotkania"
   },
   "sidebar": {
     "general": "Ogólne",
@@ -177,6 +185,10 @@
           "transcribe_with_post_process": {
             "name": "Skrót postprocessingu",
             "description": "Opcjonalnie: Dedykowany skrót klawiszowy, który zawsze stosuje postprocessing AI do transkrypcji."
+          },
+          "toggle_meeting_recording": {
+            "name": "Skrót nagrywania spotkania",
+            "description": "Opcjonalnie: skrót klawiszowy do rozpoczynania lub zatrzymywania nagrywania spotkania."
           }
         },
         "errors": {
@@ -729,6 +741,19 @@
   },
   "meetings": {
     "recoveredNotice": "Odzyskano spotkania po nieoczekiwanym zamknięciu: {{total}}",
+    "indicator": {
+      "stop": "Zatrzymaj",
+      "recording": "Nagrywanie spotkania",
+      "microphone": "Mikrofon",
+      "systemAudio": "Dźwięk systemowy",
+      "warnings": {
+        "system_audio_unavailable": "Dźwięk systemowy niedostępny — nagrywany jest tylko mikrofon",
+        "system_audio_silent": "Od jakiegoś czasu brak dźwięku systemowego — sprawdź wyjście aplikacji do spotkań",
+        "output_muted": "Wyjście dźwięku jest wyciszone — dźwięk systemowy może zostać nagrany jako cisza",
+        "device_changed": "Zmieniło się urządzenie audio — nagrywanie trwa na nowym",
+        "mic_unavailable": "Mikrofon niedostępny — nagrywany jest tylko dźwięk systemowy"
+      }
+    },
     "title": "Meetings",
     "loading": "Loading meetings…",
     "empty": {

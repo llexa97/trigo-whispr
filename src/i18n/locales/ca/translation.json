@@ -12,7 +12,15 @@
     "meetingTitleManual": "Reunió — {{date}}",
     "quitMeetingTitle": "Reunió en curs",
     "quitMeetingMessage": "S'està enregistrant una reunió. Voleu aturar l'enregistrament i sortir?",
-    "quitMeetingConfirm": "Atura i surt"
+    "quitMeetingConfirm": "Atura i surt",
+    "recordMeeting": "Enregistra una reunió",
+    "stopMeeting": "Atura l'enregistrament ({{time}})",
+    "stoppingMeeting": "S'està aturant l'enregistrament…",
+    "meetingReminderTitle": "S'està enregistrant una reunió",
+    "meetingReminderMessage": "Informa els participants que estàs enregistrant aquesta reunió.",
+    "meetingReminderStart": "Inicia l'enregistrament",
+    "meetingReminderDontShow": "Inicia i no ho tornis a mostrar",
+    "meetingStartFailedTitle": "No s'ha pogut enregistrar la reunió"
   },
   "sidebar": {
     "general": "General",
@@ -150,6 +158,10 @@
           "transcribe_with_post_process": {
             "name": "Drecera de postprocessament",
             "description": "Opcional: una drecera específica que sempre aplica postprocessament amb IA a la transcripció."
+          },
+          "toggle_meeting_recording": {
+            "name": "Drecera d'enregistrament de reunions",
+            "description": "Opcional: una drecera de teclat per iniciar o aturar l'enregistrament d'una reunió."
           }
         },
         "errors": {
@@ -729,6 +741,19 @@
   },
   "meetings": {
     "recoveredNotice": "{{total}} reunió(ns) recuperada(es) després d'un tancament inesperat",
+    "indicator": {
+      "stop": "Atura",
+      "recording": "S'està enregistrant una reunió",
+      "microphone": "Micròfon",
+      "systemAudio": "Àudio del sistema",
+      "warnings": {
+        "system_audio_unavailable": "Àudio del sistema no disponible: només s'enregistra el micròfon",
+        "system_audio_silent": "Fa una estona que no es rep àudio del sistema: comprova la sortida de l'aplicació de reunions",
+        "output_muted": "La sortida de so està silenciada: l'àudio del sistema es podria enregistrar com a silenci",
+        "device_changed": "Ha canviat un dispositiu d'àudio: l'enregistrament ha continuat en el nou",
+        "mic_unavailable": "Micròfon no disponible: només s'enregistra l'àudio del sistema"
+      }
+    },
     "title": "Meetings",
     "loading": "Loading meetings…",
     "empty": {

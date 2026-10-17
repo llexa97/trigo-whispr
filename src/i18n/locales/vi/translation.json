@@ -12,7 +12,15 @@
     "meetingTitleManual": "Cuộc họp — {{date}}",
     "quitMeetingTitle": "Đang họp",
     "quitMeetingMessage": "Cuộc họp đang được ghi âm. Dừng ghi âm và thoát?",
-    "quitMeetingConfirm": "Dừng và thoát"
+    "quitMeetingConfirm": "Dừng và thoát",
+    "recordMeeting": "Ghi âm cuộc họp",
+    "stopMeeting": "Dừng ghi ({{time}})",
+    "stoppingMeeting": "Đang dừng ghi…",
+    "meetingReminderTitle": "Đang ghi cuộc họp",
+    "meetingReminderMessage": "Hãy cho người tham gia biết bạn đang ghi lại cuộc họp này.",
+    "meetingReminderStart": "Bắt đầu ghi",
+    "meetingReminderDontShow": "Bắt đầu, không hiển thị lại",
+    "meetingStartFailedTitle": "Không thể ghi cuộc họp"
   },
   "sidebar": {
     "general": "Chung",
@@ -177,6 +185,10 @@
           "transcribe_with_post_process": {
             "name": "Phím tắt xử lý sau",
             "description": "Tùy chọn: Phím tắt chuyên dụng luôn áp dụng xử lý sau bằng AI cho bản chuyển đổi của bạn."
+          },
+          "toggle_meeting_recording": {
+            "name": "Phím tắt ghi cuộc họp",
+            "description": "Tùy chọn: phím tắt để bắt đầu hoặc dừng ghi một cuộc họp."
           }
         },
         "errors": {
@@ -729,6 +741,19 @@
   },
   "meetings": {
     "recoveredNotice": "Đã khôi phục {{total}} cuộc họp sau khi tắt đột ngột",
+    "indicator": {
+      "stop": "Dừng",
+      "recording": "Đang ghi cuộc họp",
+      "microphone": "Micrô",
+      "systemAudio": "Âm thanh hệ thống",
+      "warnings": {
+        "system_audio_unavailable": "Không có âm thanh hệ thống — chỉ ghi micrô của bạn",
+        "system_audio_silent": "Đã lâu không nhận được âm thanh hệ thống — hãy kiểm tra đầu ra của ứng dụng họp",
+        "output_muted": "Đầu ra âm thanh đang bị tắt tiếng — âm thanh hệ thống có thể bị ghi thành im lặng",
+        "device_changed": "Một thiết bị âm thanh đã thay đổi — việc ghi tiếp tục trên thiết bị mới",
+        "mic_unavailable": "Không có micrô — chỉ ghi âm thanh hệ thống"
+      }
+    },
     "title": "Meetings",
     "loading": "Loading meetings…",
     "empty": {

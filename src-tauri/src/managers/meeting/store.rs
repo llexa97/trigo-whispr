@@ -95,17 +95,33 @@ impl MeetingSourceKind {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Type)]
 #[serde(rename_all = "snake_case")]
+/// Who a segment is attributed to. V1 attributes by track.
 pub enum Speaker {
+    /// The mic track, with a system track to tell the user apart.
     Me,
+    /// The system track.
     Others,
+    /// The mic track of a meeting recorded without system audio: it holds
+    /// everyone in the room, so it is not labelled as the user.
+    MicOnly,
 }
 
 impl Speaker {
-    fn as_str(self) -> &'static str {
+    pub fn as_str(self) -> &'static str {
         match self {
             Speaker::Me => "me",
             Speaker::Others => "others",
+            Speaker::MicOnly => "mic_only",
         }
+    }
+
+    pub fn parse(s: &str) -> Option<Self> {
+        Some(match s {
+            "me" => Speaker::Me,
+            "others" => Speaker::Others,
+            "mic_only" => Speaker::MicOnly,
+            _ => return None,
+        })
     }
 }
 
@@ -318,11 +334,7 @@ pub fn segments(conn: &Connection, id: &str) -> Result<Vec<MeetingSegment>> {
             let speaker: String = row.get(1)?;
             Ok(MeetingSegment {
                 idx: row.get(0)?,
-                speaker: if speaker == "me" {
-                    Speaker::Me
-                } else {
-                    Speaker::Others
-                },
+                speaker: Speaker::parse(&speaker).unwrap_or(Speaker::Others),
                 start_ms: row.get(2)?,
                 end_ms: row.get(3)?,
                 text: row.get(4)?,
@@ -371,6 +383,14 @@ pub fn set_status(
     conn.execute(
         "UPDATE meetings SET status = ?2, error = ?3 WHERE id = ?1",
         params![id, status.as_str(), error],
+    )?;
+    Ok(())
+}
+
+pub fn set_model_id(conn: &Connection, id: &str, model_id: &str) -> Result<()> {
+    conn.execute(
+        "UPDATE meetings SET model_id = ?2 WHERE id = ?1",
+        params![id, model_id],
     )?;
     Ok(())
 }
