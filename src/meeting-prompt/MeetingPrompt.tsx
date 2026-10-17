@@ -54,14 +54,14 @@ const MeetingPrompt: React.FC = () => {
           <button
             type="button"
             className="mp-button mp-primary"
-            onClick={() => respond("record")}
+            onClick={() => respond({ kind: "record", app_id: prompt.app_id })}
           >
             {t("meetings.prompt.detected.record")}
           </button>
           <button
             type="button"
             className="mp-button"
-            onClick={() => respond("ignore")}
+            onClick={() => respond({ kind: "ignore", app_id: prompt.app_id })}
           >
             {t("meetings.prompt.detected.ignore")}
           </button>
@@ -76,14 +76,21 @@ const MeetingPrompt: React.FC = () => {
           <button
             type="button"
             className="mp-button mp-danger"
-            onClick={() => respond("stop")}
+            onClick={() =>
+              respond({ kind: "stop", meeting_id: prompt.meeting_id })
+            }
           >
             {t("meetings.prompt.stop.stop")}
           </button>
           <button
             type="button"
             className="mp-button"
-            onClick={() => respond("keep_recording")}
+            onClick={() =>
+              respond({
+                kind: "keep_recording",
+                meeting_id: prompt.meeting_id,
+              })
+            }
           >
             {t("meetings.prompt.stop.keep")}
           </button>
@@ -99,7 +106,12 @@ const MeetingPrompt: React.FC = () => {
         <button
           type="button"
           className="mp-button"
-          onClick={() => respond("keep_recording")}
+          onClick={() =>
+            respond({
+              kind: "keep_recording",
+              meeting_id: prompt.meeting_id,
+            })
+          }
         >
           {t("meetings.prompt.autoStop.cancel")}
         </button>
@@ -112,7 +124,7 @@ const MeetingPrompt: React.FC = () => {
         <button
           type="button"
           className="mp-close"
-          onClick={() => respond("dismiss")}
+          onClick={() => respond({ kind: "dismiss" })}
           title={t("meetings.prompt.close")}
           aria-label={t("meetings.prompt.close")}
         >

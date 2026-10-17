@@ -36,10 +36,17 @@ const CONFIRMATION_DURATION: Duration = Duration::from_secs(5);
 pub enum MeetingPrompt {
     /// A meeting app is using the microphone: Record / Ignore.
     Detected { app_id: String, app_name: String },
-    /// The detected meeting looks over: Stop / Keep recording.
-    Stop { app_name: String },
-    /// Auto-stop countdown, shown here when the meeting pill is hidden.
-    AutoStop { app_name: String },
+    /// The detected meeting `meeting_id` looks over: Stop / Keep recording.
+    Stop {
+        meeting_id: String,
+        app_name: String,
+    },
+    /// Auto-stop countdown of `meeting_id`, shown here when the meeting pill
+    /// is hidden.
+    AutoStop {
+        meeting_id: String,
+        app_name: String,
+    },
     /// A detected meeting started recording without asking.
     Started { app_name: String },
 }

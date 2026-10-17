@@ -287,18 +287,22 @@ pub fn change_meeting_detection_enabled_setting(app: AppHandle, enabled: bool) {
 #[specta::specta]
 pub fn change_meeting_detection_apps_setting(app: AppHandle, apps: HashMap<String, bool>) {
     update_settings(&app, |s| s.meeting_detection_apps = apps);
+    detection::settings_changed(&app);
 }
 
 #[tauri::command]
 #[specta::specta]
 pub fn change_meeting_auto_start_setting(app: AppHandle, enabled: bool) {
     update_settings(&app, |s| s.meeting_auto_start = enabled);
+    detection::settings_changed(&app);
 }
 
 #[tauri::command]
 #[specta::specta]
 pub fn change_meeting_auto_stop_setting(app: AppHandle, mode: MeetingAutoStop) {
     update_settings(&app, |s| s.meeting_auto_stop = mode);
+    // Withdraw or re-offer a pending stop in the new mode right away.
+    detection::settings_changed(&app);
 }
 
 #[tauri::command]

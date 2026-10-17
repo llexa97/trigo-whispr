@@ -11,7 +11,9 @@
 //! Separately, a recording started from a detection is watched: once its app
 //! has released the microphone for [`RELEASE_GRACE`], the engine offers to
 //! stop it (ask, or a countdown, per `meeting_auto_stop`). Recordings
-//! started manually are never offered to stop.
+//! started manually are never offered to stop. An offer follows the setting:
+//! changing `meeting_auto_stop` withdraws it and, unless the new mode is
+//! `never`, offers again in the new mode.
 
 use super::catalog::{self, Platform};
 use super::MicUser;
@@ -66,8 +68,9 @@ pub enum Action {
         app_name: &'static str,
         auto: bool,
     },
-    /// The app took the microphone back, or the recording ended: withdraw
-    /// the stop offer.
+    /// The app took the microphone back, the recording ended or
+    /// `meeting_auto_stop` changed: withdraw the stop offer (cancel the
+    /// countdown).
     WithdrawStopOffer,
 }
 
@@ -81,18 +84,28 @@ pub enum Answer {
 enum AppState {
     Candidate(Instant),
     Prompted(Instant),
-    /// A start was requested; `seen` once the recording showed up.
+    /// A start was requested; `seen` once the recording showed up. Until
+    /// then no other app is prompted; [`Engine::start_finished`] releases it
+    /// if the start did not happen.
     Recording {
         seen: bool,
     },
     Dismissed,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Offer {
+    /// Offered in this `meeting_auto_stop` mode, not answered yet.
+    Pending(MeetingAutoStop),
+    /// The user chose to keep recording: not offered again for this release.
+    Declined,
+}
+
 #[derive(Debug)]
 struct StopWatch {
     meeting_id: String,
     released_since: Option<Instant>,
-    offered: bool,
+    offer: Option<Offer>,
 }
 
 pub struct Settings<'a> {
@@ -220,7 +233,11 @@ impl Engine {
         actions: &mut Vec<Action>,
     ) {
         let Recording::Detected { meeting_id, app_id } = recording else {
-            if self.stop_watch.take().is_some_and(|w| w.offered) {
+            if self
+                .stop_watch
+                .take()
+                .is_some_and(|w| matches!(w.offer, Some(Offer::Pending(_))))
+            {
                 actions.push(Action::WithdrawStopOffer);
             }
             return;
@@ -233,7 +250,7 @@ impl Engine {
             self.stop_watch = Some(StopWatch {
                 meeting_id: meeting_id.clone(),
                 released_since: None,
-                offered: false,
+                offer: None,
             });
         }
         let Some(watch) = self.stop_watch.as_mut() else {
@@ -242,24 +259,65 @@ impl Engine {
 
         if on_mic.contains(app_id.as_str()) {
             watch.released_since = None;
-            if std::mem::take(&mut watch.offered) {
+            if matches!(watch.offer.take(), Some(Offer::Pending(_))) {
                 actions.push(Action::WithdrawStopOffer);
             }
             return;
         }
         let since = *watch.released_since.get_or_insert(now);
-        if watch.offered
-            || now.duration_since(since) < RELEASE_GRACE
-            || settings.auto_stop == MeetingAutoStop::Never
+        match watch.offer {
+            Some(Offer::Declined) => return,
+            Some(Offer::Pending(mode)) if mode == settings.auto_stop => return,
+            // The mode changed under the offer: withdraw it, then offer
+            // again in the new mode below.
+            Some(Offer::Pending(_)) => {
+                watch.offer = None;
+                actions.push(Action::WithdrawStopOffer);
+            }
+            None => {}
+        }
+        if now.duration_since(since) < RELEASE_GRACE || settings.auto_stop == MeetingAutoStop::Never
         {
             return;
         }
-        watch.offered = true;
+        watch.offer = Some(Offer::Pending(settings.auto_stop));
         actions.push(Action::OfferStop {
             meeting_id: meeting_id.clone(),
             app_name: catalog::entry(app_id).map_or("", |e| e.display_name),
             auto: settings.auto_stop == MeetingAutoStop::Auto,
         });
+    }
+
+    /// The user chose to keep recording meeting `meeting_id` (answered the
+    /// stop prompt, or cancelled the countdown). Not offered again until
+    /// its app takes the microphone back and releases it again.
+    pub fn stop_declined(&mut self, meeting_id: &str) {
+        if let Some(watch) = self
+            .stop_watch
+            .as_mut()
+            .filter(|w| w.meeting_id == meeting_id && w.offer.is_some())
+        {
+            watch.offer = Some(Offer::Declined);
+        }
+    }
+
+    /// The start requested for `app_id` is over: `started` if the recording
+    /// runs, otherwise it was cancelled at the reminder, failed or was
+    /// refused. A start that did not happen stops blocking the other apps;
+    /// `app_id` itself is not prompted again for this call.
+    pub fn start_finished(&mut self, app_id: &str, started: bool) {
+        if started {
+            return;
+        }
+        if let Some(state) = self
+            .apps
+            .iter_mut()
+            .find(|(id, _)| **id == app_id)
+            .map(|(_, state)| state)
+            .filter(|state| **state == AppState::Recording { seen: false })
+        {
+            *state = AppState::Dismissed;
+        }
     }
 
     /// The user answered the detection prompt for `app_id`.
@@ -592,5 +650,110 @@ mod tests {
         h.engine.answer("zoom", Answer::Ignore);
         let (_, actions) = h.poll_until(Duration::from_secs(10)).unwrap();
         assert_eq!(actions, vec![prompt("slack", "Slack")]);
+    }
+
+    #[test]
+    fn a_start_that_did_not_happen_frees_the_other_apps() {
+        let mut h = Harness::new();
+        h.take_mic("zoom.exe");
+        h.poll_until(Duration::from_secs(10)).unwrap();
+        h.engine.answer("zoom", Answer::Record);
+        // Cancelled at the consent reminder (or failed, or refused).
+        h.engine.start_finished("zoom", false);
+
+        h.take_mic("slack.exe");
+        let (_, actions) = h.poll_until(Duration::from_secs(10)).unwrap();
+        assert_eq!(actions, vec![prompt("slack", "Slack")]);
+        // Zoom itself is not prompted again for this call.
+        h.engine.answer("slack", Answer::Ignore);
+        assert!(h.poll_for(Duration::from_secs(60)).is_empty());
+    }
+
+    #[test]
+    fn a_failed_auto_start_frees_the_other_apps() {
+        let mut h = Harness::new();
+        h.auto_start = true;
+        h.take_mic("zoom.exe");
+        h.poll_until(Duration::from_secs(10)).unwrap();
+        h.engine.start_finished("zoom", false);
+        h.take_mic("slack.exe");
+        let (_, actions) = h.poll_until(Duration::from_secs(10)).unwrap();
+        assert!(matches!(
+            actions.as_slice(),
+            [Action::StartRecording {
+                app_id: "slack",
+                ..
+            }]
+        ));
+    }
+
+    #[test]
+    fn a_successful_start_keeps_blocking_until_the_recording_shows_up() {
+        let mut h = Harness::new();
+        h.take_mic("zoom.exe");
+        h.poll_until(Duration::from_secs(10)).unwrap();
+        h.engine.answer("zoom", Answer::Record);
+        h.engine.start_finished("zoom", true);
+        h.take_mic("slack.exe");
+        assert!(h.poll_for(Duration::from_secs(10)).is_empty());
+    }
+
+    /// A detected recording whose app released the microphone long enough
+    /// for the countdown to be offered.
+    fn countdown_offered() -> Harness {
+        let mut h = Harness::new();
+        h.auto_stop = MeetingAutoStop::Auto;
+        h.detected("zoom");
+        let (_, actions) = h.poll_until(Duration::from_secs(60)).unwrap();
+        assert!(matches!(
+            actions.as_slice(),
+            [Action::OfferStop { auto: true, .. }]
+        ));
+        h
+    }
+
+    #[test]
+    fn switching_to_never_withdraws_the_countdown() {
+        let mut h = countdown_offered();
+        h.auto_stop = MeetingAutoStop::Never;
+        assert_eq!(h.poll(), vec![Action::WithdrawStopOffer]);
+        assert!(h.poll_for(Duration::from_secs(60)).is_empty());
+    }
+
+    #[test]
+    fn switching_to_ask_replaces_the_countdown_with_the_question() {
+        let mut h = countdown_offered();
+        h.auto_stop = MeetingAutoStop::Ask;
+        assert_eq!(
+            h.poll(),
+            vec![
+                Action::WithdrawStopOffer,
+                Action::OfferStop {
+                    meeting_id: "m1".into(),
+                    app_name: "Zoom",
+                    auto: false
+                }
+            ]
+        );
+        assert!(h.poll_for(Duration::from_secs(60)).is_empty());
+    }
+
+    #[test]
+    fn keep_recording_is_not_offered_again_even_after_a_mode_change() {
+        let mut h = countdown_offered();
+        h.engine.stop_declined("m1");
+        assert!(h.poll_for(Duration::from_secs(60)).is_empty());
+        h.auto_stop = MeetingAutoStop::Ask;
+        assert!(h.poll_for(Duration::from_secs(60)).is_empty());
+
+        // A new release of the microphone is a new end of meeting.
+        h.take_mic("zoom.exe");
+        h.poll();
+        h.release_mic("zoom.exe");
+        let (_, actions) = h.poll_until(Duration::from_secs(60)).unwrap();
+        assert!(matches!(
+            actions.as_slice(),
+            [Action::OfferStop { auto: false, .. }]
+        ));
     }
 }

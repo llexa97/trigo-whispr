@@ -2,7 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { TriangleAlert } from "lucide-react";
 import { commands, events } from "@/bindings";
-import type { CaptureWarning, MeetingStateChanged } from "@/bindings";
+import type {
+  CaptureWarning,
+  MeetingAutoStopCountdown,
+  MeetingStateChanged,
+} from "@/bindings";
 import { syncLanguageFromSettings } from "@/i18n";
 import "./MeetingIndicator.css";
 
@@ -42,7 +46,10 @@ const MeetingIndicator: React.FC = () => {
   const [meeting, setMeeting] = useState<MeetingStateChanged>(IDLE);
   const [stopping, setStopping] = useState(false);
   // Auto-stop countdown of a detected meeting whose app left the call.
-  const [countdown, setCountdown] = useState<number | null>(null);
+  const [countdown, setCountdown] = useState<MeetingAutoStopCountdown>({
+    remaining_secs: null,
+    meeting_id: null,
+  });
 
   useEffect(() => {
     let active = true;
@@ -61,7 +68,7 @@ const MeetingIndicator: React.FC = () => {
       if (event.payload.state !== "recording") setStopping(false);
     });
     const unlistenCountdown = events.meetingAutoStopCountdown.listen((event) =>
-      setCountdown(event.payload.remaining_secs),
+      setCountdown(event.payload),
     );
     return () => {
       active = false;
@@ -71,7 +78,12 @@ const MeetingIndicator: React.FC = () => {
   }, []);
 
   const busy = stopping || meeting.state === "stopping";
-  const counting = countdown !== null && meeting.state === "recording";
+  const countdownId = countdown.meeting_id;
+  const counting =
+    countdown.remaining_secs !== null &&
+    countdownId !== null &&
+    countdownId === meeting.meeting_id &&
+    meeting.state === "recording";
 
   const stop = async () => {
     if (busy) return;
@@ -102,12 +114,20 @@ const MeetingIndicator: React.FC = () => {
       {counting ? (
         <>
           <span className="mi-time mi-countdown" data-tauri-drag-region>
-            {t("meetings.indicator.autoStop", { seconds: countdown })}
+            {t("meetings.indicator.autoStop", {
+              seconds: countdown.remaining_secs,
+            })}
           </span>
           <button
             type="button"
             className="mi-cancel"
-            onClick={() => commands.respondMeetingPrompt("keep_recording")}
+            onClick={() =>
+              countdownId &&
+              commands.respondMeetingPrompt({
+                kind: "keep_recording",
+                meeting_id: countdownId,
+              })
+            }
           >
             {t("meetings.indicator.cancelAutoStop")}
           </button>

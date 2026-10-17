@@ -1389,11 +1389,11 @@ export type MeetingAutoStop =
  */
 "never"
 /**
- * Auto-stop countdown, shown in the meeting pill (or the popup when the
- * pill is hidden). `remaining_secs` is `None` once it ended or was
- * cancelled.
+ * Auto-stop countdown of meeting `meeting_id`, shown in the meeting pill
+ * (or the popup when the pill is hidden). `remaining_secs` is `None` once
+ * it ended or was cancelled.
  */
-export type MeetingAutoStopCountdown = { remaining_secs: number | null }
+export type MeetingAutoStopCountdown = { remaining_secs: number | null; meeting_id: string | null }
 export type MeetingCaptureTestReport = { 
 /**
  * Temporary directory holding `mic.wav` / `system.wav`.
@@ -1411,13 +1411,14 @@ export type MeetingPrompt =
  */
 { kind: "detected"; app_id: string; app_name: string } | 
 /**
- * The detected meeting looks over: Stop / Keep recording.
+ * The detected meeting `meeting_id` looks over: Stop / Keep recording.
  */
-{ kind: "stop"; app_name: string } | 
+{ kind: "stop"; meeting_id: string; app_name: string } | 
 /**
- * Auto-stop countdown, shown here when the meeting pill is hidden.
+ * Auto-stop countdown of `meeting_id`, shown here when the meeting pill
+ * is hidden.
  */
-{ kind: "auto_stop"; app_name: string } | 
+{ kind: "auto_stop"; meeting_id: string; app_name: string } | 
 /**
  * A detected meeting started recording without asking.
  */
@@ -1427,29 +1428,31 @@ export type MeetingPrompt =
  */
 export type MeetingPromptChanged = { prompt: MeetingPrompt | null }
 /**
- * The user's answer in the popup.
+ * The user's answer in the popup (or the pill). Each one names the app or
+ * meeting it answers for, so an answer to a prompt that has since been
+ * replaced is dropped instead of acting on something else.
  */
 export type MeetingPromptResponse = 
 /**
  * Detected meeting: record it.
  */
-"record" | 
+{ kind: "record"; app_id: string } | 
 /**
  * Detected meeting: not this call.
  */
-"ignore" | 
+{ kind: "ignore"; app_id: string } | 
 /**
  * Meeting over: stop the recording now.
  */
-"stop" | 
+{ kind: "stop"; meeting_id: string } | 
 /**
  * Meeting over: keep recording (also cancels the countdown).
  */
-"keep_recording" | 
+{ kind: "keep_recording"; meeting_id: string } | 
 /**
  * Close the confirmation.
  */
-"dismiss"
+{ kind: "dismiss" }
 export type MeetingSegment = { idx: number; speaker: Speaker; start_ms: number; end_ms: number; text: string }
 export type MeetingSource = { kind: "manual" } | { kind: "detected"; app_id: string; app_name: string }
 export type MeetingSourceKind = "manual" | "detected"

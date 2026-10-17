@@ -92,7 +92,33 @@ impl Request {
     }
 }
 
+/// Reports how the start of a detected meeting ended to the detection, on
+/// every path (refused, cancelled at the reminder, failed, started), so a
+/// start that did not happen stops holding the other meeting apps back.
+struct StartOutcome {
+    app: AppHandle,
+    /// Catalog app of a detected start; `None` for manual requests.
+    app_id: Option<String>,
+    started: bool,
+}
+
+impl Drop for StartOutcome {
+    fn drop(&mut self) {
+        if let Some(app_id) = self.app_id.take() {
+            crate::meeting::detection::service::start_finished(&self.app, &app_id, self.started);
+        }
+    }
+}
+
 fn run_manual(app: &AppHandle, trigger: &'static str, request: Request) {
+    let outcome = StartOutcome {
+        app: app.clone(),
+        app_id: match &request.source {
+            MeetingSource::Detected { app_id, .. } => Some(app_id.clone()),
+            MeetingSource::Manual => None,
+        },
+        started: false,
+    };
     if !manual_recording_supported() {
         warn!("Meeting recording toggled from {trigger}, but it is not supported here");
         return;
@@ -106,6 +132,9 @@ fn run_manual(app: &AppHandle, trigger: &'static str, request: Request) {
         .name("meeting-toggle".into())
         .spawn(move || {
             let _guard = guard;
+            // The whole outcome, not just the field written below: it must
+            // report when this thread ends, not when `run_manual` returns.
+            let mut outcome = outcome;
             let Some(manager) = app
                 .try_state::<Arc<MeetingManager>>()
                 .map(|m| m.inner().clone())
@@ -121,7 +150,7 @@ fn run_manual(app: &AppHandle, trigger: &'static str, request: Request) {
                     error!("Failed to stop the meeting recording: {e}");
                 }
             } else {
-                start_with_reminder(&app, &manager, trigger, request);
+                outcome.started = start_with_reminder(&app, &manager, trigger, request);
             }
         });
     if let Err(e) = spawned {
@@ -129,7 +158,13 @@ fn run_manual(app: &AppHandle, trigger: &'static str, request: Request) {
     }
 }
 
-fn start_with_reminder(app: &AppHandle, manager: &MeetingManager, trigger: &str, request: Request) {
+/// Returns whether the recording started.
+fn start_with_reminder(
+    app: &AppHandle,
+    manager: &MeetingManager,
+    trigger: &str,
+    request: Request,
+) -> bool {
     let current = settings::get_settings(app);
     let strings = get_tray_translations(Some(current.app_language));
 
@@ -143,7 +178,7 @@ fn start_with_reminder(app: &AppHandle, manager: &MeetingManager, trigger: &str,
             }
             Reminder::Cancel => {
                 info!("Meeting recording cancelled at the reminder ({trigger})");
-                return;
+                return false;
             }
         }
     }
@@ -158,8 +193,12 @@ fn start_with_reminder(app: &AppHandle, manager: &MeetingManager, trigger: &str,
             if let Some(app_name) = confirmation {
                 prompt::show(app, MeetingPrompt::Started { app_name });
             }
+            true
         }
-        Err(e) => report_start_failure(app, &strings, e),
+        Err(e) => {
+            report_start_failure(app, &strings, e);
+            false
+        }
     }
 }
 
