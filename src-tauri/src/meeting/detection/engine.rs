@@ -159,12 +159,15 @@ impl Engine {
             }
         }
 
-        // A start requested earlier is pending until its recording shows up.
-        let mut busy = *recording != Recording::None
-            || self
-                .apps
-                .values()
-                .any(|s| *s == AppState::Recording { seen: false });
+        // A meeting really being recorded covers every app on the mic for
+        // this call. A start still pending (reminder open, slow capture) only
+        // defers them: they stay candidates, prompted once it turns out not
+        // to have started (`start_finished`).
+        let recorded = *recording != Recording::None;
+        let mut start_pending = self
+            .apps
+            .values()
+            .any(|s| *s == AppState::Recording { seen: false });
         let mut prompt_open = self
             .apps
             .values()
@@ -179,14 +182,14 @@ impl Engine {
                 matches!(recording, Recording::Detected { app_id, .. } if app_id == id);
             let state = self.apps.get(id).copied();
             let next = match state {
-                None if busy => AppState::Dismissed,
+                None if recorded => AppState::Dismissed,
                 None => AppState::Candidate(now),
-                Some(AppState::Candidate(_)) if busy => AppState::Dismissed,
+                Some(AppState::Candidate(_)) if recorded => AppState::Dismissed,
                 Some(AppState::Candidate(since))
-                    if now.duration_since(since) >= DEBOUNCE && !prompt_open =>
+                    if now.duration_since(since) >= DEBOUNCE && !prompt_open && !start_pending =>
                 {
                     if settings.auto_start {
-                        busy = true;
+                        start_pending = true;
                         actions.push(Action::StartRecording {
                             app_id: id,
                             app_name: entry.display_name,
@@ -203,7 +206,7 @@ impl Engine {
                     }
                 }
                 Some(AppState::Prompted(since))
-                    if busy || now.duration_since(since) >= PROMPT_TIMEOUT =>
+                    if recorded || now.duration_since(since) >= PROMPT_TIMEOUT =>
                 {
                     // Recorded some other way meanwhile, or left unanswered.
                     actions.push(Action::ClosePrompt);
@@ -755,5 +758,51 @@ mod tests {
             actions.as_slice(),
             [Action::OfferStop { auto: false, .. }]
         ));
+    }
+
+    #[test]
+    fn apps_seen_while_a_start_is_pending_are_offered_once_it_failed() {
+        let mut h = Harness::new();
+        h.take_mic("zoom.exe");
+        h.poll_until(Duration::from_secs(10)).unwrap();
+        h.engine.answer("zoom", Answer::Record);
+
+        // The consent reminder is still open.
+        h.take_mic("slack.exe");
+        assert!(h.poll_for(Duration::from_secs(10)).is_empty());
+        h.engine.start_finished("zoom", false);
+
+        assert_eq!(h.poll(), vec![prompt("slack", "Slack")]);
+    }
+
+    #[test]
+    fn a_candidate_before_the_start_request_is_offered_once_it_failed() {
+        let mut h = Harness::new();
+        h.take_mic("zoom.exe");
+        h.take_mic("slack.exe");
+        // Zoom prompted, Slack waits as a candidate.
+        h.poll_until(Duration::from_secs(10)).unwrap();
+        h.engine.answer("zoom", Answer::Record);
+        assert!(h.poll_for(Duration::from_secs(10)).is_empty());
+        h.engine.start_finished("zoom", false);
+
+        assert_eq!(h.poll(), vec![prompt("slack", "Slack")]);
+    }
+
+    #[test]
+    fn apps_seen_while_a_start_is_pending_are_covered_once_it_records() {
+        let mut h = Harness::new();
+        h.take_mic("zoom.exe");
+        h.poll_until(Duration::from_secs(10)).unwrap();
+        h.engine.answer("zoom", Answer::Record);
+        h.take_mic("slack.exe");
+        h.poll_for(Duration::from_secs(10));
+
+        h.engine.start_finished("zoom", true);
+        h.detected("zoom");
+        assert!(h.poll_for(Duration::from_secs(10)).is_empty());
+        // Not after the recording ends either: that call was covered.
+        h.recording = Recording::None;
+        assert!(h.poll_for(Duration::from_secs(60)).is_empty());
     }
 }
