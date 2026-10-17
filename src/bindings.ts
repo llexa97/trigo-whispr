@@ -1022,6 +1022,13 @@ async retryMeetingTranscription(id: string) : Promise<Result<null, string>> {
 }
 },
 /**
+ * Stops a meeting's transcription (or takes it out of the queue); it is left
+ * `pending`, to be retried. Returns whether it was queued or running.
+ */
+async cancelMeetingTranscription(id: string) : Promise<boolean> {
+    return await TAURI_INVOKE("cancel_meeting_transcription", { id });
+},
+/**
  * Report of the meetings recovered at startup, returned only once.
  */
 async takeMeetingRecoveryNotice() : Promise<RecoveryReport | null> {
@@ -1061,6 +1068,7 @@ async isLaptop() : Promise<Result<boolean, string>> {
 export const events = __makeEvents__<{
 historyUpdatePayload: HistoryUpdatePayload,
 meetingStateChanged: MeetingStateChanged,
+meetingTranscriptionProgress: MeetingTranscriptionProgress,
 meetingsRecovered: MeetingsRecovered,
 meetingsUpdated: MeetingsUpdated,
 streamPhaseEvent: StreamPhaseEvent,
@@ -1068,6 +1076,7 @@ streamTextEvent: StreamTextEvent
 }>({
 historyUpdatePayload: "history-update-payload",
 meetingStateChanged: "meeting-state-changed",
+meetingTranscriptionProgress: "meeting-transcription-progress",
 meetingsRecovered: "meetings-recovered",
 meetingsUpdated: "meetings-updated",
 streamPhaseEvent: "stream-phase-event",
@@ -1276,6 +1285,18 @@ export type MeetingStatus = "recording" | "pending" | "transcribing" | "done" | 
  */
 "recovered"
 /**
+ * Emitted after each chunk of a meeting's transcription.
+ */
+export type MeetingTranscriptionProgress = { meeting_id: string; 
+/**
+ * 0 to 1.
+ */
+progress: number; 
+/**
+ * Estimated time left, once a chunk is done.
+ */
+eta_ms: number | null }
+/**
  * Emitted when meetings were recovered after a crash or rebuilt from their
  * folders. Also available through `take_meeting_recovery_notice` for the
  * startup case, where it fires before the UI listens.
@@ -1413,7 +1434,23 @@ export type ShortcutActivation =
 "hold_or_toggle"
 export type ShortcutBinding = { id: string; name: string; description: string; default_binding: string; current_binding: string }
 export type SoundTheme = "marimba" | "pop" | "custom"
-export type Speaker = "me" | "others"
+/**
+ * Who a segment is attributed to. V1 attributes by track.
+ */
+export type Speaker = 
+/**
+ * The mic track, with a system track to tell the user apart.
+ */
+"me" | 
+/**
+ * The system track.
+ */
+"others" | 
+/**
+ * The mic track of a meeting recorded without system audio: it holds
+ * everyone in the room, so it is not labelled as the user.
+ */
+"mic_only"
 /**
  * Phase of the streaming overlay card, emitted to drive its UI state.
  */

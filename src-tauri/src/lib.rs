@@ -39,6 +39,7 @@ use managers::audio::AudioRecordingManager;
 use managers::history::HistoryManager;
 use managers::meeting::MeetingManager;
 use managers::model::ModelManager;
+use managers::transcription::meeting::{MeetingStore, MeetingTranscriber};
 use managers::transcription::TranscriptionManager;
 use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 use std::sync::Arc;
@@ -187,6 +188,22 @@ fn should_force_show_permissions_window(app: &AppHandle) -> bool {
     false
 }
 
+/// Transcribes stopped meetings in the background: the ones queued from now
+/// on, and the ones left waiting by a previous run or recovered at startup.
+fn start_meeting_transcriber(app_handle: &AppHandle, meeting_manager: &Arc<MeetingManager>) {
+    let transcriber = MeetingTranscriber::new(
+        app_handle,
+        Arc::clone(meeting_manager) as Arc<dyn MeetingStore>,
+    );
+    let listener = transcriber.clone();
+    meeting_manager.set_transcription_listener(move |id| listener.enqueue(id));
+    match meeting_manager.queued_meetings() {
+        Ok(queued) => queued.iter().for_each(|m| transcriber.enqueue(&m.id)),
+        Err(e) => log::error!("Failed to list meetings waiting for transcription: {e}"),
+    }
+    app_handle.manage(transcriber);
+}
+
 fn stop_meeting_for_exit(app: &AppHandle) {
     let Some(meeting_manager) = app.try_state::<Arc<MeetingManager>>() else {
         return;
@@ -308,6 +325,7 @@ fn initialize_core_logic(app_handle: &AppHandle) {
     app_handle.manage(history_manager.clone());
     app_handle.manage(meeting_manager.clone());
     meeting_manager.start_retention_timer();
+    start_meeting_transcriber(app_handle, &meeting_manager);
     app_handle.manage(tray::TrayState::new());
 
     // Note: Shortcuts are NOT initialized here.
@@ -855,6 +873,7 @@ fn specta_builder() -> Builder<tauri::Wry> {
             commands::meeting::delete_meeting,
             commands::meeting::get_meeting_audio_paths,
             commands::meeting::retry_meeting_transcription,
+            commands::meeting::cancel_meeting_transcription,
             commands::meeting::take_meeting_recovery_notice,
             commands::meeting::update_meeting_audio_retention,
             commands::meeting::change_show_meeting_indicator_setting,
@@ -868,6 +887,7 @@ fn specta_builder() -> Builder<tauri::Wry> {
             managers::meeting::MeetingsRecovered,
             managers::transcription::StreamTextEvent,
             managers::transcription::StreamPhaseEvent,
+            managers::transcription::meeting::MeetingTranscriptionProgress,
         ])
 }
 
