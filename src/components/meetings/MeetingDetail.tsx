@@ -25,7 +25,6 @@ import {
   formatMeetingDate,
   markdownFileName,
   sourceLabel,
-  transcriptMarkdown,
 } from "./format";
 import {
   MeetingAudioPlayer,
@@ -199,18 +198,31 @@ export const MeetingDetail: React.FC<MeetingDetailProps> = ({ id, onBack }) => {
     return null;
   }
 
-  const markdown = () =>
-    transcriptMarkdown(t, i18n.language, meeting, segments ?? []);
+  // Same rendering as the `transcript.md` written by the transcription.
+  const markdown = async () => {
+    const result = await commands.getMeetingMarkdown(meeting.id);
+    if (result.status !== "ok") throw new Error(result.error);
+    return result.data;
+  };
   const hasTranscript = (segments?.length ?? 0) > 0;
   const transcribing = meeting.status === "transcribing";
   const canRetry =
     meeting.has_audio &&
     (meeting.status === "done" ||
       meeting.status === "failed" ||
-      meeting.status === "recovered");
+      meeting.status === "recovered" ||
+      // A cancelled transcription is left pending until it is retried; the
+      // backend never queues the same meeting twice.
+      meeting.status === "pending");
 
   const handleCopy = async () => {
-    if (!(await copyToClipboard(markdown()))) {
+    let ok = false;
+    try {
+      ok = await copyToClipboard(await markdown());
+    } catch (error) {
+      console.error("Failed to render the transcript:", error);
+    }
+    if (!ok) {
       toast.error(t("meetings.errors.copy"));
       return;
     }
@@ -225,7 +237,7 @@ export const MeetingDetail: React.FC<MeetingDetailProps> = ({ id, onBack }) => {
         filters: [{ name: "Markdown", extensions: ["md"] }],
       });
       if (!path) return;
-      await writeTextFile(path, markdown());
+      await writeTextFile(path, await markdown());
       toast.success(t("meetings.detail.exported"));
     } catch (error) {
       toast.error(t("meetings.errors.export"), { description: String(error) });

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Search, Users } from "lucide-react";
 import { toast } from "sonner";
@@ -7,8 +7,6 @@ import { Button } from "../ui/Button";
 import { MeetingDetail } from "./MeetingDetail";
 import { MeetingList } from "./MeetingList";
 import { MeetingRecorder } from "./MeetingRecorder";
-
-const SEARCH_DEBOUNCE_MS = 250;
 
 const EmptyState: React.FC = () => {
   const { t } = useTranslation();
@@ -42,29 +40,16 @@ const EmptyState: React.FC = () => {
 export const MeetingsSection: React.FC = () => {
   const { t } = useTranslation();
   const initialize = useMeetingsStore((s) => s.initialize);
-  const reload = useMeetingsStore((s) => s.reload);
   const query = useMeetingsStore((s) => s.query);
   const setQuery = useMeetingsStore((s) => s.setQuery);
   const loading = useMeetingsStore((s) => s.loading);
   const count = useMeetingsStore((s) => s.meetings.length);
   const selectedId = useMeetingsStore((s) => s.selectedId);
   const select = useMeetingsStore((s) => s.select);
-  const firstQuery = useRef(true);
 
   useEffect(() => {
     initialize();
   }, [initialize]);
-
-  // Re-run the search once typing pauses (the initial load is done by
-  // `initialize`).
-  useEffect(() => {
-    if (firstQuery.current) {
-      firstQuery.current = false;
-      return;
-    }
-    const timer = setTimeout(reload, SEARCH_DEBOUNCE_MS);
-    return () => clearTimeout(timer);
-  }, [query, reload]);
 
   const searching = query.trim().length > 0;
 

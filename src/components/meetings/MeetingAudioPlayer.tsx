@@ -85,7 +85,8 @@ export const MeetingAudioPlayer = forwardRef<
   const play = useCallback(async () => {
     const all = tracks();
     if (all.length === 0) return;
-    const time = all[0].currentTime;
+    // Once the leader has ended, "play" starts over.
+    const time = all[0].ended ? 0 : all[0].currentTime;
     all.forEach((a) => (a.currentTime = time));
     try {
       await Promise.all(all.map((a) => a.play()));

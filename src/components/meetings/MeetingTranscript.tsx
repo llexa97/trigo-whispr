@@ -1,14 +1,9 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import type { MeetingSegment } from "@/bindings";
-import {
-  formatTimestamp,
-  speakerKey,
-  speakerLabel,
-  type SpeakerKey,
-} from "./format";
+import type { MeetingSegment, Speaker } from "@/bindings";
+import { formatTimestamp, speakerLabel } from "./format";
 
-const SPEAKER_CLASSES: Record<SpeakerKey, string> = {
+const SPEAKER_CLASSES: Record<Speaker, string> = {
   me: "bg-logo-primary/25 text-text",
   others: "bg-sky-500/20 text-sky-500",
   mic_only: "bg-mid-gray/20 text-text/70",
@@ -32,7 +27,6 @@ export const MeetingTranscript: React.FC<MeetingTranscriptProps> = ({
   return (
     <ol className="space-y-1">
       {segments.map((segment) => {
-        const key = speakerKey(segment.speaker);
         const active =
           currentMs !== null &&
           currentMs >= segment.start_ms &&
@@ -61,7 +55,7 @@ export const MeetingTranscript: React.FC<MeetingTranscriptProps> = ({
               </span>
             )}
             <span
-              className={`text-xs font-medium px-1.5 py-0.5 rounded shrink-0 ${SPEAKER_CLASSES[key]}`}
+              className={`text-xs font-medium px-1.5 py-0.5 rounded shrink-0 ${SPEAKER_CLASSES[segment.speaker]}`}
             >
               {speakerLabel(t, segment.speaker)}
             </span>

@@ -1,30 +1,15 @@
 import { create } from "zustand";
-import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
 import {
   commands,
   events,
   type Meeting,
   type MeetingStateChanged,
   type MeetingsUpdated,
+  type MeetingTranscriptionProgress,
 } from "@/bindings";
 
 const PAGE_SIZE = 30;
-
-/**
- * Progress of a meeting transcription, emitted by the transcription pipeline
- * after each chunk. Not in `bindings.ts` yet: the pipeline that emits it
- * lands separately, until then nothing is received.
- */
-export interface MeetingTranscriptionProgress {
-  meeting_id: string;
-  /** 0–1. */
-  progress: number;
-  eta_ms: number | null;
-}
-
-const PROGRESS_EVENT = "meeting-transcription-progress";
-const CANCEL_TRANSCRIPTION_COMMAND = "cancel_meeting_transcription";
+const SEARCH_DEBOUNCE_MS = 250;
 
 const IDLE_STATE: MeetingStateChanged = {
   state: "idle",
@@ -59,6 +44,29 @@ let initialized = false;
 // for a previous search query) never overwrites a newer one.
 let generation = 0;
 let loadingMore = false;
+let searchTimer: ReturnType<typeof setTimeout> | undefined;
+// `MeetingsUpdated` events received while a page is loading. The page may
+// have been read before them, so they are applied again on top of it.
+let loadsInFlight = 0;
+let liveUpdates: MeetingsUpdated[] = [];
+
+/**
+ * Runs a page load; `apply` merges its result, then the live updates that
+ * arrived meanwhile are replayed so a stale snapshot never undoes them.
+ */
+const trackLoad = async (
+  load: () => Promise<((replay: MeetingsUpdated[]) => void) | null>,
+) => {
+  loadsInFlight++;
+  const mark = liveUpdates.length;
+  try {
+    const apply = await load();
+    apply?.(liveUpdates.slice(mark));
+  } finally {
+    loadsInFlight--;
+    if (loadsInFlight === 0) liveUpdates = [];
+  }
+};
 
 const fetchPage = (query: string, offset: number) =>
   query.trim()
@@ -123,8 +131,11 @@ export const useMeetingsStore = create<MeetingsStore>()((set, get) => {
         events.meetingStateChanged.listen((event) =>
           set({ recorder: event.payload }),
         ),
-        events.meetingsUpdated.listen((event) => applyUpdate(event.payload)),
-        listen<MeetingTranscriptionProgress>(PROGRESS_EVENT, (event) =>
+        events.meetingsUpdated.listen((event) => {
+          if (loadsInFlight > 0) liveUpdates.push(event.payload);
+          applyUpdate(event.payload);
+        }),
+        events.meetingTranscriptionProgress.listen((event) =>
           set((state) => ({
             progress: {
               ...state.progress,
@@ -147,16 +158,21 @@ export const useMeetingsStore = create<MeetingsStore>()((set, get) => {
       const query = get().query;
       set({ loading: true });
       try {
-        const result = await fetchPage(query, 0);
-        if (current !== generation) return;
-        if (result.status === "ok") {
-          set({
-            meetings: result.data.meetings,
-            hasMore: result.data.has_more,
-          });
-        } else {
-          console.error("Failed to load meetings:", result.error);
-        }
+        await trackLoad(async () => {
+          const result = await fetchPage(query, 0);
+          if (current !== generation) return null;
+          if (result.status !== "ok") {
+            console.error("Failed to load meetings:", result.error);
+            return null;
+          }
+          return (replay) => {
+            set({
+              meetings: result.data.meetings,
+              hasMore: result.data.has_more,
+            });
+            replay.forEach(applyUpdate);
+          };
+        });
       } catch (error) {
         console.error("Failed to load meetings:", error);
       } finally {
@@ -170,16 +186,21 @@ export const useMeetingsStore = create<MeetingsStore>()((set, get) => {
       loadingMore = true;
       const current = generation;
       try {
-        const result = await fetchPage(query, meetings.length);
-        if (current !== generation || result.status !== "ok") return;
-        set((state) => {
-          const known = new Set(state.meetings.map((m) => m.id));
-          return {
-            meetings: [
-              ...state.meetings,
-              ...result.data.meetings.filter((m) => !known.has(m.id)),
-            ],
-            hasMore: result.data.has_more,
+        await trackLoad(async () => {
+          const result = await fetchPage(query, meetings.length);
+          if (current !== generation || result.status !== "ok") return null;
+          return (replay) => {
+            set((state) => {
+              const known = new Set(state.meetings.map((m) => m.id));
+              return {
+                meetings: [
+                  ...state.meetings,
+                  ...result.data.meetings.filter((m) => !known.has(m.id)),
+                ],
+                hasMore: result.data.has_more,
+              };
+            });
+            replay.forEach(applyUpdate);
           };
         });
       } catch (error) {
@@ -189,16 +210,22 @@ export const useMeetingsStore = create<MeetingsStore>()((set, get) => {
       }
     },
 
+    // Debounced here rather than in the section, so leaving the section
+    // while typing still runs the search.
     setQuery: (query) => {
       set({ query });
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => get().reload(), SEARCH_DEBOUNCE_MS);
     },
 
     select: (id) => set({ selectedId: id }),
 
+    // Same path as the tray and the shortcut (consent reminder, no
+    // concurrent toggles). A start failure is reported by a native dialog.
     startMeeting: async () => {
       try {
-        const result = await commands.startMeeting({ kind: "manual" });
-        return result.status === "ok" ? null : result.error;
+        await commands.requestMeetingStart();
+        return null;
       } catch (error) {
         return errorMessage(error);
       }
@@ -215,7 +242,8 @@ export const useMeetingsStore = create<MeetingsStore>()((set, get) => {
 
     cancelTranscription: async (id) => {
       try {
-        await invoke(CANCEL_TRANSCRIPTION_COMMAND, { id });
+        // `false` only means it was no longer queued nor running.
+        await commands.cancelMeetingTranscription(id);
         return null;
       } catch (error) {
         return errorMessage(error);

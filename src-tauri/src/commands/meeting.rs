@@ -88,6 +88,16 @@ pub async fn start_meeting(
     blocking(&meeting_manager, move |m| m.start(source)).await
 }
 
+/// Starts a meeting recording the way the tray and the shortcut do: the
+/// consent reminder first, and no concurrent start or stop. Returns at once;
+/// the recording shows up through `MeetingStateChanged`, a failure in a
+/// dialog.
+#[tauri::command]
+#[specta::specta]
+pub fn request_meeting_start(app: AppHandle) {
+    crate::meeting::control::start_meeting(&app, "meetings section");
+}
+
 #[tauri::command]
 #[specta::specta]
 pub async fn stop_meeting(
@@ -145,6 +155,16 @@ pub async fn open_meeting_folder(
     app.opener()
         .open_path(folder.to_string_lossy(), None::<String>)
         .map_err(|e| format!("Failed to open meeting folder: {e}"))
+}
+
+/// The meeting's transcript in the `transcript.md` format.
+#[tauri::command]
+#[specta::specta]
+pub async fn get_meeting_markdown(
+    meeting_manager: State<'_, Arc<MeetingManager>>,
+    id: String,
+) -> Result<String, String> {
+    blocking(&meeting_manager, move |m| m.markdown(&id)).await
 }
 
 #[tauri::command]

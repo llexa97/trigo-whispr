@@ -797,9 +797,6 @@
       "others": "Autres",
       "mic_only": "Micro"
     },
-    "markdown": {
-      "line": "**[{{time}}] {{speaker}} :** {{text}}"
-    },
     "player": {
       "play": "Lire",
       "pause": "Pause",
