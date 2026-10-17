@@ -54,6 +54,26 @@ enigo = "0.6.1"
 # Feedback sounds. No `recording`: microphone capture is handy-recorder's.
 rodio = { version = "0.23.0", default-features = false, features = ["playback", "wav", "flac", "mp3", "vorbis"] }
 handy-recorder = "0.1"
+# Imported audio/video files (Transcriptions page): containers and codecs,
+# decoded in pure Rust. Same symphonia rodio already builds on. Opus is not a
+# symphonia codec: it goes through libopus (built from source with cmake and
+# linked statically, so nothing more to ship).
+symphonia = { version = "0.5.5", default-features = false, features = [
+  "aac",
+  "alac",
+  "flac",
+  "isomp4",
+  "mkv",
+  "mp3",
+  "ogg",
+  "pcm",
+  "vorbis",
+  "wav",
+  "adpcm",
+] }
+opus = "0.4"
+# Imported files to 16 kHz; pinned to the version handy-recorder uses.
+rubato = "=5.0.0"
 # Meeting capture opens its own streams (see src/meeting/capture). Same cpal
 # fork handy-recorder builds on (WASAPI loopback), not a second cpal.
 cpal = { package = "handy-cpal", version = "=0.18.2" }

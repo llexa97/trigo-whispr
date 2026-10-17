@@ -649,6 +649,18 @@ fn build_menu(
         true,
         None::<&str>,
     )?;
+    let transcribe_file_label = if strings.transcribe_file.is_empty() {
+        get_tray_translations(Some("en".to_string())).transcribe_file
+    } else {
+        strings.transcribe_file.clone()
+    };
+    let transcribe_file_i = MenuItem::with_id(
+        app,
+        "transcribe_file",
+        &transcribe_file_label,
+        true,
+        None::<&str>,
+    )?;
     let quit_i = MenuItem::with_id(app, "quit", &strings.quit, true, quit_accelerator)?;
     let separator = || PredefinedMenuItem::separator(app);
 
@@ -672,6 +684,7 @@ fn build_menu(
                 &separator()?,
                 &meeting_i,
                 &copy_last_transcript_i,
+                &transcribe_file_i,
                 &separator()?,
                 &settings_i,
                 &check_updates_i,
@@ -711,6 +724,7 @@ fn build_menu(
                 &separator()?,
                 &meeting_i,
                 &copy_last_transcript_i,
+                &transcribe_file_i,
                 &separator()?,
                 &model_submenu,
                 &unload_model_i,

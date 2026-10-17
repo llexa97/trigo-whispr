@@ -3,6 +3,7 @@
     "settings": "Configurações...",
     "checkUpdates": "Verificar Atualizações...",
     "copyLastTranscript": "Copiar última transcrição",
+    "transcribeFile": "Transcribe a File…",
     "unloadModel": "Descarregar modelo",
     "model": "Modelo",
     "quit": "Sair",
@@ -29,6 +30,7 @@
     "postProcessing": "Pós-Processamento",
     "history": "Histórico",
     "meetings": "Meetings",
+    "transcriptions": "Transcriptions",
     "debug": "Depuração",
     "about": "Sobre"
   },
@@ -944,6 +946,123 @@
       "started": {
         "title": "Recording the {{app}} meeting",
         "subtitle": "Stop it from the pill or the tray"
+      }
+    }
+  },
+  "transcriptions": {
+    "title": "Transcriptions",
+    "loading": "Loading transcriptions…",
+    "search": {
+      "placeholder": "Search by name or text",
+      "noResults": "No transcription matches your search."
+    },
+    "empty": {
+      "title": "No transcriptions yet",
+      "description": "Drop an audio or video file here to transcribe it locally, with nothing sent anywhere."
+    },
+    "drop": {
+      "title": "Drop an audio or video file here",
+      "hint": "Several files at once are transcribed one after the other.",
+      "release": "Release to transcribe {{count}} file(s)",
+      "refused": "These files are not supported",
+      "overlay": "Drop to transcribe {{count}} file(s)",
+      "choose": "Choose files",
+      "formats": "WAV, MP3, M4A, AAC, FLAC, OGG, Opus, WebM, MP4, MOV, MKV",
+      "filterName": "Audio and video"
+    },
+    "options": {
+      "language": "Language",
+      "languageFromSettings": "As in settings",
+      "languageAuto": "Auto detect",
+      "postProcess": "Post-process with the LLM"
+    },
+    "status": {
+      "pending": "Waiting",
+      "decoding": "Decoding",
+      "decodingProgress": "Decoding {{percent}}%",
+      "transcribing": "Transcribing",
+      "transcribingProgress": "Transcribing {{percent}}%",
+      "done": "Done",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    },
+    "errors": {
+      "unsupported_format": "This format is not supported.",
+      "corrupt_file": "The file is damaged or could not be read.",
+      "no_audio_track": "The file has no audio track.",
+      "no_speech": "No speech was detected.",
+      "file_missing": "The file was moved or deleted.",
+      "no_model": "Download a transcription model first.",
+      "failed": "The transcription failed.",
+      "noModelTitle": "No transcription model",
+      "openModels": "Open models",
+      "importFailed": "Could not import the files",
+      "copy": "Could not copy the transcript",
+      "export": "Could not export the transcript",
+      "openFolder": "Could not open the folder",
+      "retry": "Could not start the transcription again",
+      "cancel": "Could not cancel the transcription",
+      "delete": "Could not delete the transcription"
+    },
+    "import": {
+      "rejected": "{{name}} was not imported",
+      "unsupportedTitle": "Unsupported files ignored",
+      "longFileTitle": "Long file",
+      "longFile": "{{name}} lasts {{duration}}: its transcription will take a while. You can keep using the app meanwhile."
+    },
+    "detail": {
+      "back": "Back to transcriptions",
+      "date": "Imported",
+      "duration": "Duration",
+      "model": "Model",
+      "language": "Language",
+      "audio": "Audio",
+      "audioKept": "Kept",
+      "audioNotKept": "Not kept",
+      "source": "Original file",
+      "eta": "about {{time}} left",
+      "transcript": "Transcript",
+      "postProcessed": "Post-processed",
+      "loading": "Loading…",
+      "exported": "Transcript exported",
+      "playFrom": "Play from {{time}}",
+      "empty": {
+        "pending": "Waiting for its turn…",
+        "decoding": "Reading the file…",
+        "transcribing": "Transcription in progress…",
+        "done": "No text.",
+        "failed": "No transcript.",
+        "cancelled": "The transcription was cancelled. Start it again to get a transcript."
+      }
+    },
+    "actions": {
+      "copy": "Copy",
+      "export": "Export {{format}}",
+      "retry": "Transcribe again",
+      "cancel": "Cancel",
+      "openFolder": "Open folder",
+      "delete": "Delete"
+    },
+    "retry": {
+      "title": "Transcribe again",
+      "description": "The kept audio (or else the original file) is transcribed again.",
+      "model": "The model selected in the app is used; change it in Models to try another one.",
+      "cancel": "Cancel",
+      "confirm": "Transcribe"
+    },
+    "delete": {
+      "title": "Delete this transcription?",
+      "description": "The transcript of {{name}} and its kept audio will be deleted. The original file is not touched.",
+      "cancel": "Cancel",
+      "confirm": "Delete"
+    },
+    "settings": {
+      "open": "Settings",
+      "back": "Transcriptions",
+      "title": "Imported files",
+      "retention": {
+        "label": "Keep the decoded audio",
+        "description": "How long a copy of the audio is kept for playback and new transcriptions. The transcripts are always kept."
       }
     }
   }

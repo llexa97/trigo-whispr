@@ -62,12 +62,14 @@ Trigo Whispr is a cross-platform desktop speech-to-text application built with T
   - `transcription.rs` - Speech-to-text processing pipeline
   - `history.rs` - Transcription history storage
   - `meeting.rs` - Meeting recording lifecycle, `meetings.db` + per-meeting folders, crash recovery (`self_heal`), audio retention
+  - `file_transcription.rs` - Transcriptions page: imported audio/video files, `transcriptions.db` + per-file folders (`audio.wav` decoded copy), requeue after a quit, audio retention
+  - `transcription/file.rs` - Background queue for imported files: decode to 16 kHz mono WAV, then chunked transcription like a meeting track (dictation first, cancellable), optional LLM post-processing; `transcription/queue.rs` is the FIFO + cancel/commit worker shared with meetings
 - `meeting/power.rs` - Keeps the system awake while a meeting is recorded
 - `meeting/control.rs` - Manual meeting start/stop shared by the tray, the `toggle_meeting_recording` shortcut (unbound by default), `--toggle-meeting` and the pill; first-recording consent reminder
 - `meeting/indicator.rs` - Floating meeting pill window (`src/meeting-indicator/`): timer, level meters, capture warnings, Stop; draggable, position remembered
 - `meeting/detection/` - Automatic meeting detection: `MicUsageProbe` trait (per-OS "who uses the mic" backend; null until the Windows/macOS backends land), `catalog.rs` (known meeting apps, Trigo excluded), `engine.rs` (pure state machine: 4 s debounce, Ignore per call, end-of-meeting after 20 s of mic release for detected recordings only), `service.rs` (2 s polling thread, runs only while `meeting_detection_enabled`), `prompt.rs` (non-focusable `meeting-prompt` popup window, `src/meeting-prompt/`)
 - `audio_toolkit/` - Low-level audio processing:
-  - `audio/` - Recording sink (VAD, levels, live streaming feed), output devices, WAV I/O
+  - `audio/` - Recording sink (VAD, levels, live streaming feed), output devices, WAV I/O; `file.rs` decodes imported files (symphonia + libopus) to 16 kHz mono
   - `vad/` - Voice Activity Detection (Silero VAD)
 - `meeting/capture/` - Meeting recording: mic + system audio (Windows WASAPI process/endpoint loopback) as two aligned 16 kHz WAV tracks streamed to disk; separate from the dictation pipeline (adapted from fly-on-the-wall, see `THIRD_PARTY_LICENSES.md`)
 - `commands/` - Tauri command handlers for frontend communication
@@ -83,6 +85,7 @@ Trigo Whispr is a cross-platform desktop speech-to-text application built with T
 - `App.tsx` - Main component with onboarding flow
 - `components/` - React UI components:
   - `settings/` - Settings UI
+  - `transcriptions/` - Transcriptions page (drop zone, list, detail, exports); files dropped anywhere on the window are imported via `useFileImport`
   - `model-selector/` - Model management interface
   - `onboarding/` - First-run experience
   - `overlay/` - Recording overlay UI
