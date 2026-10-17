@@ -28,7 +28,9 @@ struct InProgress;
 
 impl InProgress {
     fn acquire() -> Option<Self> {
-        (!TOGGLE_IN_PROGRESS.swap(true, Ordering::SeqCst)).then_some(InProgress)
+        // Lazily: a guard built for a refused toggle would be dropped at once
+        // and release the lock still held by the running one.
+        (!TOGGLE_IN_PROGRESS.swap(true, Ordering::SeqCst)).then(|| InProgress)
     }
 }
 
@@ -187,9 +189,12 @@ mod tests {
     }
 
     #[test]
-    fn a_second_toggle_is_dropped_while_one_runs() {
+    fn toggles_are_dropped_while_one_runs() {
         let first = InProgress::acquire();
         assert!(first.is_some());
+        // Every refusal must leave the running toggle's lock in place.
+        assert!(InProgress::acquire().is_none());
+        assert!(InProgress::acquire().is_none());
         assert!(InProgress::acquire().is_none());
         drop(first);
         assert!(InProgress::acquire().is_some());
