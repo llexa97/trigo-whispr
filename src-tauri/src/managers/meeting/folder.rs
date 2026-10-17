@@ -23,7 +23,6 @@ use std::path::{Path, PathBuf};
 
 pub const MANIFEST_FILE: &str = "manifest.json";
 pub const TRANSCRIPT_JSON_FILE: &str = "transcript.json";
-#[allow(dead_code)] // Written by the transcription pipeline (#5).
 pub const TRANSCRIPT_MD_FILE: &str = "transcript.md";
 
 const MANIFEST_VERSION: u32 = 1;

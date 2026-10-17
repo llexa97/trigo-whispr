@@ -4,6 +4,7 @@ use crate::managers::meeting::store::{MeetingDetail, PaginatedMeetings};
 use crate::managers::meeting::{
     MeetingAudioPaths, MeetingManager, MeetingSource, MeetingStateChanged,
 };
+use crate::managers::transcription::meeting::MeetingTranscriber;
 use crate::meeting::capture::{self, CaptureConfig, CaptureOutput};
 use crate::settings::MeetingAudioRetention;
 use serde::Serialize;
@@ -162,6 +163,17 @@ pub async fn retry_meeting_transcription(
     id: String,
 ) -> Result<(), String> {
     blocking(&meeting_manager, move |m| m.retry_transcription(&id)).await
+}
+
+/// Stops a meeting's transcription (or takes it out of the queue); it is left
+/// `pending`, to be retried. Returns whether it was queued or running.
+#[tauri::command]
+#[specta::specta]
+pub fn cancel_meeting_transcription(
+    transcriber: State<'_, MeetingTranscriber>,
+    id: String,
+) -> bool {
+    transcriber.cancel(&id)
 }
 
 /// Report of the meetings recovered at startup, returned only once.
