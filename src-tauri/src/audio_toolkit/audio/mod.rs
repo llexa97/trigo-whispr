@@ -1,5 +1,6 @@
 // Re-export all audio components
 mod device;
+pub mod file;
 mod sink;
 mod utils;
 mod visualizer;

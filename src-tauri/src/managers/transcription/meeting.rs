@@ -6,10 +6,9 @@
 //! Where meetings and their status are stored is the `MeetingManager`'s
 //! business (#4); it implements [`MeetingStore`] and feeds the queue.
 
-use std::collections::VecDeque;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Condvar, Mutex, MutexGuard};
+use std::sync::Arc;
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -21,6 +20,7 @@ use tauri::{AppHandle, Manager};
 use tauri_specta::Event;
 use transcribe_cpp::Transcript;
 
+use super::queue::{JobQueue, RunningJob};
 use super::{
     effective_language_for_model, post_process_transcription_text, run_setup, RunSetup,
     TranscriptionManager,
@@ -92,22 +92,24 @@ impl Drop for ForegroundRun<'_> {
     }
 }
 
-/// Keeps the model loaded while a meeting is transcribed; afterwards it is
-/// unloaded per the usual rules, once no dictation uses it either.
-struct MeetingActive<'a>(&'a TranscriptionManager);
+/// Keeps the model loaded while a meeting (or an imported file) is
+/// transcribed; afterwards it is unloaded per the usual rules, once no
+/// dictation uses it either.
+pub(super) struct BackgroundActive<'a>(&'a TranscriptionManager);
 
-impl<'a> MeetingActive<'a> {
-    fn new(tm: &'a TranscriptionManager) -> Self {
-        tm.lock_users().set_meeting(true);
+impl<'a> BackgroundActive<'a> {
+    pub(super) fn new(tm: &'a TranscriptionManager) -> Self {
+        tm.lock_users().add_background();
         Self(tm)
     }
 }
 
-impl Drop for MeetingActive<'_> {
+impl Drop for BackgroundActive<'_> {
     fn drop(&mut self) {
         self.0.touch_activity();
-        self.0
-            .update_users("meeting transcription", |users| users.set_meeting(false));
+        self.0.update_users("background transcription", |users| {
+            users.remove_background()
+        });
     }
 }
 
@@ -124,7 +126,7 @@ impl TranscriptionManager {
     }
 
     /// Loads the selected model if none is, waiting for a load under way.
-    fn ensure_model_loaded(&self) -> Result<()> {
+    pub(super) fn ensure_model_loaded(&self) -> Result<()> {
         self.initiate_model_load();
         let mut is_loading = self.is_loading.lock().unwrap();
         while *is_loading {
@@ -156,7 +158,7 @@ impl TranscriptionManager {
             total += track_samples(path)?;
         }
 
-        let _active = MeetingActive::new(self);
+        let _active = BackgroundActive::new(self);
         self.ensure_model_loaded()?;
         let mut settings = get_settings(&self.app_handle);
         settings.translate_to_english = false;
@@ -177,7 +179,7 @@ impl TranscriptionManager {
             total as f64 / 16_000.0
         );
 
-        let mut run = MeetingRun {
+        let mut run = BackgroundRun {
             tm: self,
             setup: &setup,
             model_id: &model_id,
@@ -229,21 +231,21 @@ fn post_process_segments(
     renumber(segments)
 }
 
-/// One meeting's decode on the engine.
-struct MeetingRun<'a> {
-    tm: &'a TranscriptionManager,
-    setup: &'a RunSetup,
-    model_id: &'a str,
-    cancelled: &'a AtomicBool,
+/// One meeting's (or imported file's) decode on the engine.
+pub(super) struct BackgroundRun<'a> {
+    pub tm: &'a TranscriptionManager,
+    pub setup: &'a RunSetup,
+    pub model_id: &'a str,
+    pub cancelled: &'a AtomicBool,
     /// Engine cancels after this stop the chunk being decoded.
-    mark: CancelMark,
+    pub mark: CancelMark,
     /// Samples done, over every track.
-    done: u64,
-    on_progress: &'a mut dyn FnMut(u64),
+    pub done: u64,
+    pub on_progress: &'a mut dyn FnMut(u64),
 }
 
-impl MeetingRun<'_> {
-    fn track(&mut self, path: &Path, settings: &AppSettings) -> Result<TrackTranscript> {
+impl BackgroundRun<'_> {
+    pub fn track(&mut self, path: &Path, settings: &AppSettings) -> Result<TrackTranscript> {
         let backend = settings.vad_backend;
         let app = self.tm.app_handle.clone();
         // Long-form chunking regardless of the model or setting: a meeting is
@@ -254,7 +256,7 @@ impl MeetingRun<'_> {
     }
 }
 
-impl TrackHooks for MeetingRun<'_> {
+impl TrackHooks for BackgroundRun<'_> {
     fn check_cancelled(&self) -> Result<()> {
         if self.cancelled.load(Ordering::Acquire) {
             return Err(EngineError::Cancelled.into());
@@ -293,7 +295,7 @@ impl TrackHooks for MeetingRun<'_> {
                 {
                     // Someone else's cancel (a dictation's): decode the chunk
                     // again once the engine is free.
-                    info!("Meeting chunk stopped by another cancel; decoding it again");
+                    info!("Background chunk stopped by another cancel; decoding it again");
                     attempt += 1;
                     self.before_chunk()?;
                     self.mark = self.tm.engine.cancel_mark();
@@ -313,164 +315,48 @@ impl TrackHooks for MeetingRun<'_> {
 /// The queue of meetings to transcribe, and its worker thread.
 #[derive(Clone)]
 pub struct MeetingTranscriber {
-    shared: Arc<Shared>,
-}
-
-struct Shared {
-    app: AppHandle,
-    store: Arc<dyn MeetingStore>,
-    queue: Mutex<Queue>,
-    wake: Condvar,
-}
-
-#[derive(Default)]
-struct Queue {
-    /// Ids of the meetings waiting, oldest first.
-    pending: VecDeque<String>,
-    /// The meeting being transcribed.
-    current: Option<Current>,
-}
-
-struct Current {
-    id: String,
-    cancelled: Arc<AtomicBool>,
-    /// Past the point of no return: its result is being saved, a cancel
-    /// comes too late.
-    committed: bool,
-}
-
-/// What a cancel did.
-#[derive(Debug, PartialEq, Eq)]
-enum CancelOutcome {
-    /// Taken out of the queue.
-    Dequeued,
-    /// Being transcribed: flagged to stop.
-    Stopping,
-    /// Its result is already being saved.
-    TooLate,
-    NotQueued,
-}
-
-impl Queue {
-    fn contains(&self, id: &str) -> bool {
-        self.pending.iter().any(|p| p == id) || self.current.as_ref().is_some_and(|c| c.id == id)
-    }
-
-    /// Takes the next meeting, if any, as the current one.
-    fn start_next(&mut self) -> Option<(String, Arc<AtomicBool>)> {
-        let id = self.pending.pop_front()?;
-        let cancelled = Arc::new(AtomicBool::new(false));
-        self.current = Some(Current {
-            id: id.clone(),
-            cancelled: Arc::clone(&cancelled),
-            committed: false,
-        });
-        Some((id, cancelled))
-    }
-
-    fn cancel(&mut self, id: &str) -> CancelOutcome {
-        if let Some(at) = self.pending.iter().position(|p| p == id) {
-            self.pending.remove(at);
-            return CancelOutcome::Dequeued;
-        }
-        match self.current.as_mut().filter(|c| c.id == id) {
-            Some(current) if current.committed => CancelOutcome::TooLate,
-            Some(current) => {
-                current.cancelled.store(true, Ordering::Release);
-                CancelOutcome::Stopping
-            }
-            None => CancelOutcome::NotQueued,
-        }
-    }
-
-    /// The point of no return for the current meeting's result: false if it
-    /// was cancelled first, else no cancel is accepted from now on.
-    fn commit(&mut self) -> bool {
-        match self.current.as_mut() {
-            Some(current) if !current.cancelled.load(Ordering::Acquire) => {
-                current.committed = true;
-                true
-            }
-            _ => false,
-        }
-    }
+    queue: JobQueue,
 }
 
 impl MeetingTranscriber {
     pub fn new(app: &AppHandle, store: Arc<dyn MeetingStore>) -> Self {
-        let shared = Arc::new(Shared {
+        let worker = Worker {
             app: app.clone(),
             store,
-            queue: Mutex::new(Queue::default()),
-            wake: Condvar::new(),
+        };
+        let queue = JobQueue::spawn(app, "meeting-transcriber", move |job| {
+            match worker.store.job(job.id) {
+                Ok(meeting) => worker.transcribe(&meeting, job),
+                Err(e) => warn!("Meeting '{}' can no longer be transcribed: {e:#}", job.id),
+            }
         });
-        let worker = Arc::clone(&shared);
-        thread::Builder::new()
-            .name("meeting-transcriber".into())
-            .spawn(move || worker.run())
-            .expect("Failed to spawn the meeting transcription thread");
-        Self { shared }
+        Self { queue }
     }
 
     /// Queues a meeting, unless it is already queued or being transcribed.
     /// Its status is the store's: `pending` or `recovered` until it starts.
     pub fn enqueue(&self, meeting_id: &str) {
-        let mut queue = self.shared.lock();
-        if queue.contains(meeting_id) {
-            return;
-        }
-        queue.pending.push_back(meeting_id.to_string());
-        self.shared.wake.notify_one();
+        self.queue.enqueue(meeting_id);
     }
 
     /// Stops a meeting's transcription, or takes it out of the queue; either
     /// way it is left `pending`, its tracks kept, to be retried. Returns
     /// false if it was not queued, or its result is already being saved.
     pub fn cancel(&self, meeting_id: &str) -> bool {
-        let outcome = self.shared.lock().cancel(meeting_id);
-        match outcome {
-            CancelOutcome::Dequeued => true,
-            CancelOutcome::Stopping => {
-                // Free the engine now, unless that would also stop a
-                // dictation: then the meeting stops once its chunk is done.
-                if let Some(tm) = self.shared.app.try_state::<Arc<TranscriptionManager>>() {
-                    if !tm.dictation_busy() {
-                        tm.cancel_transcription();
-                    }
-                }
-                true
-            }
-            CancelOutcome::TooLate | CancelOutcome::NotQueued => false,
-        }
+        self.queue.cancel(meeting_id)
     }
 }
 
-impl Shared {
-    fn lock(&self) -> MutexGuard<'_, Queue> {
-        self.queue.lock().unwrap_or_else(|e| e.into_inner())
-    }
+/// What the worker thread needs to transcribe a meeting.
+struct Worker {
+    app: AppHandle,
+    store: Arc<dyn MeetingStore>,
+}
 
-    fn run(&self) {
-        loop {
-            let (id, cancelled) = {
-                let mut queue = self.lock();
-                loop {
-                    match queue.start_next() {
-                        Some(next) => break next,
-                        None => queue = self.wake.wait(queue).unwrap_or_else(|e| e.into_inner()),
-                    }
-                }
-            };
-            match self.store.job(&id) {
-                Ok(job) => self.transcribe(&job, &cancelled),
-                Err(e) => warn!("Meeting '{id}' can no longer be transcribed: {e:#}"),
-            }
-            self.lock().current = None;
-        }
-    }
-
-    fn transcribe(&self, job: &MeetingJob, cancelled: &AtomicBool) {
+impl Worker {
+    fn transcribe(&self, job: &MeetingJob, running: &RunningJob<'_>) {
         let id = job.meeting.id.as_str();
+        let cancelled = running.cancelled;
         let Some(tm) = self.app.try_state::<Arc<TranscriptionManager>>() else {
             error!("No transcription manager for meeting '{id}'");
             return;
@@ -481,15 +367,7 @@ impl Shared {
         let started = Instant::now();
         let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
             tm.transcribe_meeting(job, cancelled, &mut |done, total| {
-                let progress = if total == 0 {
-                    1.0
-                } else {
-                    done as f64 / total as f64
-                };
-                let eta_ms = (done > 0).then(|| {
-                    let elapsed = started.elapsed().as_millis() as f64;
-                    (elapsed / done as f64 * total.saturating_sub(done) as f64) as u64
-                });
+                let (progress, eta_ms) = progress_and_eta(started, done, total);
                 self.progress(id, progress, eta_ms);
             })
         }))
@@ -502,7 +380,7 @@ impl Shared {
         .and_then(|file| {
             // Nothing is saved for a meeting cancelled before this point,
             // and no cancel is accepted after it.
-            if !self.lock().commit() {
+            if !running.commit() {
                 return Err(EngineError::Cancelled.into());
             }
             write_transcript_files(&job.dir, &file)?;
@@ -520,7 +398,7 @@ impl Shared {
                 self.progress(id, 1.0, Some(0));
                 self.store.set_status(id, MeetingStatus::Done, None);
             }
-            Err(_) if cancelled.load(Ordering::Acquire) => {
+            Err(_) if running.is_cancelled() => {
                 info!("Meeting '{id}' transcription cancelled");
                 self.store.set_status(id, MeetingStatus::Pending, None);
             }
@@ -542,50 +420,17 @@ impl Shared {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn queue(ids: &[&str]) -> Queue {
-        Queue {
-            pending: ids.iter().map(|id| id.to_string()).collect(),
-            current: None,
-        }
-    }
-
-    #[test]
-    fn a_queued_meeting_is_dequeued() {
-        let mut q = queue(&["a", "b"]);
-        assert_eq!(q.cancel("b"), CancelOutcome::Dequeued);
-        assert!(!q.contains("b"));
-        assert_eq!(q.cancel("c"), CancelOutcome::NotQueued);
-    }
-
-    #[test]
-    fn a_cancelled_meeting_saves_nothing() {
-        let mut q = queue(&["a"]);
-        let (_, cancelled) = q.start_next().unwrap();
-        assert_eq!(q.cancel("a"), CancelOutcome::Stopping);
-        assert!(cancelled.load(Ordering::Acquire));
-        // Its decode may still finish (a dictation kept the engine from
-        // stopping): the result is not committed.
-        assert!(!q.commit());
-    }
-
-    #[test]
-    fn a_cancel_after_the_commit_is_refused() {
-        let mut q = queue(&["a"]);
-        let (_, cancelled) = q.start_next().unwrap();
-        assert!(q.commit());
-        assert_eq!(q.cancel("a"), CancelOutcome::TooLate);
-        assert!(!cancelled.load(Ordering::Acquire));
-    }
-
-    #[test]
-    fn a_running_meeting_is_not_queued_twice() {
-        let mut q = queue(&["a"]);
-        q.start_next().unwrap();
-        assert!(q.contains("a"));
-        assert!(q.start_next().is_none());
-    }
+/// Progress (0 to 1) of `done` samples out of `total`, and the time left
+/// estimated from the pace since `started`.
+pub(super) fn progress_and_eta(started: Instant, done: u64, total: u64) -> (f64, Option<u64>) {
+    let progress = if total == 0 {
+        1.0
+    } else {
+        done as f64 / total as f64
+    };
+    let eta_ms = (done > 0).then(|| {
+        let elapsed = started.elapsed().as_millis() as f64;
+        (elapsed / done as f64 * total.saturating_sub(done) as f64) as u64
+    });
+    (progress, eta_ms)
 }

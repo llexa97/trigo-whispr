@@ -481,6 +481,10 @@ pub struct AppSettings {
     pub recording_retention_period: RecordingRetentionPeriod,
     #[serde(default)]
     pub meeting_audio_retention: MeetingAudioRetention,
+    /// How long the decoded audio of imported files is kept (same choices
+    /// as for meetings).
+    #[serde(default)]
+    pub file_transcription_audio_retention: MeetingAudioRetention,
     #[serde(default)]
     pub paste_method: PasteMethod,
     #[serde(default)]
@@ -1103,6 +1107,7 @@ pub fn get_default_settings() -> AppSettings {
         history_limit: default_history_limit(),
         recording_retention_period: default_recording_retention_period(),
         meeting_audio_retention: MeetingAudioRetention::default(),
+        file_transcription_audio_retention: MeetingAudioRetention::default(),
         paste_method: PasteMethod::default(),
         clipboard_handling: ClipboardHandling::default(),
         auto_submit: default_auto_submit(),
