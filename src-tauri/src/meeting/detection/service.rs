@@ -466,6 +466,55 @@ pub fn apps() -> Vec<MeetingDetectionApp> {
         .collect()
 }
 
+/// An app using the microphone, as the debug panel lists it.
+#[derive(Debug, Clone, Serialize, Type)]
+pub struct MicUserReport {
+    pub app_id: String,
+    pub exe_path: Option<String>,
+    pub pid: Option<u32>,
+    /// Catalog app it belongs to, if any.
+    pub catalog_app: Option<String>,
+    /// Trigo itself (never treated as a meeting).
+    pub own: bool,
+}
+
+/// What the probe sees right now, for the debug panel.
+#[derive(Debug, Clone, Serialize, Type)]
+pub struct MicUsageReport {
+    pub supported: bool,
+    pub users: Vec<MicUserReport>,
+    pub error: Option<String>,
+}
+
+/// Asks a fresh probe who is using the microphone, whether or not detection
+/// is enabled.
+pub fn mic_usage_report() -> MicUsageReport {
+    let mut probe = platform_probe();
+    let supported = probe.supported();
+    let (users, error) = match probe.active_mic_users() {
+        Ok(users) => (users, None),
+        Err(e) => (Vec::new(), Some(e.to_string())),
+    };
+    let platform = Platform::current();
+    MicUsageReport {
+        supported,
+        users: users
+            .iter()
+            .map(|user| MicUserReport {
+                app_id: user.app_id.clone(),
+                exe_path: user
+                    .exe_path
+                    .as_ref()
+                    .map(|p| p.to_string_lossy().into_owned()),
+                pid: user.pid,
+                catalog_app: catalog::match_app(user, platform).map(|e| e.id.to_string()),
+                own: catalog::is_own_app(user),
+            })
+            .collect(),
+        error,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

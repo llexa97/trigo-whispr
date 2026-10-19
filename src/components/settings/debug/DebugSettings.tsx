@@ -15,6 +15,7 @@ import { UpdateChecksToggle } from "../UpdateChecksToggle";
 import { WhatsNewPreview } from "./WhatsNewPreview";
 import { KeyboardDiagnostic } from "./KeyboardDiagnostic";
 import { MeetingCaptureTest } from "./MeetingCaptureTest";
+import { MicUsageMonitor } from "./MicUsageMonitor";
 import {
   OnboardingPreview,
   type OnboardingPreviewStep,
@@ -62,6 +63,7 @@ export const DebugSettings: React.FC<DebugSettingsProps> = ({
         <ClamshellMicrophoneSelector descriptionMode="tooltip" grouped={true} />
         <KeyboardDiagnostic />
         <MeetingCaptureTest />
+        <MicUsageMonitor />
         <LiveLogViewer descriptionMode="tooltip" grouped={true} />
       </SettingsGroup>
     </div>
