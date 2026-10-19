@@ -123,7 +123,10 @@ keychain the first time (macOS may ask for your password to trust it), signs
 the bundle with the hardened runtime and `src-tauri/Entitlements.plist`, then
 runs `codesign --verify --deep --strict`. Pass another bundle path as the first
 argument, or set `SIGN_IDENTITY` to use an existing identity (e.g. a Developer
-ID). Re-run it after every rebuild.
+ID). Re-run it after every rebuild: it reuses the same identity (and asks again
+to trust it if you declined), and signs by its SHA-1 hash. If several
+identities share the name, it stops and lists their hashes so you can delete
+the extra ones (`security delete-identity -Z <hash>`).
 
 On the first meeting recording, macOS asks to allow system audio recording
 with the `NSAudioCaptureUsageDescription` text from `src-tauri/Info.plist`.

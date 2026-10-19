@@ -16,6 +16,7 @@
     "format:backend": "cd src-tauri && cargo fmt",
     "test:keyboard": "bun src/lib/utils/keyboard.test.ts",
     "test:meetings": "bun src/components/meetings/format.test.ts",
+    "test:macos-selfsign": "bash scripts/tests/macos-selfsign.test.sh",
     "test:playwright": "playwright test",
     "test:playwright:ui": "playwright test --ui",
     "check:translations": "bun scripts/check-translations.ts",
