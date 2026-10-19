@@ -1121,6 +1121,12 @@ async isMeetingDetectionSupported() : Promise<boolean> {
     return await TAURI_INVOKE("is_meeting_detection_supported");
 },
 /**
+ * Debug: the apps the platform probe sees using the microphone right now.
+ */
+async getMicUsage() : Promise<MicUsageReport> {
+    return await TAURI_INVOKE("get_mic_usage");
+},
+/**
  * What the detection popup should show (it may load after the event).
  */
 async getMeetingPrompt() : Promise<MeetingPrompt | null> {
@@ -1488,6 +1494,22 @@ export type MeetingsRecovered = { report: RecoveryReport }
  * Same model as `HistoryUpdatePayload`.
  */
 export type MeetingsUpdated = { action: "added"; meeting: Meeting } | { action: "updated"; meeting: Meeting } | { action: "deleted"; id: string }
+/**
+ * What the probe sees right now, for the debug panel.
+ */
+export type MicUsageReport = { supported: boolean; users: MicUserReport[]; error: string | null }
+/**
+ * An app using the microphone, as the debug panel lists it.
+ */
+export type MicUserReport = { app_id: string; exe_path: string | null; pid: number | null; 
+/**
+ * Catalog app it belongs to, if any.
+ */
+catalog_app: string | null; 
+/**
+ * Trigo itself (never treated as a meeting).
+ */
+own: boolean }
 export type ModelInfo = { id: string; name: string; description: string; filename: string; source: ModelSource; size_mb: number; is_downloaded: boolean; is_downloading: boolean; partial_size: number; accuracy_score: number; speed_score: number; supports_translation: boolean; is_recommended: boolean; supported_languages: string[]; supports_language_selection: boolean; is_custom: boolean; supports_streaming: boolean; supports_language_detection: boolean }
 export type ModelLoadStatus = { is_loaded: boolean; current_model: string | null }
 /**

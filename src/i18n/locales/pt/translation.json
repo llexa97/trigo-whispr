@@ -611,6 +611,17 @@
         "none": "nenhum",
         "failed": "A captura falhou: {{error}}"
       },
+      "micUsage": {
+        "title": "Apps usando o microfone",
+        "description": "Saída ao vivo da sonda de detecção de reuniões: apps usando o microfone e o app de reunião correspondente.",
+        "watch": "Observar",
+        "stop": "Parar",
+        "unsupported": "Ainda não suportado nesta plataforma.",
+        "nobody": "Nenhum app está usando o microfone.",
+        "own": "Trigo Whispr (ignorado)",
+        "unknown": "não é um app de reunião",
+        "failed": "Falha da sonda: {{error}}"
+      },
       "whatsNewPreview": {
         "title": "Pré-visualizar novidades",
         "description": "Abrir a nota de versão incorporada mais recente sem marcá-la como vista",

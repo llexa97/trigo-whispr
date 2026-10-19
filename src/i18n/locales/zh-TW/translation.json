@@ -611,6 +611,17 @@
         "none": "無",
         "failed": "錄製失敗：{{error}}"
       },
+      "micUsage": {
+        "title": "正在使用麥克風的應用程式",
+        "description": "會議偵測探針的即時輸出：正在使用麥克風的應用程式及其對應的會議應用程式。",
+        "watch": "監看",
+        "stop": "停止",
+        "unsupported": "此平台尚未支援。",
+        "nobody": "沒有應用程式在使用麥克風。",
+        "own": "Trigo Whispr（已忽略）",
+        "unknown": "不是會議應用程式",
+        "failed": "探針失敗：{{error}}"
+      },
       "whatsNewPreview": {
         "title": "預覽新功能",
         "description": "開啟最新內建版本資訊，且不標記為已看過",

@@ -611,6 +611,17 @@
         "none": "žádné",
         "failed": "Záznam selhal: {{error}}"
       },
+      "micUsage": {
+        "title": "Aplikace používající mikrofon",
+        "description": "Živý výstup sondy detekce schůzek: aplikace používající mikrofon a odpovídající aplikace pro schůzky.",
+        "watch": "Sledovat",
+        "stop": "Zastavit",
+        "unsupported": "Na této platformě zatím není podporováno.",
+        "nobody": "Mikrofon nepoužívá žádná aplikace.",
+        "own": "Trigo Whispr (ignorováno)",
+        "unknown": "není aplikace pro schůzky",
+        "failed": "Sonda selhala: {{error}}"
+      },
       "whatsNewPreview": {
         "title": "Náhled novinek",
         "description": "Otevřít nejnovější přibalené poznámky k vydání bez označení jako zobrazené",
