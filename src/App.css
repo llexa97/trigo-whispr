@@ -13,6 +13,10 @@
   --color-mid-gray: var(--color-mid-gray);
   --color-warning: var(--color-warning);
   --color-error: var(--color-error);
+  --color-brand-green: var(--color-brand-green);
+  --font-sans:
+    "Geist Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
 }
 
 :root {
@@ -56,7 +60,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    /* Just a bit darker than the (already dark) background, keeping its warm tint */
+    /* Just a bit darker than the (already dark) navy background */
     --color-log-surface: color-mix(in srgb, var(--color-background), black 15%);
   }
 }
