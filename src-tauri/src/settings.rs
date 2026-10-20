@@ -435,6 +435,8 @@ pub struct AppSettings {
     pub autostart_enabled: bool,
     #[serde(default = "default_update_checks_enabled")]
     pub update_checks_enabled: bool,
+    /// Retired: the What's New window is no longer shown after updates (only
+    /// previewed from the debug page). Kept so older stores still deserialize.
     #[serde(default = "default_show_whats_new_on_update")]
     pub show_whats_new_on_update: bool,
     /// The app version whose What's New the user has already seen. Fresh installs
@@ -521,6 +523,8 @@ pub struct AppSettings {
     pub app_language: String,
     #[serde(default = "default_theme")]
     pub theme: Theme,
+    /// Retired: the experimental group is no longer shown and nothing reads this.
+    /// Kept so older stores still deserialize.
     #[serde(default)]
     pub experimental_enabled: bool,
     #[serde(default)]
@@ -546,8 +550,8 @@ pub struct AppSettings {
     pub filler_word_removal_enabled: bool,
     #[serde(default)]
     pub custom_filler_words: Option<Vec<String>>,
-    /// Fresh installs default from the OS locale; existing stores are migrated
-    /// in `apply_settings_migrations`.
+    /// No longer exposed in the UI: always `AsTranscribed`, enforced by
+    /// `apply_settings_migrations`. Kept so older stores still deserialize.
     #[serde(default)]
     pub chinese_script: ChineseScript,
     #[serde(default)]
@@ -695,12 +699,6 @@ fn default_long_form_chunking() -> bool {
 
 fn default_filler_word_removal_enabled() -> bool {
     true
-}
-
-fn default_chinese_script() -> ChineseScript {
-    tauri_plugin_os::locale()
-        .and_then(|locale| crate::chinese_script::chinese_script_for_locale(&locale))
-        .unwrap_or_default()
 }
 
 fn default_debug_mode() -> bool {
@@ -1151,7 +1149,7 @@ pub fn get_default_settings() -> AppSettings {
         external_script_path: None,
         filler_word_removal_enabled: default_filler_word_removal_enabled(),
         custom_filler_words: None,
-        chinese_script: default_chinese_script(),
+        chinese_script: ChineseScript::AsTranscribed,
         transcribe_accelerator: TranscribeAcceleratorSetting::default(),
         transcribe_gpu_device: default_transcribe_gpu_device(),
         extra_recording_buffer_ms: 0,
@@ -1351,19 +1349,19 @@ fn apply_settings_migrations(
         }
     }
 
-    // One-time Chinese script migration: the script used to be chosen through
-    // `zh-Hans`/`zh-Hant` language intents. Split those into the recognition
-    // language and the script setting; every other upgrading user keeps the
-    // unconverted output they had. Only fresh installs get the locale default.
-    if settings_value.get("chinese_script").is_none() {
-        settings.chinese_script = match settings.selected_language.as_str() {
-            "zh-Hans" => ChineseScript::Simplified,
-            "zh-Hant" => ChineseScript::Traditional,
-            _ => ChineseScript::AsTranscribed,
-        };
-        if settings.chinese_script != ChineseScript::AsTranscribed {
-            settings.selected_language = "zh".to_string();
-        }
+    // One-time Chinese language migration: the script used to be chosen through
+    // `zh-Hans`/`zh-Hant` language intents. Keep their recognition language.
+    if settings_value.get("chinese_script").is_none()
+        && matches!(settings.selected_language.as_str(), "zh-Hans" | "zh-Hant")
+    {
+        settings.selected_language = "zh".to_string();
+        updated = true;
+    }
+
+    // The Chinese script setting is no longer exposed in the UI, so a stored
+    // conversion could never be turned off again: always keep the model output.
+    if settings.chinese_script != ChineseScript::AsTranscribed {
+        settings.chinese_script = ChineseScript::AsTranscribed;
         updated = true;
     }
 
@@ -1805,12 +1803,8 @@ mod tests {
     }
 
     #[test]
-    fn chinese_script_migration_only_carries_over_legacy_intents() {
-        for (intent, language, script) in [
-            ("zh-Hans", "zh", ChineseScript::Simplified),
-            ("zh-Hant", "zh", ChineseScript::Traditional),
-            ("auto", "auto", ChineseScript::AsTranscribed),
-        ] {
+    fn chinese_script_migration_keeps_legacy_language_and_forces_as_transcribed() {
+        for (intent, language) in [("zh-Hans", "zh"), ("zh-Hant", "zh"), ("auto", "auto")] {
             let mut settings = get_default_settings();
             settings.selected_language = intent.to_string();
             settings.chinese_script = ChineseScript::Traditional;
@@ -1818,8 +1812,18 @@ mod tests {
 
             assert!(apply_settings_migrations(&mut settings, &raw));
             assert_eq!(settings.selected_language, language);
-            assert_eq!(settings.chinese_script, script);
+            assert_eq!(settings.chinese_script, ChineseScript::AsTranscribed);
         }
+    }
+
+    #[test]
+    fn stored_chinese_script_is_forced_to_as_transcribed() {
+        let mut settings = get_default_settings();
+        settings.chinese_script = ChineseScript::Simplified;
+        let raw = serde_json::json!({ "chinese_script": "simplified" });
+
+        assert!(apply_settings_migrations(&mut settings, &raw));
+        assert_eq!(settings.chinese_script, ChineseScript::AsTranscribed);
     }
 
     #[test]

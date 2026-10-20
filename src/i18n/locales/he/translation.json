@@ -268,12 +268,7 @@
         "app": "אפליקציה",
         "output": "פלט",
         "transcription": "תמלול",
-        "history": "היסטוריה",
-        "experimental": "ניסיוני"
-      },
-      "experimentalToggle": {
-        "label": "תכונות ניסיוניות",
-        "description": "הפעל תכונות ניסיוניות שעדיין נמצאות בפיתוח."
+        "history": "היסטוריה"
       },
       "lazyStreamClose": {
         "label": "השאר את המיקרופון פתוח בין תמלולים",
@@ -403,15 +398,6 @@
       "fillerWordRemoval": {
         "title": "הסרת מילות מילוי",
         "description": "מסיר מילות היסוס נפוצות מתמלולים. השבת כדי להשאיר אותן."
-      },
-      "chineseScript": {
-        "title": "כתב סיני",
-        "description": "כותב תמלולים במנדרינית ובקנטונזית בתווים מפושטים או מסורתיים. שפות אחרות נשארות ללא שינוי.",
-        "options": {
-          "asTranscribed": "כפי שתומלל",
-          "simplified": "מפושט",
-          "traditional": "מסורתי"
-        }
       }
     },
     "postProcessing": {
@@ -654,35 +640,9 @@
     },
     "about": {
       "title": "אודות",
-      "version": {
-        "title": "גרסה",
-        "description": "הגרסה הנוכחית של Trigo Whispr"
-      },
       "appDataDirectory": {
         "title": "תיקיית נתוני אפליקציה",
         "description": "המיקום שבו Trigo Whispr שומר את הנתונים שלו"
-      },
-      "sourceCode": {
-        "title": "קוד מקור",
-        "description": "צפה בקוד המקור ותרום",
-        "button": "צפה ב-GitHub"
-      },
-      "supportDevelopment": {
-        "title": "תמיכה בפיתוח",
-        "description": "עזור לנו להמשיך לבנות את Trigo Whispr",
-        "button": "תרומה"
-      },
-      "acknowledgments": {
-        "title": "תודות",
-        "ggml": {
-          "title": "ggml",
-          "description": "הסקה מהירה לביצועים גבוהים עבור מודל זיהוי הדיבור Whisper של OpenAI",
-          "details": "Trigo Whispr משתמש ב-ggml לתמלול מהיר ומקומי. תודה לעבודה המדהימה של Georgi Gerganov וכל התורמים."
-        }
-      },
-      "whatsNewUpdates": {
-        "label": "הצג מה חדש",
-        "description": "הצג הערות גרסה לאחר עדכוני Trigo Whispr"
       }
     },
     "meetings": {

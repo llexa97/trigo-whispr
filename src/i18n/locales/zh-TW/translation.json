@@ -268,12 +268,7 @@
         "app": "應用程式",
         "output": "輸出",
         "transcription": "轉錄",
-        "history": "歷史",
-        "experimental": "實驗性"
-      },
-      "experimentalToggle": {
-        "label": "實驗性功能",
-        "description": "啟用仍在開發中的實驗性功能"
+        "history": "歷史"
       },
       "lazyStreamClose": {
         "label": "在轉錄之間保持麥克風開啟",
@@ -403,15 +398,6 @@
       "fillerWordRemoval": {
         "title": "移除語助詞",
         "description": "從轉錄中移除常見的語助詞。關閉此選項即可保留這些詞。"
-      },
-      "chineseScript": {
-        "title": "繁簡轉換",
-        "description": "將國語和粵語轉錄輸出為簡體或繁體中文。其他語言不受影響。",
-        "options": {
-          "asTranscribed": "保持原樣",
-          "simplified": "簡體",
-          "traditional": "繁體"
-        }
       }
     },
     "postProcessing": {
@@ -654,35 +640,9 @@
     },
     "about": {
       "title": "關於",
-      "version": {
-        "title": "版本",
-        "description": "Trigo Whispr 的目前版本"
-      },
       "appDataDirectory": {
         "title": "應用程式資料目錄",
         "description": "Trigo Whispr 儲存資料的位置"
-      },
-      "sourceCode": {
-        "title": "原始碼",
-        "description": "檢視原始碼並參與貢獻",
-        "button": "在 GitHub 上檢視"
-      },
-      "supportDevelopment": {
-        "title": "支持開發",
-        "description": "幫助我們繼續開發 Trigo Whispr",
-        "button": "捐贈"
-      },
-      "acknowledgments": {
-        "title": "致謝",
-        "ggml": {
-          "title": "ggml",
-          "description": "針對 OpenAI Whisper 自動語音辨識模型的高效能推理引擎",
-          "details": "Trigo Whispr 使用 ggml 進行快速的本機語音轉文字處理。感謝 Georgi Gerganov 和貢獻者們的傑出工作"
-        }
-      },
-      "whatsNewUpdates": {
-        "label": "顯示新功能",
-        "description": "Trigo Whispr 更新後顯示版本資訊"
       }
     },
     "meetings": {

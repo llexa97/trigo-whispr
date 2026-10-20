@@ -268,12 +268,7 @@
         "app": "App",
         "output": "Output",
         "transcription": "Transskription",
-        "history": "Historik",
-        "experimental": "Eksperimentel"
-      },
-      "experimentalToggle": {
-        "label": "Eksperimentelle funktioner",
-        "description": "Aktivér eksperimentelle funktioner, der stadig er under udvikling."
+        "history": "Historik"
       },
       "lazyStreamClose": {
         "label": "Hold mikrofon åben mellem transskriptioner",
@@ -403,15 +398,6 @@
       "fillerWordRemoval": {
         "title": "Fjern fyldord",
         "description": "Fjerner almindelige tøveord fra transskriptioner. Slå fra for at beholde dem."
-      },
-      "chineseScript": {
-        "title": "Kinesisk skrift",
-        "description": "Skriver mandarin- og kantonesisk-transskriptioner med forenklede eller traditionelle tegn. Andre sprog ændres ikke.",
-        "options": {
-          "asTranscribed": "Som transskriberet",
-          "simplified": "Forenklet",
-          "traditional": "Traditionel"
-        }
       }
     },
     "postProcessing": {
@@ -654,35 +640,9 @@
     },
     "about": {
       "title": "Om",
-      "version": {
-        "title": "Version",
-        "description": "Nuværende version af Trigo Whispr"
-      },
-      "whatsNewUpdates": {
-        "label": "Vis nyheder",
-        "description": "Vis udgivelsesnoter, efter Trigo Whispr opdateres"
-      },
       "appDataDirectory": {
         "title": "Appdatamappe",
         "description": "Placering, hvor Trigo Whispr gemmer sine data"
-      },
-      "sourceCode": {
-        "title": "Kildekode",
-        "description": "Se kildekode og bidrag",
-        "button": "Vis på GitHub"
-      },
-      "supportDevelopment": {
-        "title": "Støt udviklingen",
-        "description": "Hjælp os med at fortsætte udviklingen af Trigo Whispr",
-        "button": "Donér"
-      },
-      "acknowledgments": {
-        "title": "Anerkendelser",
-        "ggml": {
-          "title": "ggml",
-          "description": "Højtydende tensor-bibliotek til maskinlæringsinferens på enheden",
-          "details": "Trigo Whisprs lokale tale-til-tekst funktionalitet er bygget på transcribe.cpp og ggml. Tak for det fantastiske arbejde af Georgi Gerganov og bidragyderne."
-        }
       }
     },
     "meetings": {

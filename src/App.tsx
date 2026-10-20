@@ -27,9 +27,7 @@ import {
   DebugSettings,
   type OnboardingPreviewStep,
 } from "./components/settings";
-import { ErrorBoundary } from "./components/ErrorBoundary";
 import { Sidebar, SidebarSection, SECTIONS_CONFIG } from "./components/Sidebar";
-import { WhatsNewGate } from "./components/whats-new";
 import { DropOverlay } from "./components/transcriptions/DropOverlay";
 import { useFileImport } from "./components/transcriptions/useFileImport";
 import { useSettings } from "./hooks/useSettings";
@@ -434,9 +432,6 @@ function App() {
         dir={direction}
         className="h-screen flex flex-col select-none cursor-default"
       >
-        <ErrorBoundary context="What's New">
-          <WhatsNewGate />
-        </ErrorBoundary>
         {/* Main content area that takes remaining space */}
         <div className="flex-1 flex overflow-hidden">
           <Sidebar

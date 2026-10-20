@@ -268,12 +268,7 @@
         "app": "アプリ",
         "output": "出力",
         "transcription": "文字起こし",
-        "history": "履歴",
-        "experimental": "実験的"
-      },
-      "experimentalToggle": {
-        "label": "実験的な機能",
-        "description": "まだ開発中の実験的な機能を有効にします。"
+        "history": "履歴"
       },
       "lazyStreamClose": {
         "label": "文字起こし間でマイクを有効にする",
@@ -403,15 +398,6 @@
       "fillerWordRemoval": {
         "title": "フィラー語を削除",
         "description": "文字起こしから一般的なフィラー語を削除します。残すにはオフにしてください。"
-      },
-      "chineseScript": {
-        "title": "中国語の表記",
-        "description": "北京語と広東語の文字起こしを簡体字または繁体字で出力します。他の言語は変更されません。",
-        "options": {
-          "asTranscribed": "文字起こしのまま",
-          "simplified": "簡体字",
-          "traditional": "繁体字"
-        }
       }
     },
     "postProcessing": {
@@ -654,35 +640,9 @@
     },
     "about": {
       "title": "概要",
-      "version": {
-        "title": "バージョン",
-        "description": "Trigo Whispr の現在のバージョン"
-      },
       "appDataDirectory": {
         "title": "アプリデータディレクトリ",
         "description": "Trigo Whispr がデータを保存する場所"
-      },
-      "sourceCode": {
-        "title": "ソースコード",
-        "description": "ソースコードを見て貢献する",
-        "button": "GitHub で見る"
-      },
-      "supportDevelopment": {
-        "title": "開発を支援",
-        "description": "Trigo Whispr の開発を支援してください",
-        "button": "寄付する"
-      },
-      "acknowledgments": {
-        "title": "謝辞",
-        "ggml": {
-          "title": "ggml",
-          "description": "オンデバイス機械学習推論のための高性能テンソルライブラリ",
-          "details": "Trigo Whispr のローカルの音声からテキストへの文字起こしは transcribe.cpp と ggml を基盤としています。Georgi Gerganov 氏と貢献者の皆様の素晴らしい仕事に感謝します。"
-        }
-      },
-      "whatsNewUpdates": {
-        "label": "新機能を表示",
-        "description": "Trigo Whispr のアップデート後にリリースノートを表示"
       }
     },
     "meetings": {

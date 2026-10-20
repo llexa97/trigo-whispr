@@ -268,12 +268,7 @@
         "app": "एप",
         "output": "आउटपुट",
         "transcription": "ट्रान्सक्रिप्सन",
-        "history": "हिस्ट्री",
-        "experimental": "प्रयोगात्मक"
-      },
-      "experimentalToggle": {
-        "label": "प्रयोगात्मक सुविधाहरू",
-        "description": "अझै विकासमा रहेका प्रयोगात्मक सुविधाहरू अन गर्नुहोस्।"
+        "history": "हिस्ट्री"
       },
       "lazyStreamClose": {
         "label": "ट्रान्सक्रिप्सनहरूबीच माइक खुला राख्नुहोस्",
@@ -403,15 +398,6 @@
       "fillerWordRemoval": {
         "title": "फिलर शब्दहरू हटाउनुहोस्",
         "description": "ट्रान्सक्रिप्सनबाट सामान्य हिचकिचाहटका शब्दहरू हटाउँछ। तिनलाई राख्न यो विकल्प बन्द गर्नुहोस्।"
-      },
-      "chineseScript": {
-        "title": "चिनियाँ लिपि",
-        "description": "म्यान्डरिन र क्यान्टोनिज ट्रान्सक्रिप्सनलाई सरलीकृत वा परम्परागत अक्षरमा लेख्छ। अन्य भाषाहरू परिवर्तन हुँदैनन्।",
-        "options": {
-          "asTranscribed": "ट्रान्सक्राइब भए अनुसार",
-          "simplified": "सरलीकृत",
-          "traditional": "परम्परागत"
-        }
       }
     },
     "postProcessing": {
@@ -654,35 +640,9 @@
     },
     "about": {
       "title": "बारेमा",
-      "version": {
-        "title": "संस्करण",
-        "description": "Trigo Whispr को हालको संस्करण"
-      },
-      "whatsNewUpdates": {
-        "label": "नयाँ के छ देखाउनुहोस्",
-        "description": "Trigo Whispr अपडेट भएपछि रिलिज नोटहरू देखाउनुहोस्"
-      },
       "appDataDirectory": {
         "title": "एप डेटा डाइरेक्टरी",
         "description": "Trigo Whispr ले आफ्नो डेटा भण्डारण गर्ने स्थान"
-      },
-      "sourceCode": {
-        "title": "स्रोत कोड",
-        "description": "स्रोत कोड हेर्नुहोस् र योगदान गर्नुहोस्",
-        "button": "GitHub मा हेर्नुहोस्"
-      },
-      "supportDevelopment": {
-        "title": "विकासलाई सहयोग गर्नुहोस्",
-        "description": "Trigo Whispr निर्माण जारी राख्न हामीलाई सहयोग गर्नुहोस्",
-        "button": "दान गर्नुहोस्"
-      },
-      "acknowledgments": {
-        "title": "आभार",
-        "ggml": {
-          "title": "ggml",
-          "description": "अन-डिभाइस मेसिन लर्निङ अनुमानका लागि उच्च-प्रदर्शन टेन्सर लाइब्रेरी",
-          "details": "Trigo Whispr को स्थानीय स्पिच-टु-टेक्स्ट transcribe.cpp र ggml मा आधारित छ। Georgi Gerganov र योगदानकर्ताहरूको उत्कृष्ट कामका लागि धन्यवाद।"
-        }
       }
     },
     "meetings": {

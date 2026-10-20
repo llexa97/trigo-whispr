@@ -268,12 +268,7 @@
         "app": "Aplicación",
         "output": "Salida",
         "transcription": "Transcripción",
-        "history": "Historial",
-        "experimental": "Experimental"
-      },
-      "experimentalToggle": {
-        "label": "Funciones experimentales",
-        "description": "Habilitar funciones experimentales que aún están en desarrollo."
+        "history": "Historial"
       },
       "lazyStreamClose": {
         "label": "Mantener micrófono abierto entre transcripciones",
@@ -403,15 +398,6 @@
       "fillerWordRemoval": {
         "title": "Eliminar muletillas",
         "description": "Elimina las muletillas más comunes de las transcripciones. Desactívalo para conservarlas."
-      },
-      "chineseScript": {
-        "title": "Escritura china",
-        "description": "Escribe las transcripciones en mandarín y cantonés con caracteres simplificados o tradicionales. Los demás idiomas no se modifican.",
-        "options": {
-          "asTranscribed": "Tal como se transcribió",
-          "simplified": "Simplificado",
-          "traditional": "Tradicional"
-        }
       }
     },
     "postProcessing": {
@@ -654,35 +640,9 @@
     },
     "about": {
       "title": "Acerca de",
-      "version": {
-        "title": "Versión",
-        "description": "Versión actual de Trigo Whispr"
-      },
       "appDataDirectory": {
         "title": "Directorio de datos de la aplicación",
         "description": "Ubicación donde Trigo Whispr almacena sus datos"
-      },
-      "sourceCode": {
-        "title": "Código fuente",
-        "description": "Ver código fuente y contribuir",
-        "button": "Ver en GitHub"
-      },
-      "supportDevelopment": {
-        "title": "Apoyar el desarrollo",
-        "description": "Ayúdanos a continuar construyendo Trigo Whispr",
-        "button": "Donar"
-      },
-      "acknowledgments": {
-        "title": "Reconocimientos",
-        "ggml": {
-          "title": "ggml",
-          "description": "Biblioteca de tensores de alto rendimiento para inferencia de aprendizaje automático en el dispositivo",
-          "details": "El habla a texto local de Trigo Whispr está construido sobre transcribe.cpp y ggml. Gracias al increíble trabajo de Georgi Gerganov y colaboradores."
-        }
-      },
-      "whatsNewUpdates": {
-        "label": "Mostrar novedades",
-        "description": "Mostrar notas de la versión después de las actualizaciones de Trigo Whispr"
       }
     },
     "meetings": {
