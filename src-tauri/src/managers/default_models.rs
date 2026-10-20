@@ -215,6 +215,18 @@ impl DefaultModelsInstaller {
                 {
                     tokio::time::sleep(BUSY_POLL_INTERVAL).await;
                 }
+                *self.current.lock().unwrap() = None;
+                // That transfer was the user's: if it ended without the file
+                // (cancelled, or failed and already reported), leave it until
+                // Retry or the next launch rather than restarting it at once.
+                if !model_manager
+                    .get_model_info(model_id)
+                    .is_some_and(|m| m.is_downloaded)
+                {
+                    self.set_error(model_id, Some(DefaultModelError::Cancelled));
+                    self.emit_status();
+                    continue;
+                }
             }
 
             if !model_manager
@@ -283,6 +295,17 @@ impl DefaultModelsInstaller {
             }
             Err(e) => {
                 error!("Default model {} download failed: {:#}", model_id, e);
+                // Same event as the `download_model` command, so the Models
+                // page stops showing the transfer as running. `silent`: the
+                // setup screen and the background toast report it already.
+                let _ = self.app.emit(
+                    "model-download-failed",
+                    serde_json::json!({
+                        "model_id": model_id,
+                        "error": e.to_string(),
+                        "silent": true,
+                    }),
+                );
                 Err(DefaultModelError::Download {
                     detail: e.to_string(),
                 })

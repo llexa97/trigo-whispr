@@ -246,7 +246,12 @@ function App() {
       "default-models-status",
       (event) => {
         for (const model of event.payload.models) {
-          if (model.state !== "failed" || !model.error) {
+          // A cancel from the Models page was the user's own doing.
+          if (
+            model.state !== "failed" ||
+            !model.error ||
+            model.error.kind === "cancelled"
+          ) {
             reported.delete(model.model_id);
             continue;
           }
