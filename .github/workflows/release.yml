@@ -80,8 +80,10 @@ jobs:
       platform: ${{ matrix.platform }}
       target: ${{ matrix.target }}
       build-args: ${{ matrix.args }}
-      # No Apple/Azure certificate or updater signing key is required.
+      # No Apple/Azure certificate is required, but the updater artifacts are
+      # signed with TAURI_SIGNING_PRIVATE_KEY so installed apps can self-update.
       sign-binaries: false
+      sign-updater: true
       asset-prefix: "trigo-whispr"
       upload-artifacts: false
       release-id: ${{ needs.create-release.outputs.release-id }}
@@ -111,6 +113,12 @@ jobs:
             }
             if (!assets.some(asset => /\.dmg$/i.test(asset.name) && asset.size > 0)) {
               throw new Error('No macOS installer was uploaded; keeping the release as a draft.');
+            }
+            if (!assets.some(asset => asset.name === 'latest.json' && asset.size > 0)) {
+              throw new Error('No latest.json was uploaded; installed apps could not find this update, keeping the release as a draft.');
+            }
+            if (!assets.some(asset => /\.sig$/i.test(asset.name) && asset.size > 0)) {
+              throw new Error('No updater signature was uploaded; keeping the release as a draft.');
             }
             await github.rest.repos.updateRelease({
               owner: context.repo.owner,

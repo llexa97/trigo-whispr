@@ -757,6 +757,7 @@
     "installing": "Wird installiert...",
     "preparing": "Wird vorbereitet...",
     "checkForUpdates": "Nach Updates suchen",
+    "updateFailed": "Update fehlgeschlagen, manuell herunterladen",
     "portableUpdateTitle": "Manuelles Update erforderlich",
     "portableUpdateMessage": "Portable Installationen können nicht automatisch aktualisiert werden. Lade unten den Installer für dein System herunter, führe ihn aus und installiere in denselben Ordner — dein Data/-Ordner (Einstellungen, Modelle, Aufnahmen) bleibt erhalten.",
     "portableUpdateButton": "Installer herunterladen",

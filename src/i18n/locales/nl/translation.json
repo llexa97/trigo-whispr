@@ -757,6 +757,7 @@
     "installing": "Installeren...",
     "preparing": "Voorbereiden...",
     "checkForUpdates": "Controleren op updates",
+    "updateFailed": "Update mislukt, handmatig downloaden",
     "portableUpdateTitle": "Handmatige update vereist",
     "portableUpdateMessage": "Draagbare (portable) installaties kunnen niet automatisch worden bijgewerkt. Download hieronder het installatiebestand voor je systeem, voer het uit en installeer in dezelfde map — je Data/-map (instellingen, modellen, opnames) blijft behouden.",
     "portableUpdateButton": "Installatiebestand downloaden",
