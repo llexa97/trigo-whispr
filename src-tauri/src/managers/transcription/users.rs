@@ -31,6 +31,11 @@ impl EngineUsers {
         self.dictation || self.foreground > 0
     }
 
+    /// A meeting's or an imported file's transcription is under way.
+    pub(super) fn background_active(&self) -> bool {
+        self.background > 0
+    }
+
     pub(super) fn set_dictation(&mut self, active: bool) {
         self.dictation = active;
     }

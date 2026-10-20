@@ -715,6 +715,30 @@ async getCurrentModel() : Promise<Result<string, string>> {
     else return { status: "error", error: e  as any };
 }
 },
+/**
+ * The model meetings and imported files are transcribed with, as resolved
+ * now (the default or the dictation model when none is chosen).
+ */
+async getLongFormModel() : Promise<Result<string, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_long_form_model") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Chooses the model for meetings and imported files. It is loaded when one
+ * is next transcribed, not now: dictation keeps its model loaded meanwhile.
+ */
+async setLongFormModel(modelId: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("set_long_form_model", { modelId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async getTranscriptionModelStatus() : Promise<Result<string | null, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("get_transcription_model_status") };
@@ -1350,7 +1374,17 @@ hold_threshold_ms?: number; audio_feedback?: boolean; audio_feedback_volume?: nu
  * upgrading from before this key existed are blanked by the migration so they
  * see the current release's notes — see `apply_settings_migrations`.
  */
-whats_new_last_seen_version?: string; selected_model?: string; onboarding_completed?: boolean; always_on_microphone?: boolean; selected_microphone?: string | null; 
+whats_new_last_seen_version?: string; 
+/**
+ * The dictation model (live shortcut).
+ */
+selected_model?: string; 
+/**
+ * The model for long transcriptions: meetings and imported files. Empty
+ * means the default ([`DEFAULT_LONG_FORM_MODEL`] once downloaded, else
+ * the dictation model); see `ModelManager::long_form_model_id`.
+ */
+long_form_model?: string; onboarding_completed?: boolean; always_on_microphone?: boolean; selected_microphone?: string | null; 
 /**
  * Which input channel to use on the selected microphone device.
  * None means "average all channels" (original behavior).

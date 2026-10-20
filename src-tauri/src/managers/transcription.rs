@@ -271,6 +271,19 @@ pub struct TranscriptionManager {
     /// Who is using the engine: an immediate unload waits for the last of
     /// them, and a meeting's transcription gives way to dictation.
     users: Arc<Mutex<EngineUsers>>,
+    /// Bumped each time a dictation stops a background chunk to load its own
+    /// model: that chunk is decoded again, without counting as a failed try.
+    preemptions: Arc<AtomicU64>,
+}
+
+/// What a model is loaded for: dictation and long transcriptions each have
+/// their own model, and one is loaded at a time.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ModelUsage {
+    /// The live shortcut, and re-transcribing a dictation from history.
+    Dictation,
+    /// Meetings and imported files.
+    LongForm,
 }
 
 impl TranscriptionManager {
@@ -291,6 +304,7 @@ impl TranscriptionManager {
             next_stream_worker_id: Arc::new(AtomicU64::new(1)),
             active_stream_worker: Arc::new(AtomicU64::new(0)),
             users: Arc::new(Mutex::new(EngineUsers::default())),
+            preemptions: Arc::new(AtomicU64::new(0)),
         };
 
         // Start the idle watcher
@@ -718,19 +732,48 @@ impl TranscriptionManager {
         Ok(())
     }
 
-    /// Kicks off the model loading in a background thread if it's not already loaded
+    /// The model `usage` is transcribed with, per the settings.
+    pub fn model_for(&self, usage: ModelUsage) -> String {
+        let settings = get_settings(&self.app_handle);
+        match usage {
+            ModelUsage::Dictation => settings.selected_model,
+            ModelUsage::LongForm => self.model_manager.long_form_model_id(&settings),
+        }
+    }
+
+    /// Whether `model_id` is the model loaded now.
+    fn has_loaded(&self, model_id: &str) -> bool {
+        self.is_model_loaded() && self.get_current_model().as_deref() == Some(model_id)
+    }
+
+    /// Kicks off loading the dictation model in a background thread, unless
+    /// it is already loaded.
     pub fn initiate_model_load(&self) {
+        self.initiate_model_load_for(ModelUsage::Dictation);
+    }
+
+    /// Kicks off loading `usage`'s model in a background thread, unless it is
+    /// already loaded (or a load is under way). Loading it replaces the
+    /// model of the other usage.
+    pub fn initiate_model_load_for(&self, usage: ModelUsage) {
+        let model_id = self.model_for(usage);
+        self.initiate_load_of(&model_id, usage);
+    }
+
+    fn initiate_load_of(&self, model_id: &str, usage: ModelUsage) {
         let mut is_loading = self.is_loading.lock().unwrap();
         if *is_loading {
             return;
         }
 
         let reload_pending = self.reload_model_on_next_use.load(Ordering::Acquire);
-        if !reload_pending && self.is_model_loaded() {
+        if !reload_pending && self.has_loaded(model_id) {
             return;
         }
 
         *is_loading = true;
+        let previous = self.get_current_model();
+        let model_id = model_id.to_string();
         let self_clone = self.clone();
         thread::spawn(move || {
             if reload_pending {
@@ -738,14 +781,90 @@ impl TranscriptionManager {
                     .reload_model_on_next_use
                     .store(false, Ordering::Release);
             }
-            let settings = get_settings(&self_clone.app_handle);
-            if let Err(e) = self_clone.load_model(&settings.selected_model) {
-                error!("Failed to load model: {}", e);
+            let started = Instant::now();
+            match self_clone.load_model(&model_id) {
+                Ok(()) => match previous.filter(|previous| *previous != model_id) {
+                    Some(previous) => info!(
+                        "Switched transcription model for {:?}: '{}' -> '{}' in {}ms",
+                        usage,
+                        previous,
+                        model_id,
+                        started.elapsed().as_millis()
+                    ),
+                    None => info!(
+                        "Loaded transcription model '{}' for {:?} in {}ms",
+                        model_id,
+                        usage,
+                        started.elapsed().as_millis()
+                    ),
+                },
+                Err(e) => error!("Failed to load model: {}", e),
             }
             let mut is_loading = self_clone.is_loading.lock().unwrap();
             *is_loading = false;
             self_clone.loading_condvar.notify_all();
         });
+    }
+
+    /// Waits for the model load under way, if any.
+    fn wait_for_load(&self) {
+        let mut is_loading = self.is_loading.lock().unwrap();
+        while *is_loading {
+            is_loading = self.loading_condvar.wait(is_loading).unwrap();
+        }
+    }
+
+    /// Loads `usage`'s model unless it is loaded, waiting for the load.
+    pub(super) fn ensure_model_loaded_for(&self, usage: ModelUsage) -> Result<()> {
+        let model_id = self.model_for(usage);
+        self.ensure_model_loaded(&model_id, usage)
+    }
+
+    /// Loads `model_id` unless it is loaded, waiting for the load. A load of
+    /// another model under way is waited for first.
+    pub(super) fn ensure_model_loaded(&self, model_id: &str, usage: ModelUsage) -> Result<()> {
+        for _ in 0..2 {
+            self.initiate_load_of(model_id, usage);
+            self.wait_for_load();
+            if self.has_loaded(model_id) {
+                return Ok(());
+            }
+        }
+        Err(anyhow::anyhow!(
+            "Model failed to load. Please check your model settings."
+        ))
+    }
+
+    /// Whether a meeting's or an imported file's transcription is under way.
+    pub fn background_transcription_active(&self) -> bool {
+        self.lock_users().background_active()
+    }
+
+    /// A dictation is starting (already registered as a user, so the
+    /// background queue no longer starts chunks): if a meeting or an imported file is being
+    /// transcribed with another model, stop its chunk now, so the dictation
+    /// loads its model without waiting for that chunk. The chunk is decoded
+    /// again once the dictation is done, with its own model reloaded.
+    pub fn preempt_background_for_dictation(&self) {
+        if !self.lock_users().background_active() {
+            return;
+        }
+        let dictation_model = self.model_for(ModelUsage::Dictation);
+        if self.get_current_model().as_deref() == Some(dictation_model.as_str()) {
+            // Same model: the dictation waits for the chunk, as it always did.
+            return;
+        }
+        info!(
+            "Dictation needs '{}': interrupting the background transcription's chunk",
+            dictation_model
+        );
+        self.preemptions.fetch_add(1, Ordering::SeqCst);
+        self.engine.cancel();
+    }
+
+    /// How many background chunks dictations have interrupted so far.
+    pub(super) fn preemption_count(&self) -> u64 {
+        self.preemptions.load(Ordering::SeqCst)
     }
 
     pub fn get_current_model(&self) -> Option<String> {
@@ -815,20 +934,20 @@ impl TranscriptionManager {
             stream_active: Arc::clone(&self.stream_active),
         };
 
-        // Wait for any in-progress model load to finish (start_stream races the
-        // background load kicked off when recording starts).
-        {
-            let mut is_loading = self.is_loading.lock().unwrap();
-            while *is_loading {
-                is_loading = self.loading_condvar.wait(is_loading).unwrap();
-            }
-        }
+        // Wait for the dictation model's load kicked off when recording
+        // starts (start_stream races it), or load it again if a meeting's or
+        // a file's transcription replaced it in between. A failure is
+        // reported below as no loaded model.
+        let dictation_model_loaded = self
+            .ensure_model_loaded_for(ModelUsage::Dictation)
+            .inspect_err(|e| debug!("Live preview: {}", e))
+            .is_ok();
 
         let model_id = self.get_current_model().unwrap_or_default();
 
         // The loaded model (not the ModelManager copy) is the source of truth
         // for run-path capabilities.
-        let Some(info) = self.engine.loaded() else {
+        let Some(info) = self.engine.loaded().filter(|_| dictation_model_loaded) else {
             info!(
                 "Live preview: model '{}' is not a loaded transcribe-cpp model; \
                  streaming is unavailable, using batch transcription",
@@ -939,11 +1058,19 @@ impl TranscriptionManager {
         .emit(&self.app_handle);
     }
 
-    /// Transcribe a whole clip in batch: a re-transcribed history entry, or
-    /// a file from the CLI.
+    /// Transcribe a whole clip in batch with the loaded model: a file from
+    /// the CLI, which loads the model it was asked for.
     pub fn transcribe(&self, audio: Vec<f32>) -> Result<String> {
         let _foreground = meeting::ForegroundRun::new(self);
-        self.complete(Instant::now(), audio, None)
+        self.complete(Instant::now(), audio, None, None)
+    }
+
+    /// Transcribe a whole dictation in batch with the dictation model: a
+    /// re-transcribed history entry.
+    pub fn transcribe_dictation(&self, audio: Vec<f32>) -> Result<String> {
+        let _foreground = meeting::ForegroundRun::new(self);
+        self.preempt_background_for_dictation();
+        self.complete(Instant::now(), audio, None, Some(ModelUsage::Dictation))
     }
 
     /// Transcribe a finished recording: what its live decode produced, or a
@@ -952,7 +1079,7 @@ impl TranscriptionManager {
         let _foreground = meeting::ForegroundRun::new(self);
         let started = Instant::now();
         let live = self.finalize_live(samples.len())?;
-        self.complete(started, samples, live)
+        self.complete(started, samples, live, Some(ModelUsage::Dictation))
     }
 
     /// The final text of one transcription, from its live result or else a
@@ -962,6 +1089,7 @@ impl TranscriptionManager {
         started: Instant,
         audio: Vec<f32>,
         live: Option<RunOutcome>,
+        usage: Option<ModelUsage>,
     ) -> Result<String> {
         #[cfg(debug_assertions)]
         if std::env::var("TRIGO_WHISPR_FORCE_TRANSCRIPTION_FAILURE").is_ok() {
@@ -980,7 +1108,7 @@ impl TranscriptionManager {
 
         let outcome = match live {
             Some(outcome) => outcome,
-            None => self.decode_batch(audio)?,
+            None => self.decode_batch(audio, usage)?,
         };
         let settings = get_settings(&self.app_handle);
         let final_result = finish_text(outcome, &settings);
@@ -1015,9 +1143,10 @@ impl TranscriptionManager {
         Ok(final_result)
     }
 
-    /// Decode a whole clip with the loaded model, loading it first if a load
-    /// is under way.
-    fn decode_batch(&self, audio: Vec<f32>) -> Result<RunOutcome> {
+    /// Decode a whole clip with `usage`'s model, loading it first unless it
+    /// is loaded; without a usage, with the loaded model, once a load under
+    /// way is done.
+    fn decode_batch(&self, audio: Vec<f32>, usage: Option<ModelUsage>) -> Result<RunOutcome> {
         // A cancel from here on (during the model-load wait or chunk planning
         // included) stops every run of this transcription.
         let mark = self.engine.cancel_mark();
@@ -1025,16 +1154,17 @@ impl TranscriptionManager {
         // Update last activity timestamp
         self.touch_activity();
 
-        // Check if model is loaded, if not try to load it
-        {
-            // If the model is loading, wait for it to complete.
-            let mut is_loading = self.is_loading.lock().unwrap();
-            while *is_loading {
-                is_loading = self.loading_condvar.wait(is_loading).unwrap();
-            }
-
-            if !self.is_model_loaded() {
-                return Err(anyhow::anyhow!("Model is not loaded for transcription."));
+        // A meeting's or a file's transcription may have loaded its model
+        // since the dictation's load was kicked off: load ours again.
+        match usage {
+            Some(usage) => self
+                .ensure_model_loaded_for(usage)
+                .map_err(|_| anyhow::anyhow!("Model is not loaded for transcription."))?,
+            None => {
+                self.wait_for_load();
+                if !self.is_model_loaded() {
+                    return Err(anyhow::anyhow!("Model is not loaded for transcription."));
+                }
             }
         }
 
@@ -1209,7 +1339,7 @@ fn run_setup(info: &LoadedInfo, settings: &AppSettings, validated_language: &str
     let languages = info.capabilities.languages.clone();
     debug!(
         "transcribe-cpp model '{}' on '{}': initial_prompt={}, vocabulary={}, translate={}, languages={:?}",
-        settings.selected_model,
+        info.arch,
         info.backend,
         info.supports_initial_prompt,
         info.supports_vocabulary,
@@ -1217,6 +1347,12 @@ fn run_setup(info: &LoadedInfo, settings: &AppSettings, validated_language: &str
         languages
     );
 
+    // Never record a language the model did not apply.
+    let validated_language = if ignores_language_hint(&info.arch) {
+        "auto"
+    } else {
+        validated_language
+    };
     let run_plan = transcribe_cpp_run_plan(
         settings.translate_to_english,
         validated_language,
@@ -1247,6 +1383,13 @@ fn run_setup(info: &LoadedInfo, settings: &AppSettings, validated_language: &str
         applied_language_hint,
         output_was_translated,
     }
+}
+
+/// Whether a model of architecture `arch` ignores the language it is given:
+/// Parakeet has no language prompt in transcribe-cpp and always detects the
+/// language itself, so a forced language has no effect on its output.
+fn ignores_language_hint(arch: &str) -> bool {
+    arch.eq_ignore_ascii_case("parakeet")
 }
 
 /// A batch run's error: a cancel stays recognisable as one.
@@ -2154,6 +2297,12 @@ mod tests {
             &supported,
         );
         assert_eq!(result, "eu vi um carro");
+    }
+
+    #[test]
+    fn only_parakeet_ignores_a_forced_language() {
+        assert!(ignores_language_hint("parakeet"));
+        assert!(!ignores_language_hint("whisper"));
     }
 
     #[test]

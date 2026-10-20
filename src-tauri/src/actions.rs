@@ -400,6 +400,9 @@ impl ShortcutAction for TranscribeAction {
 
         // Load ASR model and VAD model in parallel
         let kickoff_started = Instant::now();
+        // Before the load: it would otherwise wait for a meeting's (or a
+        // file's) chunk being decoded with the other model.
+        tm.preempt_background_for_dictation();
         tm.initiate_model_load();
         let rm_clone = Arc::clone(&rm);
         std::thread::spawn(move || {

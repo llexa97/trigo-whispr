@@ -1,7 +1,9 @@
 use super::model_capabilities::{
     CapabilityProbe, CapabilityProber, Compatibility, GgufHeaderProber,
 };
-use crate::settings::{get_settings, write_settings};
+use crate::settings::{
+    get_settings, write_settings, AppSettings, DEFAULT_DICTATION_MODEL, DEFAULT_LONG_FORM_MODEL,
+};
 use anyhow::Result;
 use hf_hub::api::tokio::{ApiBuilder, CancellationToken, Progress};
 use hf_hub::{Cache, Repo, RepoType};
@@ -299,6 +301,16 @@ pub struct DownloadProgress {
 /// Return the active HF cache followed by the pre-v0.9.6 cache for portable
 /// upgrades. Downloads still use `Cache::from_env()` and therefore only write
 /// to the active portable cache.
+/// [`ModelManager::long_form_model_id`], with `is_downloaded` telling which
+/// models can be loaded.
+fn resolve_long_form_model(settings: &AppSettings, is_downloaded: impl Fn(&str) -> bool) -> String {
+    [settings.long_form_model.as_str(), DEFAULT_LONG_FORM_MODEL]
+        .into_iter()
+        .find(|id| !id.is_empty() && is_downloaded(id))
+        .unwrap_or(&settings.selected_model)
+        .to_string()
+}
+
 fn hf_caches() -> Vec<Cache> {
     let current = Cache::from_env();
     let mut caches = vec![current.clone()];
@@ -1157,6 +1169,16 @@ impl ModelManager {
             .is_some_and(|model| model.is_downloaded)
     }
 
+    /// The model meetings and imported files are transcribed with: the one
+    /// chosen for them if it is downloaded, else [`DEFAULT_LONG_FORM_MODEL`]
+    /// if it is, else the dictation model.
+    pub fn long_form_model_id(&self, settings: &AppSettings) -> String {
+        let models = self.available_models.lock().unwrap();
+        resolve_long_form_model(settings, |id| {
+            Self::selected_model_is_available(&models, id)
+        })
+    }
+
     /// Remove a single file from the shared HF cache: the snapshot pointer for
     /// the resolved revision and, when the pointer is a symlink, the blob it
     /// points to. Everything else in the repo (other quants, refs) is left
@@ -1217,13 +1239,19 @@ impl ModelManager {
             return Ok(());
         }
 
-        // If no model is selected, pick the first downloaded one using the same
-        // ranked order the UI receives.
+        // If no model is selected, pick the default dictation model if it is
+        // downloaded, else the first downloaded one using the same ranked
+        // order the UI receives.
         if settings.selected_model.is_empty() {
-            if let Some(available_model) = self
+            let downloaded: Vec<ModelInfo> = self
                 .get_available_models()
                 .into_iter()
-                .find(|model| model.is_downloaded)
+                .filter(|model| model.is_downloaded)
+                .collect();
+            if let Some(available_model) = downloaded
+                .iter()
+                .find(|model| model.id == DEFAULT_DICTATION_MODEL)
+                .or_else(|| downloaded.first())
             {
                 info!(
                     "Auto-selecting model: {} ({})",
@@ -2221,6 +2249,42 @@ impl ModelManager {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn assigned(dictation: &str, long_form: &str) -> AppSettings {
+        AppSettings {
+            selected_model: dictation.to_string(),
+            long_form_model: long_form.to_string(),
+            ..crate::settings::get_default_settings()
+        }
+    }
+
+    #[test]
+    fn the_chosen_long_form_model_wins_once_downloaded() {
+        let settings = assigned("parakeet", "whisper-small");
+        assert_eq!(
+            resolve_long_form_model(&settings, |_| true),
+            "whisper-small"
+        );
+        // Not downloaded: the default, then the dictation model.
+        assert_eq!(
+            resolve_long_form_model(&settings, |id| id == DEFAULT_LONG_FORM_MODEL),
+            DEFAULT_LONG_FORM_MODEL
+        );
+        assert_eq!(resolve_long_form_model(&settings, |_| false), "parakeet");
+    }
+
+    #[test]
+    fn no_long_form_choice_uses_whisper_turbo_else_the_dictation_model() {
+        let settings = assigned("parakeet", "");
+        assert_eq!(
+            resolve_long_form_model(&settings, |_| true),
+            DEFAULT_LONG_FORM_MODEL
+        );
+        assert_eq!(
+            resolve_long_form_model(&settings, |id| id == "parakeet"),
+            "parakeet"
+        );
+    }
     use std::fs::File;
     use std::io::Write;
     use tempfile::TempDir;
