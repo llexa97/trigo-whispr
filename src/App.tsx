@@ -22,7 +22,9 @@ import Footer from "./components/footer";
 import Onboarding, {
   AccessibilityOnboarding,
   ModelMigration,
+  ModelSetup,
 } from "./components/onboarding";
+import { defaultModelErrorMessage } from "./components/onboarding/ModelSetup";
 import {
   DebugSettings,
   type OnboardingPreviewStep,
@@ -32,7 +34,7 @@ import { DropOverlay } from "./components/transcriptions/DropOverlay";
 import { useFileImport } from "./components/transcriptions/useFileImport";
 import { useSettings } from "./hooks/useSettings";
 import { useSettingsStore } from "./stores/settingsStore";
-import { commands } from "@/bindings";
+import { commands, type DefaultModelsStatus } from "@/bindings";
 import { deleteRetiredModel } from "@/components/onboarding/retiredModels";
 import { getLanguageDirection, initializeRTL } from "@/lib/utils/rtl";
 
@@ -170,6 +172,14 @@ function App() {
           defaultValue: t("errors.micPermissionDenied.generic"),
         });
         toast.error(t("errors.micPermissionDeniedTitle"), { description });
+      } else if (error_type === "model_downloading") {
+        toast.info(t("errors.modelDownloadingTitle"), {
+          description: t("errors.modelDownloading"),
+        });
+      } else if (error_type === "no_model") {
+        toast.error(t("errors.noModelTitle"), {
+          description: t("errors.noModel"),
+        });
       } else if (error_type === "no_input_device") {
         toast.error(t("errors.noInputDeviceTitle"), {
           description: t("errors.noInputDevice"),
@@ -222,6 +232,50 @@ function App() {
       toast.info(t("meetings.recoveredNotice", { total }));
     });
   }, [t]);
+
+  // The default models keep installing in the background after onboarding
+  // (and at later launches when one is missing). The setup screen shows its
+  // own errors; past it, a failure surfaces here with a way to try again.
+  const showsMainApp = onboardingStep === "done";
+  useEffect(() => {
+    if (!showsMainApp) return;
+    const reported = new Set<string>();
+    const unlisten = listen<DefaultModelsStatus>(
+      "default-models-status",
+      (event) => {
+        for (const model of event.payload.models) {
+          // A cancel from the Models page was the user's own doing.
+          if (
+            model.state !== "failed" ||
+            !model.error ||
+            model.error.kind === "cancelled"
+          ) {
+            reported.delete(model.model_id);
+            continue;
+          }
+          if (reported.has(model.model_id)) continue;
+          reported.add(model.model_id);
+          toast.error(
+            t("onboarding.setup.backgroundFailed", { name: model.name }),
+            {
+              description: defaultModelErrorMessage(t, model.error),
+              action: {
+                label: t("onboarding.setup.retry"),
+                onClick: () => {
+                  commands.retryDefaultModels().catch((e) => {
+                    console.error("Failed to retry default models:", e);
+                  });
+                },
+              },
+            },
+          );
+        }
+      },
+    );
+    return () => {
+      unlisten.then((fn) => fn());
+    };
+  }, [showsMainApp, t]);
 
   // Listen for model loading failures and show a toast
   useEffect(() => {
@@ -394,7 +448,7 @@ function App() {
         {onboardingPreview === "accessibility" ? (
           <AccessibilityOnboarding onComplete={NOOP} preview />
         ) : (
-          <Onboarding onModelSelected={NOOP} preview />
+          <ModelSetup onComplete={NOOP} preview />
         )}
         <button
           type="button"
@@ -417,7 +471,11 @@ function App() {
         onChooseAnother={() => setOnboardingStep("model")}
       />
     );
+  } else if (onboardingStep === "model" && !migrationModelId) {
+    // New users: the two default models install on their own.
+    content = <ModelSetup onComplete={handleModelSelected} />;
   } else if (onboardingStep === "model") {
+    // Escape hatch from the model update, which still offers the picker.
     content = (
       <Onboarding
         onModelSelected={handleModelSelected}

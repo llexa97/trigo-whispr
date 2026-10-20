@@ -102,6 +102,27 @@
         "checkFailed": "Misslyckades med att kontrollera behörigheter. Försök igen.",
         "requestFailed": "Misslyckades med att begära behörighet. Försök igen."
       }
+    },
+    "setup": {
+      "title": "Konfigurerar Trigo Whispr",
+      "description": "Trigo Whispr laddar ner sina två taligenkänningsmodeller. Du kan diktera så snart den första är klar.",
+      "roles": {
+        "dictation": "Livediktering",
+        "meetings": "Möten och importerade filer"
+      },
+      "pending": "Väntar",
+      "failed": "Misslyckades",
+      "downloadedOf": "{{downloaded}} av {{total}}",
+      "start": "Börja diktera",
+      "waitingForDictation": "Diktering blir tillgänglig när {{name}} är installerad.",
+      "continuesInBackground": "Den andra modellen fortsätter att laddas ner i bakgrunden.",
+      "retry": "Försök igen",
+      "backgroundFailed": "Det gick inte att installera {{name}}",
+      "errors": {
+        "diskSpace": "Inte tillräckligt med diskutrymme: {{required}} krävs, {{available}} ledigt. Frigör utrymme och försök igen.",
+        "cancelled": "Nedladdningen avbröts.",
+        "download": "Nedladdningen misslyckades. Kontrollera internetanslutningen och försök igen."
+      }
     }
   },
   "modelSelector": {
@@ -754,7 +775,11 @@
     "noInputDevice": "Ingen ljudenhet hittades. Anslut en mikrofon eller ett headset och försök igen.",
     "pasteFailedTitle": "Det gick inte att klistra in texten",
     "pasteFailed": "Texten kunde inte klistras in i det aktiva programmet.",
-    "transcriptionFailedTitle": "Transkriptionen misslyckades"
+    "transcriptionFailedTitle": "Transkriptionen misslyckades",
+    "modelDownloadingTitle": "Modellen laddas fortfarande ner",
+    "modelDownloading": "Diktering fungerar så snart taligenkänningsmodellen är installerad.",
+    "noModelTitle": "Ingen taligenkänningsmodell",
+    "noModel": "Ladda ner en modell i inställningarna för Modeller för att börja diktera."
   },
   "appLanguage": {
     "title": "Applikationsspråk",

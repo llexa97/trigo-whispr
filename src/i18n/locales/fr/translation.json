@@ -102,6 +102,27 @@
         "checkFailed": "Échec de la vérification des autorisations. Veuillez réessayer.",
         "requestFailed": "Échec de la demande d'autorisation. Veuillez réessayer."
       }
+    },
+    "setup": {
+      "title": "Installation de Trigo Whispr",
+      "description": "Trigo Whispr télécharge ses deux modèles de reconnaissance vocale. Vous pourrez dicter dès que le premier sera prêt.",
+      "roles": {
+        "dictation": "Dictée en direct",
+        "meetings": "Réunions et fichiers importés"
+      },
+      "pending": "En attente",
+      "failed": "Échec",
+      "downloadedOf": "{{downloaded}} sur {{total}}",
+      "start": "Commencer à dicter",
+      "waitingForDictation": "La dictée sera disponible dès que {{name}} sera installé.",
+      "continuesInBackground": "L'autre modèle continue de se télécharger en arrière-plan.",
+      "retry": "Réessayer",
+      "backgroundFailed": "Impossible d'installer {{name}}",
+      "errors": {
+        "diskSpace": "Espace disque insuffisant : {{required}} nécessaires, {{available}} disponibles. Libérez de l'espace, puis réessayez.",
+        "cancelled": "Le téléchargement a été annulé.",
+        "download": "Le téléchargement a échoué. Vérifiez votre connexion internet, puis réessayez."
+      }
     }
   },
   "modelSelector": {
@@ -754,7 +775,11 @@
     "modelLoadFailedUnknown": "modèle inconnu",
     "pasteFailedTitle": "Échec du collage du texte",
     "pasteFailed": "Le texte n'a pas pu être collé dans l'application active.",
-    "transcriptionFailedTitle": "Échec de la transcription"
+    "transcriptionFailedTitle": "Échec de la transcription",
+    "modelDownloadingTitle": "Modèle en cours de téléchargement",
+    "modelDownloading": "La dictée fonctionnera dès que le modèle de reconnaissance vocale sera installé.",
+    "noModelTitle": "Aucun modèle de reconnaissance vocale",
+    "noModel": "Téléchargez un modèle depuis les réglages Modèles pour commencer à dicter."
   },
   "appLanguage": {
     "title": "Langue de l'application",

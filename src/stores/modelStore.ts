@@ -272,6 +272,9 @@ export const useModelStore = create<ModelsStore>()(
         set(
           produce((state) => {
             state.downloadProgress[progress.model_id] = progress;
+            // Downloads also start from the backend (the default models), so
+            // the first progress event is what tells the UI one is running.
+            state.downloadingModels[progress.model_id] = true;
           }),
         );
 
@@ -325,10 +328,10 @@ export const useModelStore = create<ModelsStore>()(
         get().loadModels();
       });
 
-      listen<{ model_id: string; error: string }>(
+      listen<{ model_id: string; error: string; silent?: boolean }>(
         "model-download-failed",
         (event) => {
-          const { model_id: modelId, error } = event.payload;
+          const { model_id: modelId, error, silent } = event.payload;
           set(
             produce((state) => {
               delete state.downloadingModels[modelId];
@@ -338,7 +341,8 @@ export const useModelStore = create<ModelsStore>()(
               state.error = error;
             }),
           );
-          toast.error(error);
+          // The default models installer reports its own failures.
+          if (!silent) toast.error(error);
         },
       );
 

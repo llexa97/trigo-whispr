@@ -102,6 +102,27 @@
         "checkFailed": "İzinler kontrol edilemedi. Lütfen tekrar deneyin.",
         "requestFailed": "İzin isteği başarısız oldu. Lütfen tekrar deneyin."
       }
+    },
+    "setup": {
+      "title": "Trigo Whispr kuruluyor",
+      "description": "Trigo Whispr iki konuşma tanıma modelini indiriyor. İlki hazır olur olmaz dikte etmeye başlayabilirsiniz.",
+      "roles": {
+        "dictation": "Canlı dikte",
+        "meetings": "Toplantılar ve içe aktarılan dosyalar"
+      },
+      "pending": "Bekliyor",
+      "failed": "Başarısız",
+      "downloadedOf": "{{downloaded}} / {{total}}",
+      "start": "Dikteye başla",
+      "waitingForDictation": "Dikte, {{name}} yüklendiğinde kullanılabilir olacak.",
+      "continuesInBackground": "Diğer model arka planda inmeye devam ediyor.",
+      "retry": "Yeniden dene",
+      "backgroundFailed": "{{name}} yüklenemedi",
+      "errors": {
+        "diskSpace": "Yetersiz disk alanı: {{required}} gerekli, {{available}} boş. Yer açıp yeniden deneyin.",
+        "cancelled": "İndirme iptal edildi.",
+        "download": "İndirme başarısız oldu. İnternet bağlantınızı kontrol edip yeniden deneyin."
+      }
     }
   },
   "modelSelector": {
@@ -754,7 +775,11 @@
     "modelLoadFailedUnknown": "bilinmeyen model",
     "pasteFailedTitle": "Metin yapıştırılamadı",
     "pasteFailed": "Metin etkin uygulamaya yapıştırılamadı.",
-    "transcriptionFailedTitle": "Transkripsiyon başarısız oldu"
+    "transcriptionFailedTitle": "Transkripsiyon başarısız oldu",
+    "modelDownloadingTitle": "Model hâlâ indiriliyor",
+    "modelDownloading": "Konuşma tanıma modeli yüklenir yüklenmez dikte çalışacak.",
+    "noModelTitle": "Konuşma tanıma modeli yok",
+    "noModel": "Dikte etmek için Modeller ayarlarından bir model indirin."
   },
   "appLanguage": {
     "title": "Uygulama Dili",

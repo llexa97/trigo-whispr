@@ -102,6 +102,27 @@
         "checkFailed": "権限の確認に失敗しました。もう一度お試しください。",
         "requestFailed": "権限のリクエストに失敗しました。もう一度お試しください。"
       }
+    },
+    "setup": {
+      "title": "Trigo Whispr をセットアップしています",
+      "description": "Trigo Whispr は 2 つの音声認識モデルをダウンロードしています。最初のモデルの準備ができ次第、音声入力を始められます。",
+      "roles": {
+        "dictation": "ライブ音声入力",
+        "meetings": "会議とインポートしたファイル"
+      },
+      "pending": "待機中",
+      "failed": "失敗",
+      "downloadedOf": "{{downloaded}} / {{total}}",
+      "start": "音声入力を始める",
+      "waitingForDictation": "{{name}} のインストール後に音声入力が使えるようになります。",
+      "continuesInBackground": "もう一方のモデルはバックグラウンドでダウンロードを続けます。",
+      "retry": "再試行",
+      "backgroundFailed": "{{name}} をインストールできませんでした",
+      "errors": {
+        "diskSpace": "ディスクの空き容量が不足しています: {{required}} 必要、空き {{available}}。空き容量を確保してから再試行してください。",
+        "cancelled": "ダウンロードはキャンセルされました。",
+        "download": "ダウンロードに失敗しました。インターネット接続を確認してから再試行してください。"
+      }
     }
   },
   "modelSelector": {
@@ -754,7 +775,11 @@
     "modelLoadFailedUnknown": "不明なモデル",
     "pasteFailedTitle": "テキストの貼り付けに失敗しました",
     "pasteFailed": "アクティブなアプリにテキストを貼り付けられませんでした。",
-    "transcriptionFailedTitle": "文字起こしに失敗しました"
+    "transcriptionFailedTitle": "文字起こしに失敗しました",
+    "modelDownloadingTitle": "モデルをダウンロード中",
+    "modelDownloading": "音声認識モデルのインストールが完了すると音声入力が使えます。",
+    "noModelTitle": "音声認識モデルがありません",
+    "noModel": "音声入力を始めるには、モデル設定からモデルをダウンロードしてください。"
   },
   "appLanguage": {
     "title": "アプリの言語",

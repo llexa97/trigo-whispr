@@ -102,6 +102,27 @@
         "checkFailed": "Kunne ikke tjekke tilladelser. Prøv igen.",
         "requestFailed": "Kunne ikke anmode om tilladelse. Prøv igen."
       }
+    },
+    "setup": {
+      "title": "Konfigurerer Trigo Whispr",
+      "description": "Trigo Whispr downloader sine to talegenkendelsesmodeller. Du kan diktere, så snart den første er klar.",
+      "roles": {
+        "dictation": "Livediktering",
+        "meetings": "Møder og importerede filer"
+      },
+      "pending": "Venter",
+      "failed": "Mislykkedes",
+      "downloadedOf": "{{downloaded}} af {{total}}",
+      "start": "Begynd at diktere",
+      "waitingForDictation": "Diktering bliver tilgængelig, når {{name}} er installeret.",
+      "continuesInBackground": "Den anden model downloades fortsat i baggrunden.",
+      "retry": "Prøv igen",
+      "backgroundFailed": "{{name}} kunne ikke installeres",
+      "errors": {
+        "diskSpace": "Ikke nok diskplads: {{required}} kræves, {{available}} ledig. Frigør plads, og prøv igen.",
+        "cancelled": "Downloadet blev annulleret.",
+        "download": "Downloadet mislykkedes. Tjek din internetforbindelse, og prøv igen."
+      }
     }
   },
   "modelSelector": {
@@ -757,7 +778,11 @@
     "modelLoadFailedUnknown": "ukendt model",
     "pasteFailedTitle": "Kunne ikke indsætte tekst",
     "pasteFailed": "Teksten kunne ikke indsættes i det aktive program.",
-    "transcriptionFailedTitle": "Transskription mislykkedes"
+    "transcriptionFailedTitle": "Transskription mislykkedes",
+    "modelDownloadingTitle": "Modellen downloades stadig",
+    "modelDownloading": "Diktering virker, så snart talegenkendelsesmodellen er installeret.",
+    "noModelTitle": "Ingen talegenkendelsesmodel",
+    "noModel": "Download en model under indstillingerne for Modeller for at begynde at diktere."
   },
   "appLanguage": {
     "title": "Applikationssprog",

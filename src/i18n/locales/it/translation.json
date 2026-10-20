@@ -102,6 +102,27 @@
         "checkFailed": "Impossibile verificare i permessi. Riprova.",
         "requestFailed": "Impossibile richiedere il permesso. Riprova."
       }
+    },
+    "setup": {
+      "title": "Configurazione di Trigo Whispr",
+      "description": "Trigo Whispr sta scaricando i suoi due modelli di riconoscimento vocale. Potrai dettare non appena il primo sarà pronto.",
+      "roles": {
+        "dictation": "Dettatura dal vivo",
+        "meetings": "Riunioni e file importati"
+      },
+      "pending": "In attesa",
+      "failed": "Non riuscito",
+      "downloadedOf": "{{downloaded}} di {{total}}",
+      "start": "Inizia a dettare",
+      "waitingForDictation": "La dettatura sarà disponibile quando {{name}} sarà installato.",
+      "continuesInBackground": "L'altro modello continua a scaricarsi in background.",
+      "retry": "Riprova",
+      "backgroundFailed": "Impossibile installare {{name}}",
+      "errors": {
+        "diskSpace": "Spazio su disco insufficiente: servono {{required}}, liberi {{available}}. Libera spazio e riprova.",
+        "cancelled": "Il download è stato annullato.",
+        "download": "Il download non è riuscito. Controlla la connessione a internet e riprova."
+      }
     }
   },
   "modelSelector": {
@@ -754,7 +775,11 @@
     "modelLoadFailedUnknown": "modello sconosciuto",
     "pasteFailedTitle": "Impossibile incollare il testo",
     "pasteFailed": "Non è stato possibile incollare il testo nell'applicazione attiva.",
-    "transcriptionFailedTitle": "Trascrizione non riuscita"
+    "transcriptionFailedTitle": "Trascrizione non riuscita",
+    "modelDownloadingTitle": "Modello in download",
+    "modelDownloading": "La dettatura funzionerà non appena il modello di riconoscimento vocale sarà installato.",
+    "noModelTitle": "Nessun modello di riconoscimento vocale",
+    "noModel": "Scarica un modello dalle impostazioni Modelli per iniziare a dettare."
   },
   "appLanguage": {
     "title": "Lingua Applicazione",

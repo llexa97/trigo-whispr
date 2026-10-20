@@ -102,6 +102,27 @@
         "checkFailed": "Machtigingen controleren mislukt. Probeer het opnieuw.",
         "requestFailed": "Machtiging aanvragen mislukt. Probeer het opnieuw."
       }
+    },
+    "setup": {
+      "title": "Trigo Whispr instellen",
+      "description": "Trigo Whispr downloadt zijn twee spraakherkenningsmodellen. Je kunt dicteren zodra het eerste klaar is.",
+      "roles": {
+        "dictation": "Live dicteren",
+        "meetings": "Vergaderingen en geïmporteerde bestanden"
+      },
+      "pending": "Wachten",
+      "failed": "Mislukt",
+      "downloadedOf": "{{downloaded}} van {{total}}",
+      "start": "Begin met dicteren",
+      "waitingForDictation": "Dicteren is beschikbaar zodra {{name}} is geïnstalleerd.",
+      "continuesInBackground": "Het andere model wordt op de achtergrond verder gedownload.",
+      "retry": "Opnieuw proberen",
+      "backgroundFailed": "Kan {{name}} niet installeren",
+      "errors": {
+        "diskSpace": "Onvoldoende schijfruimte: {{required}} nodig, {{available}} vrij. Maak ruimte vrij en probeer het opnieuw.",
+        "cancelled": "De download is geannuleerd.",
+        "download": "De download is mislukt. Controleer je internetverbinding en probeer het opnieuw."
+      }
     }
   },
   "modelSelector": {
@@ -757,7 +778,11 @@
     "modelLoadFailedUnknown": "onbekend model",
     "pasteFailedTitle": "Tekst plakken mislukt",
     "pasteFailed": "Tekst kon niet worden geplakt in de actieve applicatie.",
-    "transcriptionFailedTitle": "Transcriptie mislukt"
+    "transcriptionFailedTitle": "Transcriptie mislukt",
+    "modelDownloadingTitle": "Model wordt nog gedownload",
+    "modelDownloading": "Dicteren werkt zodra het spraakherkenningsmodel is geïnstalleerd.",
+    "noModelTitle": "Geen spraakherkenningsmodel",
+    "noModel": "Download een model via de instellingen Modellen om te dicteren."
   },
   "appLanguage": {
     "title": "Interfacetaal",

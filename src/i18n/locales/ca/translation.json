@@ -102,6 +102,27 @@
         "checkFailed": "No s'han pogut comprovar els permisos. Torneu-ho a provar.",
         "requestFailed": "No s'ha pogut sol·licitar el permís. Torneu-ho a provar."
       }
+    },
+    "setup": {
+      "title": "Configurant Trigo Whispr",
+      "description": "Trigo Whispr està baixant els seus dos models de reconeixement de veu. Podràs dictar tan bon punt el primer estigui llest.",
+      "roles": {
+        "dictation": "Dictat en directe",
+        "meetings": "Reunions i fitxers importats"
+      },
+      "pending": "En espera",
+      "failed": "Error",
+      "downloadedOf": "{{downloaded}} de {{total}}",
+      "start": "Comença a dictar",
+      "waitingForDictation": "El dictat estarà disponible quan {{name}} estigui instal·lat.",
+      "continuesInBackground": "L'altre model es continua baixant en segon pla.",
+      "retry": "Torna-ho a provar",
+      "backgroundFailed": "No s'ha pogut instal·lar {{name}}",
+      "errors": {
+        "diskSpace": "Espai de disc insuficient: calen {{required}}, n'hi ha {{available}} lliures. Allibera espai i torna-ho a provar.",
+        "cancelled": "S'ha cancel·lat la baixada.",
+        "download": "La baixada ha fallat. Comprova la connexió a internet i torna-ho a provar."
+      }
     }
   },
   "modelSelector": {
@@ -757,7 +778,11 @@
     "modelLoadFailedUnknown": "model desconegut",
     "pasteFailedTitle": "No s'ha pogut enganxar el text",
     "pasteFailed": "No s'ha pogut enganxar el text a l'aplicació activa.",
-    "transcriptionFailedTitle": "La transcripció ha fallat"
+    "transcriptionFailedTitle": "La transcripció ha fallat",
+    "modelDownloadingTitle": "El model encara s'està baixant",
+    "modelDownloading": "El dictat funcionarà tan bon punt s'instal·li el model de reconeixement de veu.",
+    "noModelTitle": "Cap model de reconeixement de veu",
+    "noModel": "Baixa un model des de la configuració de Models per començar a dictar."
   },
   "appLanguage": {
     "title": "Llengua de l'aplicació",

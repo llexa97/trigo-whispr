@@ -102,6 +102,27 @@
         "checkFailed": "فشل التحقق من الأذونات. يرجير المحاولة مرة أخرى.",
         "requestFailed": "فشل طلب الإذن. يرجى المحاولة مرة أخرى."
       }
+    },
+    "setup": {
+      "title": "إعداد Trigo Whispr",
+      "description": "يقوم Trigo Whispr بتنزيل نموذجَي التعرّف على الكلام. يمكنك بدء الإملاء فور جاهزية النموذج الأول.",
+      "roles": {
+        "dictation": "الإملاء المباشر",
+        "meetings": "الاجتماعات والملفات المستوردة"
+      },
+      "pending": "في الانتظار",
+      "failed": "فشل",
+      "downloadedOf": "{{downloaded}} من {{total}}",
+      "start": "ابدأ الإملاء",
+      "waitingForDictation": "سيتوفر الإملاء بعد تثبيت {{name}}.",
+      "continuesInBackground": "يستمر تنزيل النموذج الآخر في الخلفية.",
+      "retry": "إعادة المحاولة",
+      "backgroundFailed": "تعذّر تثبيت {{name}}",
+      "errors": {
+        "diskSpace": "مساحة القرص غير كافية: المطلوب {{required}}، والمتاح {{available}}. حرّر بعض المساحة ثم أعد المحاولة.",
+        "cancelled": "تم إلغاء التنزيل.",
+        "download": "فشل التنزيل. تحقّق من اتصالك بالإنترنت ثم أعد المحاولة."
+      }
     }
   },
   "modelSelector": {
@@ -754,7 +775,11 @@
     "modelLoadFailedUnknown": "نموذج غير معروف",
     "pasteFailedTitle": "فشل لصق النص",
     "pasteFailed": "تعذر لصق النص في التطبيق النشط.",
-    "transcriptionFailedTitle": "فشل التفريغ النصي"
+    "transcriptionFailedTitle": "فشل التفريغ النصي",
+    "modelDownloadingTitle": "النموذج قيد التنزيل",
+    "modelDownloading": "سيعمل الإملاء فور تثبيت نموذج التعرّف على الكلام.",
+    "noModelTitle": "لا يوجد نموذج للتعرّف على الكلام",
+    "noModel": "نزّل نموذجًا من إعدادات النماذج لبدء الإملاء."
   },
   "appLanguage": {
     "title": "لغة التطبيق",

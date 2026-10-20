@@ -453,6 +453,11 @@ pub struct AppSettings {
     /// the dictation model); see `ModelManager::long_form_model_id`.
     #[serde(default = "default_model")]
     pub long_form_model: String,
+    /// `selected_model` was set to [`DEFAULT_LONG_FORM_MODEL`] only because
+    /// [`DEFAULT_DICTATION_MODEL`] couldn't be installed; dictation moves to
+    /// the latter once it is. Cleared by any model the user picks.
+    #[serde(default)]
+    pub dictation_model_is_fallback: bool,
     #[serde(default)]
     pub onboarding_completed: bool,
     #[serde(default = "default_always_on_microphone")]
@@ -1105,6 +1110,7 @@ pub fn get_default_settings() -> AppSettings {
         whats_new_last_seen_version: default_whats_new_last_seen_version(),
         selected_model: "".to_string(),
         long_form_model: "".to_string(),
+        dictation_model_is_fallback: false,
         onboarding_completed: false,
         always_on_microphone: false,
         selected_microphone: None,

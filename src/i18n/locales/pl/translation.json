@@ -102,6 +102,27 @@
         "checkFailed": "Nie udało się sprawdzić uprawnień. Spróbuj ponownie.",
         "requestFailed": "Nie udało się poprosić o uprawnienie. Spróbuj ponownie."
       }
+    },
+    "setup": {
+      "title": "Konfigurowanie Trigo Whispr",
+      "description": "Trigo Whispr pobiera swoje dwa modele rozpoznawania mowy. Możesz dyktować, gdy tylko pierwszy będzie gotowy.",
+      "roles": {
+        "dictation": "Dyktowanie na żywo",
+        "meetings": "Spotkania i zaimportowane pliki"
+      },
+      "pending": "Oczekiwanie",
+      "failed": "Niepowodzenie",
+      "downloadedOf": "{{downloaded}} z {{total}}",
+      "start": "Zacznij dyktować",
+      "waitingForDictation": "Dyktowanie będzie dostępne po zainstalowaniu {{name}}.",
+      "continuesInBackground": "Drugi model nadal pobiera się w tle.",
+      "retry": "Spróbuj ponownie",
+      "backgroundFailed": "Nie udało się zainstalować {{name}}",
+      "errors": {
+        "diskSpace": "Za mało miejsca na dysku: potrzeba {{required}}, wolne {{available}}. Zwolnij miejsce i spróbuj ponownie.",
+        "cancelled": "Pobieranie zostało anulowane.",
+        "download": "Pobieranie nie powiodło się. Sprawdź połączenie z internetem i spróbuj ponownie."
+      }
     }
   },
   "modelSelector": {
@@ -754,7 +775,11 @@
     "modelLoadFailedUnknown": "nieznany model",
     "pasteFailedTitle": "Nie udało się wkleić tekstu",
     "pasteFailed": "Nie można było wkleić tekstu do aktywnej aplikacji.",
-    "transcriptionFailedTitle": "Transkrypcja nie powiodła się"
+    "transcriptionFailedTitle": "Transkrypcja nie powiodła się",
+    "modelDownloadingTitle": "Model jest nadal pobierany",
+    "modelDownloading": "Dyktowanie zadziała, gdy tylko model rozpoznawania mowy zostanie zainstalowany.",
+    "noModelTitle": "Brak modelu rozpoznawania mowy",
+    "noModel": "Pobierz model w ustawieniach Modele, aby zacząć dyktować."
   },
   "appLanguage": {
     "title": "Język aplikacji",

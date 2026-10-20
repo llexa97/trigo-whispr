@@ -102,6 +102,27 @@
         "checkFailed": "Nepodařilo se zkontrolovat oprávnění. Zkuste to prosím znovu.",
         "requestFailed": "Nepodařilo se požádat o oprávnění. Zkuste to prosím znovu."
       }
+    },
+    "setup": {
+      "title": "Nastavení Trigo Whispr",
+      "description": "Trigo Whispr stahuje své dva modely rozpoznávání řeči. Diktovat můžete, jakmile bude první připraven.",
+      "roles": {
+        "dictation": "Živé diktování",
+        "meetings": "Schůzky a importované soubory"
+      },
+      "pending": "Čeká",
+      "failed": "Selhalo",
+      "downloadedOf": "{{downloaded}} z {{total}}",
+      "start": "Začít diktovat",
+      "waitingForDictation": "Diktování bude k dispozici po instalaci {{name}}.",
+      "continuesInBackground": "Druhý model se dál stahuje na pozadí.",
+      "retry": "Zkusit znovu",
+      "backgroundFailed": "{{name}} se nepodařilo nainstalovat",
+      "errors": {
+        "diskSpace": "Nedostatek místa na disku: potřeba {{required}}, volno {{available}}. Uvolněte místo a zkuste to znovu.",
+        "cancelled": "Stahování bylo zrušeno.",
+        "download": "Stahování selhalo. Zkontrolujte připojení k internetu a zkuste to znovu."
+      }
     }
   },
   "modelSelector": {
@@ -754,7 +775,11 @@
     "modelLoadFailedUnknown": "neznámý model",
     "pasteFailedTitle": "Vložení textu se nezdařilo",
     "pasteFailed": "Text nebylo možné vložit do aktivní aplikace.",
-    "transcriptionFailedTitle": "Přepis selhal"
+    "transcriptionFailedTitle": "Přepis selhal",
+    "modelDownloadingTitle": "Model se stále stahuje",
+    "modelDownloading": "Diktování bude fungovat, jakmile bude model rozpoznávání řeči nainstalován.",
+    "noModelTitle": "Žádný model rozpoznávání řeči",
+    "noModel": "Stáhněte model v nastavení Modely, abyste mohli diktovat."
   },
   "appLanguage": {
     "title": "Jazyk aplikace",

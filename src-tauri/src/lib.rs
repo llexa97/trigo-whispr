@@ -36,6 +36,7 @@ pub use utils::env_flag_enabled;
 
 use env_filter::Builder as EnvFilterBuilder;
 use managers::audio::AudioRecordingManager;
+use managers::default_models::DefaultModelsInstaller;
 use managers::file_transcription::FileTranscriptionManager;
 use managers::history::HistoryManager;
 use managers::meeting::MeetingManager;
@@ -344,6 +345,10 @@ fn initialize_core_logic(app_handle: &AppHandle) {
     // Add managers to Tauri's managed state
     app_handle.manage(recording_manager.clone());
     app_handle.manage(model_manager.clone());
+    // Fetches Parakeet and Whisper Turbo when either is missing (first launch,
+    // deleted, or a download cut short by quitting).
+    let default_models = Arc::new(DefaultModelsInstaller::new(app_handle));
+    app_handle.manage(default_models.clone());
     app_handle.manage(transcription_manager.clone());
     app_handle.manage(history_manager.clone());
     app_handle.manage(meeting_manager.clone());
@@ -471,6 +476,7 @@ fn initialize_core_logic(app_handle: &AppHandle) {
                 std::thread::spawn(move || {
                     match commands::models::switch_active_model(&app_clone, &model_id) {
                         Ok(()) => {
+                            managers::default_models::clear_dictation_fallback(&app_clone);
                             log::info!("Model switched to {} via tray.", model_id);
                         }
                         Err(e) => {
@@ -510,6 +516,10 @@ fn initialize_core_logic(app_handle: &AppHandle) {
 
     // Meeting pill (hidden) and tray sync with the meeting state.
     meeting::control::init(app_handle);
+
+    // Last, so selecting a model already on disk finds every manager and the
+    // tray in place.
+    default_models.ensure_installed();
 }
 
 #[tauri::command]
@@ -866,6 +876,8 @@ fn specta_builder() -> Builder<tauri::Wry> {
             commands::models::get_transcription_model_status,
             commands::models::is_model_loading,
             commands::models::rescan_local_models,
+            commands::models::get_default_models_status,
+            commands::models::retry_default_models,
             commands::audio::update_microphone_mode,
             commands::audio::get_microphone_mode,
             commands::audio::get_windows_microphone_permission_status,
