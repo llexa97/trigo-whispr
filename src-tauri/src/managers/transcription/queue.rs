@@ -88,8 +88,12 @@ impl Queue {
     }
 }
 
+/// Called when a running job is cancelled, to stop the work it may be
+/// waiting on.
+type OnStop = Box<dyn Fn() + Send + Sync>;
+
 struct Shared {
-    app: AppHandle,
+    on_stop: OnStop,
     queue: Mutex<Queue>,
     wake: Condvar,
 }
@@ -127,14 +131,37 @@ pub(super) struct JobQueue {
 }
 
 impl JobQueue {
-    /// Starts the worker thread `name`; `run` is called for each job.
+    /// Starts the worker thread `name`; `run` is called for each job. A
+    /// running job that is cancelled frees the engine at once, unless that
+    /// would also stop a dictation: then it stops once its chunk is done.
     pub fn spawn(
         app: &AppHandle,
         name: &str,
         run: impl Fn(&RunningJob<'_>) + Send + 'static,
     ) -> Self {
+        let app = app.clone();
+        Self::spawn_with(
+            name,
+            run,
+            Box::new(move || {
+                if let Some(tm) = app.try_state::<Arc<TranscriptionManager>>() {
+                    if !tm.dictation_busy() {
+                        tm.cancel_transcription();
+                    }
+                }
+            }),
+        )
+    }
+
+    /// [`spawn`](Self::spawn), with `on_stop` called when a running job is
+    /// cancelled.
+    pub(super) fn spawn_with(
+        name: &str,
+        run: impl Fn(&RunningJob<'_>) + Send + 'static,
+        on_stop: OnStop,
+    ) -> Self {
         let shared = Arc::new(Shared {
-            app: app.clone(),
+            on_stop,
             queue: Mutex::new(Queue::default()),
             wake: Condvar::new(),
         });
@@ -181,13 +208,7 @@ impl JobQueue {
         match outcome {
             CancelOutcome::Dequeued => true,
             CancelOutcome::Stopping => {
-                // Free the engine now, unless that would also stop a
-                // dictation: then the job stops once its chunk is done.
-                if let Some(tm) = self.shared.app.try_state::<Arc<TranscriptionManager>>() {
-                    if !tm.dictation_busy() {
-                        tm.cancel_transcription();
-                    }
-                }
+                (self.shared.on_stop)();
                 true
             }
             CancelOutcome::TooLate | CancelOutcome::NotQueued => false,

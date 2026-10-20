@@ -8,6 +8,7 @@
 //! `FileTranscriptionManager`'s business; it implements
 //! [`FileTranscriptionStore`] and feeds the queue.
 
+use std::future::Future;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -127,6 +128,19 @@ impl From<DecodeError> for JobError {
         };
         Self::new(code, e.to_string())
     }
+}
+
+/// Waits for `operation` (the LLM post-processing) unless the job is
+/// cancelled first: then the future is dropped, which aborts its request,
+/// and the job ends as cancelled.
+fn post_process_unless_cancelled<F: Future>(
+    operation: F,
+    cancelled: &AtomicBool,
+) -> Result<F::Output, JobError> {
+    tauri::async_runtime::block_on(crate::actions::complete_unless_cancelled(operation, || {
+        cancelled.load(Ordering::Acquire)
+    }))
+    .ok_or_else(|| JobError::failed(EngineError::Cancelled.into()))
 }
 
 /// Whether the selected model can be loaded: one is downloaded and selected.
@@ -427,16 +441,19 @@ impl Worker {
             ));
         }
 
-        if job.post_process && !running.is_cancelled() {
+        if job.post_process {
             let text = transcript
                 .segments
                 .iter()
                 .map(|s| s.text.as_str())
                 .collect::<Vec<_>>()
                 .join("\n");
-            let processed = tauri::async_runtime::block_on(
+            // The provider may take long to answer (or never): a cancel
+            // drops the request rather than waiting for it.
+            let processed = post_process_unless_cancelled(
                 crate::actions::process_transcription_output(&self.app, &text, true),
-            );
+                running.cancelled,
+            )?;
             match processed.post_processed_text {
                 Some(text) => transcript.post_processed_text = Some(text),
                 None => warn!("Post-processing of file transcription '{id}' produced nothing"),
@@ -468,6 +485,55 @@ impl Worker {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::mpsc;
+    use std::time::Duration;
+
+    #[test]
+    fn a_finished_post_processing_is_kept() {
+        let cancelled = AtomicBool::new(false);
+        let result = post_process_unless_cancelled(std::future::ready("résumé"), &cancelled);
+        assert_eq!(result.unwrap(), "résumé");
+    }
+
+    /// A provider that never answers must not hold the queue: the cancel
+    /// ends the job at once, the next file runs, and the cancelled one is
+    /// no longer current (what deleting it waits for).
+    #[test]
+    fn a_cancel_drops_a_stuck_post_processing() {
+        let (tx, rx) = mpsc::channel();
+        let queue = JobQueue::spawn_with(
+            "test-file-transcriber",
+            move |job| {
+                let result = if job.id == "stuck" {
+                    post_process_unless_cancelled(std::future::pending::<()>(), job.cancelled)
+                } else {
+                    Ok(())
+                };
+                let ended_cancelled = result.is_err() && job.is_cancelled();
+                tx.send((job.id.to_string(), ended_cancelled)).unwrap();
+            },
+            Box::new(|| {}),
+        );
+        queue.enqueue("stuck");
+        queue.enqueue("next");
+
+        let deadline = Instant::now() + Duration::from_secs(2);
+        while !queue.is_current("stuck") {
+            assert!(Instant::now() < deadline, "the stuck job never started");
+            std::thread::sleep(Duration::from_millis(5));
+        }
+        let cancelled_at = Instant::now();
+        assert!(queue.cancel("stuck"));
+        assert!(
+            queue.wait_until_not_current("stuck", Duration::from_secs(2)),
+            "the cancelled job still holds the queue"
+        );
+        assert!(cancelled_at.elapsed() < Duration::from_secs(1));
+
+        let timeout = Duration::from_secs(2);
+        assert_eq!(rx.recv_timeout(timeout).unwrap(), ("stuck".into(), true));
+        assert_eq!(rx.recv_timeout(timeout).unwrap(), ("next".into(), false));
+    }
 
     #[test]
     fn decode_errors_keep_their_meaning() {
