@@ -1,12 +1,15 @@
 import type { TFunction } from "i18next";
 import type { SpeakerName } from "@/bindings";
 
-/** Chip colours for the people found by speaker detection, by `speaker_id`. */
+/**
+ * Chip colours for the people found by speaker detection, by `speaker_id`.
+ * Blue comes last: the accent (and so the "Me" chip) is blue.
+ */
 const PERSON_CLASSES = [
-  "bg-sky-500/20 text-sky-500",
   "bg-amber-500/20 text-amber-600",
   "bg-emerald-500/20 text-emerald-600",
   "bg-fuchsia-500/20 text-fuchsia-500",
+  "bg-sky-500/20 text-sky-500",
 ];
 
 export const personClasses = (speakerId: number): string =>
