@@ -1309,15 +1309,19 @@ fn apply_settings_migrations(
         updated = true;
     }
 
-    // One-time model assignment migration: meetings and imported files used
-    // the one selected model, so they keep it. A user dictating with Whisper
-    // Large v3 Turbo moves to the default dictation model (Parakeet v3), which
-    // ignores a forced language but is much faster; if it is not downloaded,
-    // the model manager falls back to a downloaded one.
+    // One-time model assignment migration: meetings and imported files get
+    // the default (Whisper Large v3 Turbo once downloaded, else the dictation
+    // model, as before). A user dictating with Whisper Large v3 Turbo moves to
+    // the default dictation model (Parakeet v3), which ignores a forced
+    // language but is much faster, and keeps that quantization for meetings
+    // and files; if Parakeet is not downloaded, the model manager falls back
+    // to a downloaded one.
     if settings_value.get("long_form_model").is_none() {
-        settings.long_form_model = settings.selected_model.clone();
         if settings.selected_model.starts_with(LONG_FORM_MODEL_REPO) {
-            settings.selected_model = DEFAULT_DICTATION_MODEL.to_string();
+            settings.long_form_model = std::mem::replace(
+                &mut settings.selected_model,
+                DEFAULT_DICTATION_MODEL.to_string(),
+            );
         }
         updated = true;
     }
@@ -1838,10 +1842,15 @@ mod tests {
     }
 
     #[test]
-    fn model_migration_keeps_the_old_model_for_meetings_and_files() {
+    fn model_migration_leaves_other_dictation_models_and_defaults_long_form() {
+        // Parakeet dictation: meetings and files move to the default.
+        let settings = migrated_models(DEFAULT_DICTATION_MODEL);
+        assert_eq!(settings.selected_model, DEFAULT_DICTATION_MODEL);
+        assert_eq!(settings.long_form_model, "");
+
         let settings = migrated_models("whisper-small");
         assert_eq!(settings.selected_model, "whisper-small");
-        assert_eq!(settings.long_form_model, "whisper-small");
+        assert_eq!(settings.long_form_model, "");
     }
 
     #[test]

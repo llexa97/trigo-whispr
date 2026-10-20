@@ -835,7 +835,13 @@ impl TranscriptionManager {
         ))
     }
 
-    /// A dictation is starting: if a meeting or an imported file is being
+    /// Whether a meeting's or an imported file's transcription is under way.
+    pub fn background_transcription_active(&self) -> bool {
+        self.lock_users().background_active()
+    }
+
+    /// A dictation is starting (already registered as a user, so the
+    /// background queue no longer starts chunks): if a meeting or an imported file is being
     /// transcribed with another model, stop its chunk now, so the dictation
     /// loads its model without waiting for that chunk. The chunk is decoded
     /// again once the dictation is done, with its own model reloaded.
@@ -1063,6 +1069,7 @@ impl TranscriptionManager {
     /// re-transcribed history entry.
     pub fn transcribe_dictation(&self, audio: Vec<f32>) -> Result<String> {
         let _foreground = meeting::ForegroundRun::new(self);
+        self.preempt_background_for_dictation();
         self.complete(Instant::now(), audio, None, Some(ModelUsage::Dictation))
     }
 

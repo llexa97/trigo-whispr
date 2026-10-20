@@ -293,6 +293,11 @@ impl TrackHooks for BackgroundRun<'_> {
             // with the dictation's model.
             let preemptions = self.tm.preemption_count();
             let mark = self.tm.engine.cancel_mark();
+            // A dictation registers before it interrupts the engine: one not
+            // seen busy now interrupts after `mark`, which cancels the chunk.
+            if self.tm.dictation_busy() {
+                continue;
+            }
             if self.tm.has_loaded(self.model_id) {
                 self.preemptions = preemptions;
                 self.mark = mark;
@@ -323,26 +328,24 @@ impl TrackHooks for BackgroundRun<'_> {
                     self.check_cancelled()?;
                     return Ok(transcript);
                 }
-                Err(EngineError::Cancelled)
-                    if !self.cancelled.load(Ordering::Acquire)
-                        && self.tm.preemption_count() != self.preemptions =>
-                {
-                    // A dictation took the engine for its own model: decode
-                    // the chunk again once it is done, however often that
-                    // happens.
-                    info!("Background chunk interrupted by a dictation; decoding it again");
+                Err(EngineError::Cancelled) => {
+                    let decision = after_cancelled_chunk(
+                        self.cancelled.load(Ordering::Acquire),
+                        self.tm.preemption_count() != self.preemptions,
+                        attempt,
+                    );
+                    match decision {
+                        ChunkRetry::Stop => return Err(EngineError::Cancelled.into()),
+                        ChunkRetry::AfterDictationSwitch => {
+                            info!("Background chunk interrupted by a dictation; decoding it again");
+                        }
+                        ChunkRetry::AfterOtherCancel => {
+                            info!("Background chunk stopped by another cancel; decoding it again");
+                            attempt += 1;
+                        }
+                    }
                     self.before_chunk()?;
                 }
-                Err(EngineError::Cancelled)
-                    if !self.cancelled.load(Ordering::Acquire) && attempt < MAX_CHUNK_ATTEMPTS =>
-                {
-                    // Someone else's cancel (a dictation's): decode the chunk
-                    // again once the engine is free.
-                    info!("Background chunk stopped by another cancel; decoding it again");
-                    attempt += 1;
-                    self.before_chunk()?;
-                }
-                Err(EngineError::Cancelled) => return Err(EngineError::Cancelled.into()),
                 Err(e) => bail!("transcribe-cpp transcription failed: {e}"),
             }
         }
@@ -351,6 +354,31 @@ impl TrackHooks for BackgroundRun<'_> {
     fn after_chunk(&mut self, samples: usize) {
         self.done += samples as u64;
         (self.on_progress)(self.done);
+    }
+}
+
+/// What to do with a background chunk whose run was cancelled.
+#[derive(Debug, PartialEq, Eq)]
+enum ChunkRetry {
+    /// The user cancelled the job, or other cancels failed it too often.
+    Stop,
+    /// A dictation interrupted it to load its own model: decode it again
+    /// once the dictation is done, however often that happens.
+    AfterDictationSwitch,
+    /// Someone else's cancel (a dictation's own): decode it again once the
+    /// engine is free, up to [`MAX_CHUNK_ATTEMPTS`].
+    AfterOtherCancel,
+}
+
+fn after_cancelled_chunk(user_cancelled: bool, preempted: bool, attempt: usize) -> ChunkRetry {
+    if user_cancelled {
+        ChunkRetry::Stop
+    } else if preempted {
+        ChunkRetry::AfterDictationSwitch
+    } else if attempt < MAX_CHUNK_ATTEMPTS {
+        ChunkRetry::AfterOtherCancel
+    } else {
+        ChunkRetry::Stop
     }
 }
 
@@ -475,4 +503,37 @@ pub(super) fn progress_and_eta(started: Instant, done: u64, total: u64) -> (f64,
         (elapsed / done as f64 * total.saturating_sub(done) as f64) as u64
     });
     (progress, eta_ms)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_user_cancel_always_stops_the_chunk() {
+        assert_eq!(after_cancelled_chunk(true, true, 1), ChunkRetry::Stop);
+        assert_eq!(after_cancelled_chunk(true, false, 1), ChunkRetry::Stop);
+    }
+
+    #[test]
+    fn dictation_switches_never_use_up_the_attempts() {
+        for attempt in [1, MAX_CHUNK_ATTEMPTS, MAX_CHUNK_ATTEMPTS + 5] {
+            assert_eq!(
+                after_cancelled_chunk(false, true, attempt),
+                ChunkRetry::AfterDictationSwitch
+            );
+        }
+    }
+
+    #[test]
+    fn other_cancels_are_retried_a_few_times() {
+        assert_eq!(
+            after_cancelled_chunk(false, false, 1),
+            ChunkRetry::AfterOtherCancel
+        );
+        assert_eq!(
+            after_cancelled_chunk(false, false, MAX_CHUNK_ATTEMPTS),
+            ChunkRetry::Stop
+        );
+    }
 }

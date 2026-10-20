@@ -156,8 +156,13 @@ pub fn switch_active_model(app: &AppHandle, model_id: &str) -> Result<(), String
     write_settings(app, settings);
 
     // Skip eager loading if unload is set to "Immediately" — the model
-    // will be loaded on-demand during the next transcription.
-    if unload_timeout == ModelUnloadTimeout::Immediately {
+    // will be loaded on-demand during the next transcription. Likewise while
+    // a meeting or a file is transcribed with its own model: loading now
+    // would replace it under that transcription, and the next dictation
+    // loads its model anyway.
+    if unload_timeout == ModelUnloadTimeout::Immediately
+        || transcription_manager.background_transcription_active()
+    {
         // Notify frontend — load_model won't be called so no events
         // would otherwise be emitted.
         let _ = app.emit(
