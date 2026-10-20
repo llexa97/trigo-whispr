@@ -832,6 +832,11 @@ Section Install
     ${EndIf}
   ${EndIf} ; --- END PORTABLE MODE guard ---
 
+  ; Explorer caches icons per executable path, so an update that changes the
+  ; app icon keeps showing the old one on shortcuts and the taskbar.
+  ; SHCNE_ASSOCCHANGED (0x08000000) with SHCNF_IDLIST (0) makes it rebuild them.
+  System::Call 'shell32::SHChangeNotify(i 0x08000000, i 0, p 0, p 0)'
+
   !ifmacrodef NSIS_HOOK_POSTINSTALL
     !insertmacro NSIS_HOOK_POSTINSTALL
   !endif
