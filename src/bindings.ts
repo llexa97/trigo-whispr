@@ -1617,7 +1617,11 @@ export type DefaultModelRole = "dictation" |
 /**
  * Meetings and imported files.
  */
-"meetings"
+"meetings" | 
+/**
+ * Speaker detection in meetings and imported files.
+ */
+"speakers"
 export type DefaultModelState = 
 /**
  * On disk (models dir or HF cache).

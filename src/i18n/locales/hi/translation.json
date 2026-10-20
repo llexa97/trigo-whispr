@@ -105,17 +105,18 @@
     },
     "setup": {
       "title": "Trigo Whispr सेट किया जा रहा है",
-      "description": "Trigo Whispr अपने दो वाक् पहचान मॉडल डाउनलोड कर रहा है। पहला तैयार होते ही आप डिक्टेट कर सकते हैं।",
+      "description": "Trigo Whispr अपने मॉडल डाउनलोड कर रहा है। पहला तैयार होते ही आप डिक्टेट कर सकते हैं।",
       "roles": {
         "dictation": "लाइव डिक्टेशन",
-        "meetings": "मीटिंग और आयात की गई फ़ाइलें"
+        "meetings": "मीटिंग और आयात की गई फ़ाइलें",
+        "speakers": "वक्ता पहचान"
       },
       "pending": "प्रतीक्षा में",
       "failed": "विफल",
       "downloadedOf": "{{total}} में से {{downloaded}}",
       "start": "डिक्टेट करना शुरू करें",
       "waitingForDictation": "{{name}} इंस्टॉल होने के बाद डिक्टेशन उपलब्ध होगा।",
-      "continuesInBackground": "दूसरा मॉडल बैकग्राउंड में डाउनलोड होता रहेगा।",
+      "continuesInBackground": "बाकी मॉडल बैकग्राउंड में डाउनलोड होते रहेंगे।",
       "retry": "फिर से प्रयास करें",
       "backgroundFailed": "{{name}} इंस्टॉल नहीं हो सका",
       "errors": {

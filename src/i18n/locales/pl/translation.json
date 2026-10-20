@@ -105,17 +105,18 @@
     },
     "setup": {
       "title": "Konfigurowanie Trigo Whispr",
-      "description": "Trigo Whispr pobiera swoje dwa modele rozpoznawania mowy. Możesz dyktować, gdy tylko pierwszy będzie gotowy.",
+      "description": "Trigo Whispr pobiera swoje modele. Możesz dyktować, gdy tylko pierwszy będzie gotowy.",
       "roles": {
         "dictation": "Dyktowanie na żywo",
-        "meetings": "Spotkania i zaimportowane pliki"
+        "meetings": "Spotkania i zaimportowane pliki",
+        "speakers": "Wykrywanie mówców"
       },
       "pending": "Oczekiwanie",
       "failed": "Niepowodzenie",
       "downloadedOf": "{{downloaded}} z {{total}}",
       "start": "Zacznij dyktować",
       "waitingForDictation": "Dyktowanie będzie dostępne po zainstalowaniu {{name}}.",
-      "continuesInBackground": "Drugi model nadal pobiera się w tle.",
+      "continuesInBackground": "Pozostałe modele pobierają się dalej w tle.",
       "retry": "Spróbuj ponownie",
       "backgroundFailed": "Nie udało się zainstalować {{name}}",
       "errors": {

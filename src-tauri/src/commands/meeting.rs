@@ -302,9 +302,12 @@ pub fn change_meeting_detection_enabled_setting(app: AppHandle, enabled: bool) {
 #[specta::specta]
 pub fn change_speaker_detection_enabled_setting(app: AppHandle, enabled: bool) {
     update_settings(&app, |s| s.speaker_detection_enabled = enabled);
+    // Fetches its model now if it is missing.
     if enabled {
-        if let Some(models) = app.try_state::<Arc<crate::managers::model::ModelManager>>() {
-            models.ensure_diarization_model();
+        if let Some(installer) =
+            app.try_state::<Arc<crate::managers::default_models::DefaultModelsInstaller>>()
+        {
+            installer.ensure_installed();
         }
     }
 }

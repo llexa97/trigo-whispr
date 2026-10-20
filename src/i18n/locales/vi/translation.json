@@ -105,17 +105,18 @@
     },
     "setup": {
       "title": "Đang thiết lập Trigo Whispr",
-      "description": "Trigo Whispr đang tải xuống hai mô hình nhận dạng giọng nói. Bạn có thể đọc chính tả ngay khi mô hình đầu tiên sẵn sàng.",
+      "description": "Trigo Whispr đang tải xuống các mô hình. Bạn có thể đọc chính tả ngay khi mô hình đầu tiên sẵn sàng.",
       "roles": {
         "dictation": "Đọc chính tả trực tiếp",
-        "meetings": "Cuộc họp và tệp đã nhập"
+        "meetings": "Cuộc họp và tệp đã nhập",
+        "speakers": "Nhận diện người nói"
       },
       "pending": "Đang chờ",
       "failed": "Thất bại",
       "downloadedOf": "{{downloaded}} / {{total}}",
       "start": "Bắt đầu đọc chính tả",
       "waitingForDictation": "Đọc chính tả sẽ khả dụng khi {{name}} được cài đặt.",
-      "continuesInBackground": "Mô hình còn lại tiếp tục tải xuống trong nền.",
+      "continuesInBackground": "Các mô hình khác tiếp tục tải xuống trong nền.",
       "retry": "Thử lại",
       "backgroundFailed": "Không thể cài đặt {{name}}",
       "errors": {

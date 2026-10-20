@@ -105,17 +105,18 @@
     },
     "setup": {
       "title": "正在設定 Trigo Whispr",
-      "description": "Trigo Whispr 正在下載兩個語音辨識模型。第一個模型就緒後即可開始聽寫。",
+      "description": "Trigo Whispr 正在下載其模型。第一個模型就緒後即可開始聽寫。",
       "roles": {
         "dictation": "即時聽寫",
-        "meetings": "會議與匯入的檔案"
+        "meetings": "會議與匯入的檔案",
+        "speakers": "發言者辨識"
       },
       "pending": "等待中",
       "failed": "失敗",
       "downloadedOf": "{{downloaded}} / {{total}}",
       "start": "開始聽寫",
       "waitingForDictation": "{{name}} 安裝完成後即可使用聽寫。",
-      "continuesInBackground": "另一個模型將在背景繼續下載。",
+      "continuesInBackground": "其他模型會在背景繼續下載。",
       "retry": "重試",
       "backgroundFailed": "無法安裝 {{name}}",
       "errors": {

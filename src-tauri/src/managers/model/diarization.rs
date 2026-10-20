@@ -1,12 +1,12 @@
 //! The speaker diarization model (#30): NVIDIA's streaming Sortformer
 //! (4 speakers), converted for transcribe.cpp. It transcribes nothing, so it
-//! stays out of the model list: it is downloaded on request into its own
-//! folder under the models dir (the custom-model scan skips folders), and
-//! its download reports its own events.
+//! stays out of the model list: it lives in its own folder under the models
+//! dir (the custom-model scan skips folders), and its download reports its
+//! own events. The default models installer fetches it while speaker
+//! detection is on; the settings can download or delete it too.
 
 use std::fs;
 use std::path::PathBuf;
-use std::sync::Arc;
 
 use anyhow::{bail, Result};
 use hf_hub::api::tokio::CancellationToken;
@@ -17,7 +17,6 @@ use tauri_specta::Event;
 
 use super::download::{HttpDownloadEvent, HttpDownloadOutcome};
 use super::ModelManager;
-use crate::settings::get_settings;
 
 const REPO_ID: &str = "handy-computer/diar_streaming_sortformer_4spk-v2.1-gguf";
 /// Pinned, so the bytes always match [`SHA256`].
@@ -26,6 +25,10 @@ const REVISION: &str = "60ebab3ef7cae9869be0abcde13360347e96ba03";
 const FILE_NAME: &str = "diar_streaming_sortformer_4spk-v2.1-Q8_0.gguf";
 const SIZE_BYTES: u64 = 139_310_336;
 const SHA256: &str = "a5dacdc650790266c7a362e54e6bf51952015487edaa606c4e11632bc32442a9";
+/// How the setup screen lists it among the models installed at launch.
+pub const DIARIZATION_MODEL_ID: &str = "speaker-detection";
+pub const DIARIZATION_MODEL_NAME: &str = "Sortformer 4spk v2.1";
+pub const DIARIZATION_MODEL_SIZE_MB: u64 = SIZE_BYTES.div_ceil(1024 * 1024);
 /// Under the models dir.
 const DIR_NAME: &str = "diarization";
 /// Key of its download in the cancel flags, apart from any model id.
@@ -55,7 +58,8 @@ pub struct DiarizationModelProgress {
 }
 
 impl ModelManager {
-    fn diarization_dir(&self) -> PathBuf {
+    /// Where the diarization model is written.
+    pub fn diarization_dir(&self) -> PathBuf {
         self.models_dir.join(DIR_NAME)
     }
 
@@ -78,26 +82,6 @@ impl ModelManager {
             error,
         }
         .emit(&self.app_handle);
-    }
-
-    /// Downloads the diarization model in the background when speaker
-    /// detection is on and it is missing: at launch (after the default
-    /// models) and when detection is turned on. Turning detection off is how
-    /// the user says no; deleting the model turns it off too.
-    pub fn ensure_diarization_model(self: &Arc<Self>) {
-        if !get_settings(&self.app_handle).speaker_detection_enabled
-            || self.diarization_model_path().is_some()
-            || self.diarization_model_status().downloading
-        {
-            return;
-        }
-        let manager = Arc::clone(self);
-        tauri::async_runtime::spawn(async move {
-            info!("Downloading the speaker detection model");
-            // Failures are logged and reported by the download itself; the
-            // next launch tries again.
-            let _ = manager.download_diarization_model().await;
-        });
     }
 
     /// Downloads the diarization model, resuming a partial download. A

@@ -105,17 +105,18 @@
     },
     "setup": {
       "title": "Konfigurerer Trigo Whispr",
-      "description": "Trigo Whispr downloader sine to talegenkendelsesmodeller. Du kan diktere, så snart den første er klar.",
+      "description": "Trigo Whispr downloader sine modeller. Du kan diktere, så snart den første er klar.",
       "roles": {
         "dictation": "Livediktering",
-        "meetings": "Møder og importerede filer"
+        "meetings": "Møder og importerede filer",
+        "speakers": "Talergenkendelse"
       },
       "pending": "Venter",
       "failed": "Mislykkedes",
       "downloadedOf": "{{downloaded}} af {{total}}",
       "start": "Begynd at diktere",
       "waitingForDictation": "Diktering bliver tilgængelig, når {{name}} er installeret.",
-      "continuesInBackground": "Den anden model downloades fortsat i baggrunden.",
+      "continuesInBackground": "De andre modeller downloades fortsat i baggrunden.",
       "retry": "Prøv igen",
       "backgroundFailed": "{{name}} kunne ikke installeres",
       "errors": {

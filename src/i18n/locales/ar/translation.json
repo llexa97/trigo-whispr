@@ -105,17 +105,18 @@
     },
     "setup": {
       "title": "إعداد Trigo Whispr",
-      "description": "يقوم Trigo Whispr بتنزيل نموذجَي التعرّف على الكلام. يمكنك بدء الإملاء فور جاهزية النموذج الأول.",
+      "description": "يقوم Trigo Whispr بتنزيل نماذجه. يمكنك بدء الإملاء بمجرد أن يصبح الأول جاهزًا.",
       "roles": {
         "dictation": "الإملاء المباشر",
-        "meetings": "الاجتماعات والملفات المستوردة"
+        "meetings": "الاجتماعات والملفات المستوردة",
+        "speakers": "اكتشاف المتحدثين"
       },
       "pending": "في الانتظار",
       "failed": "فشل",
       "downloadedOf": "{{downloaded}} من {{total}}",
       "start": "ابدأ الإملاء",
       "waitingForDictation": "سيتوفر الإملاء بعد تثبيت {{name}}.",
-      "continuesInBackground": "يستمر تنزيل النموذج الآخر في الخلفية.",
+      "continuesInBackground": "يستمر تنزيل النماذج الأخرى في الخلفية.",
       "retry": "إعادة المحاولة",
       "backgroundFailed": "تعذّر تثبيت {{name}}",
       "errors": {

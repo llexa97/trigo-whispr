@@ -105,17 +105,18 @@
     },
     "setup": {
       "title": "Trigo Whispr instellen",
-      "description": "Trigo Whispr downloadt zijn twee spraakherkenningsmodellen. Je kunt dicteren zodra het eerste klaar is.",
+      "description": "Trigo Whispr downloadt zijn modellen. Je kunt dicteren zodra het eerste klaar is.",
       "roles": {
         "dictation": "Live dicteren",
-        "meetings": "Vergaderingen en geïmporteerde bestanden"
+        "meetings": "Vergaderingen en geïmporteerde bestanden",
+        "speakers": "Sprekerherkenning"
       },
       "pending": "Wachten",
       "failed": "Mislukt",
       "downloadedOf": "{{downloaded}} van {{total}}",
       "start": "Begin met dicteren",
       "waitingForDictation": "Dicteren is beschikbaar zodra {{name}} is geïnstalleerd.",
-      "continuesInBackground": "Het andere model wordt op de achtergrond verder gedownload.",
+      "continuesInBackground": "De andere modellen worden op de achtergrond verder gedownload.",
       "retry": "Opnieuw proberen",
       "backgroundFailed": "Kan {{name}} niet installeren",
       "errors": {

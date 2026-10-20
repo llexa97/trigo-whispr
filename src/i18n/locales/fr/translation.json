@@ -105,17 +105,18 @@
     },
     "setup": {
       "title": "Installation de Trigo Whispr",
-      "description": "Trigo Whispr télécharge ses deux modèles de reconnaissance vocale. Vous pourrez dicter dès que le premier sera prêt.",
+      "description": "Trigo Whispr télécharge ses modèles. Vous pourrez dicter dès que le premier sera prêt.",
       "roles": {
         "dictation": "Dictée en direct",
-        "meetings": "Réunions et fichiers importés"
+        "meetings": "Réunions et fichiers importés",
+        "speakers": "Détection des intervenants"
       },
       "pending": "En attente",
       "failed": "Échec",
       "downloadedOf": "{{downloaded}} sur {{total}}",
       "start": "Commencer à dicter",
       "waitingForDictation": "La dictée sera disponible dès que {{name}} sera installé.",
-      "continuesInBackground": "L'autre modèle continue de se télécharger en arrière-plan.",
+      "continuesInBackground": "Les autres modèles continuent de se télécharger en arrière-plan.",
       "retry": "Réessayer",
       "backgroundFailed": "Impossible d'installer {{name}}",
       "errors": {

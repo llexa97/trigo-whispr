@@ -105,17 +105,18 @@
     },
     "setup": {
       "title": "Trigo Whispr kuruluyor",
-      "description": "Trigo Whispr iki konuşma tanıma modelini indiriyor. İlki hazır olur olmaz dikte etmeye başlayabilirsiniz.",
+      "description": "Trigo Whispr modellerini indiriyor. İlki hazır olur olmaz dikte etmeye başlayabilirsiniz.",
       "roles": {
         "dictation": "Canlı dikte",
-        "meetings": "Toplantılar ve içe aktarılan dosyalar"
+        "meetings": "Toplantılar ve içe aktarılan dosyalar",
+        "speakers": "Konuşmacı algılama"
       },
       "pending": "Bekliyor",
       "failed": "Başarısız",
       "downloadedOf": "{{downloaded}} / {{total}}",
       "start": "Dikteye başla",
       "waitingForDictation": "Dikte, {{name}} yüklendiğinde kullanılabilir olacak.",
-      "continuesInBackground": "Diğer model arka planda inmeye devam ediyor.",
+      "continuesInBackground": "Diğer modeller arka planda inmeye devam ediyor.",
       "retry": "Yeniden dene",
       "backgroundFailed": "{{name}} yüklenemedi",
       "errors": {

@@ -105,17 +105,18 @@
     },
     "setup": {
       "title": "Trigo Whispr をセットアップしています",
-      "description": "Trigo Whispr は 2 つの音声認識モデルをダウンロードしています。最初のモデルの準備ができ次第、音声入力を始められます。",
+      "description": "Trigo Whispr はモデルをダウンロードしています。最初のモデルの準備ができ次第、音声入力を始められます。",
       "roles": {
         "dictation": "ライブ音声入力",
-        "meetings": "会議とインポートしたファイル"
+        "meetings": "会議とインポートしたファイル",
+        "speakers": "話者識別"
       },
       "pending": "待機中",
       "failed": "失敗",
       "downloadedOf": "{{downloaded}} / {{total}}",
       "start": "音声入力を始める",
       "waitingForDictation": "{{name}} のインストール後に音声入力が使えるようになります。",
-      "continuesInBackground": "もう一方のモデルはバックグラウンドでダウンロードを続けます。",
+      "continuesInBackground": "ほかのモデルはバックグラウンドでダウンロードを続けます。",
       "retry": "再試行",
       "backgroundFailed": "{{name}} をインストールできませんでした",
       "errors": {

@@ -105,17 +105,18 @@
     },
     "setup": {
       "title": "Configurant Trigo Whispr",
-      "description": "Trigo Whispr està baixant els seus dos models de reconeixement de veu. Podràs dictar tan bon punt el primer estigui llest.",
+      "description": "Trigo Whispr està baixant els seus models. Podreu dictar tan bon punt el primer estigui a punt.",
       "roles": {
         "dictation": "Dictat en directe",
-        "meetings": "Reunions i fitxers importats"
+        "meetings": "Reunions i fitxers importats",
+        "speakers": "Detecció de parlants"
       },
       "pending": "En espera",
       "failed": "Error",
       "downloadedOf": "{{downloaded}} de {{total}}",
       "start": "Comença a dictar",
       "waitingForDictation": "El dictat estarà disponible quan {{name}} estigui instal·lat.",
-      "continuesInBackground": "L'altre model es continua baixant en segon pla.",
+      "continuesInBackground": "Els altres models es continuen baixant en segon pla.",
       "retry": "Torna-ho a provar",
       "backgroundFailed": "No s'ha pogut instal·lar {{name}}",
       "errors": {

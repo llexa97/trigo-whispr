@@ -105,17 +105,18 @@
     },
     "setup": {
       "title": "Nastavení Trigo Whispr",
-      "description": "Trigo Whispr stahuje své dva modely rozpoznávání řeči. Diktovat můžete, jakmile bude první připraven.",
+      "description": "Trigo Whispr stahuje své modely. Diktovat můžete, jakmile bude první připraven.",
       "roles": {
         "dictation": "Živé diktování",
-        "meetings": "Schůzky a importované soubory"
+        "meetings": "Schůzky a importované soubory",
+        "speakers": "Rozpoznávání mluvčích"
       },
       "pending": "Čeká",
       "failed": "Selhalo",
       "downloadedOf": "{{downloaded}} z {{total}}",
       "start": "Začít diktovat",
       "waitingForDictation": "Diktování bude k dispozici po instalaci {{name}}.",
-      "continuesInBackground": "Druhý model se dál stahuje na pozadí.",
+      "continuesInBackground": "Ostatní modely se dál stahují na pozadí.",
       "retry": "Zkusit znovu",
       "backgroundFailed": "{{name}} se nepodařilo nainstalovat",
       "errors": {

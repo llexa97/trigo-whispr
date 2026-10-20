@@ -105,17 +105,18 @@
     },
     "setup": {
       "title": "正在设置 Trigo Whispr",
-      "description": "Trigo Whispr 正在下载两个语音识别模型。第一个模型就绪后即可开始听写。",
+      "description": "Trigo Whispr 正在下载其模型。第一个模型就绪后即可开始听写。",
       "roles": {
         "dictation": "实时听写",
-        "meetings": "会议和导入的文件"
+        "meetings": "会议和导入的文件",
+        "speakers": "发言人识别"
       },
       "pending": "等待中",
       "failed": "失败",
       "downloadedOf": "{{downloaded}} / {{total}}",
       "start": "开始听写",
       "waitingForDictation": "{{name}} 安装完成后即可使用听写。",
-      "continuesInBackground": "另一个模型将在后台继续下载。",
+      "continuesInBackground": "其他模型会在后台继续下载。",
       "retry": "重试",
       "backgroundFailed": "无法安装 {{name}}",
       "errors": {

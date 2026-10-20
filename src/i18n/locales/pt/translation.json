@@ -105,17 +105,18 @@
     },
     "setup": {
       "title": "Configurando o Trigo Whispr",
-      "description": "O Trigo Whispr está baixando seus dois modelos de reconhecimento de fala. Você pode ditar assim que o primeiro estiver pronto.",
+      "description": "O Trigo Whispr está a transferir os seus modelos. Pode começar a ditar assim que o primeiro estiver pronto.",
       "roles": {
         "dictation": "Ditado ao vivo",
-        "meetings": "Reuniões e arquivos importados"
+        "meetings": "Reuniões e arquivos importados",
+        "speakers": "Deteção de oradores"
       },
       "pending": "Aguardando",
       "failed": "Falhou",
       "downloadedOf": "{{downloaded}} de {{total}}",
       "start": "Começar a ditar",
       "waitingForDictation": "O ditado estará disponível quando {{name}} for instalado.",
-      "continuesInBackground": "O outro modelo continua sendo baixado em segundo plano.",
+      "continuesInBackground": "Os outros modelos continuam a ser transferidos em segundo plano.",
       "retry": "Tentar novamente",
       "backgroundFailed": "Não foi possível instalar {{name}}",
       "errors": {

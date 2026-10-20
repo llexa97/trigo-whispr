@@ -13,7 +13,15 @@
 //! arrives through the usual `model-download-progress` events; this module only
 //! adds the per-model state the setup screen needs, broadcast as
 //! `default-models-status`.
+//!
+//! While speaker detection is on, its model (#30) comes third. It is not a
+//! transcription model, so it has its own download and progress event
+//! (`DiarizationModelProgress`), but it is listed, failed and retried here
+//! like the other two.
 
+use crate::managers::model::diarization::{
+    DIARIZATION_MODEL_ID, DIARIZATION_MODEL_NAME, DIARIZATION_MODEL_SIZE_MB,
+};
 use crate::managers::model::ModelManager;
 use crate::settings::{
     get_settings, write_settings, DEFAULT_DICTATION_MODEL, DEFAULT_LONG_FORM_MODEL,
@@ -37,6 +45,8 @@ pub enum DefaultModelRole {
     Dictation,
     /// Meetings and imported files.
     Meetings,
+    /// Speaker detection in meetings and imported files.
+    Speakers,
 }
 
 /// How often a model someone else is already downloading (the Models page) is
@@ -121,15 +131,8 @@ impl DefaultModelsInstaller {
         }
         let installer = Arc::clone(self);
         tauri::async_runtime::spawn(async move {
-            {
-                let _guard = RunGuard(Arc::clone(&installer));
-                installer.run().await;
-            }
-            // Then the speaker detection model, which nothing waits on.
-            installer
-                .app
-                .state::<Arc<ModelManager>>()
-                .ensure_diarization_model();
+            let _guard = RunGuard(Arc::clone(&installer));
+            installer.run().await;
         });
     }
 
@@ -144,7 +147,7 @@ impl DefaultModelsInstaller {
         let model_manager = self.app.state::<Arc<ModelManager>>();
         let current = self.current.lock().unwrap().clone();
         let errors = self.errors.lock().unwrap().clone();
-        let models = DEFAULT_MODEL_IDS
+        let mut models: Vec<DefaultModelStatus> = DEFAULT_MODEL_IDS
             .iter()
             .map(|&id| {
                 let info = model_manager.get_model_info(id);
@@ -178,6 +181,32 @@ impl DefaultModelsInstaller {
                 }
             })
             .collect();
+        if get_settings(&self.app).speaker_detection_enabled {
+            let error = errors
+                .iter()
+                .find(|(id, _)| id == DIARIZATION_MODEL_ID)
+                .map(|(_, e)| e.clone());
+            let downloaded = model_manager.diarization_model_path().is_some();
+            let state = if downloaded {
+                DefaultModelState::Ready
+            } else if current.as_deref() == Some(DIARIZATION_MODEL_ID)
+                || model_manager.diarization_model_status().downloading
+            {
+                DefaultModelState::Downloading
+            } else if error.is_some() {
+                DefaultModelState::Failed
+            } else {
+                DefaultModelState::Pending
+            };
+            models.push(DefaultModelStatus {
+                model_id: DIARIZATION_MODEL_ID.to_string(),
+                role: DefaultModelRole::Speakers,
+                name: DIARIZATION_MODEL_NAME.to_string(),
+                size_mb: DIARIZATION_MODEL_SIZE_MB,
+                state,
+                error: if downloaded { None } else { error },
+            });
+        }
         DefaultModelsStatus {
             models,
             running: self.running.load(Ordering::Acquire),
@@ -251,6 +280,70 @@ impl DefaultModelsInstaller {
                 self.select_for_dictation(model_id).await;
             }
             self.emit_status();
+        }
+        self.install_diarization_model(&model_manager).await;
+    }
+
+    /// The speaker detection model, last: nothing waits on it. Skipped while
+    /// speaker detection is off.
+    async fn install_diarization_model(&self, model_manager: &ModelManager) {
+        if !get_settings(&self.app).speaker_detection_enabled
+            || model_manager.diarization_model_path().is_some()
+        {
+            self.set_error(DIARIZATION_MODEL_ID, None);
+            self.emit_status();
+            return;
+        }
+        // Already downloading from the settings: wait for that transfer.
+        if model_manager.diarization_model_status().downloading {
+            *self.current.lock().unwrap() = Some(DIARIZATION_MODEL_ID.to_string());
+            self.emit_status();
+            while model_manager.diarization_model_status().downloading {
+                tokio::time::sleep(BUSY_POLL_INTERVAL).await;
+            }
+            *self.current.lock().unwrap() = None;
+            if model_manager.diarization_model_path().is_none() {
+                self.set_error(DIARIZATION_MODEL_ID, Some(DefaultModelError::Cancelled));
+            }
+            self.emit_status();
+            return;
+        }
+
+        self.set_error(DIARIZATION_MODEL_ID, None);
+        *self.current.lock().unwrap() = Some(DIARIZATION_MODEL_ID.to_string());
+        self.emit_status();
+        let outcome = self.download_diarization_model(model_manager).await;
+        *self.current.lock().unwrap() = None;
+        self.set_error(DIARIZATION_MODEL_ID, outcome.err());
+        self.emit_status();
+    }
+
+    async fn download_diarization_model(
+        &self,
+        model_manager: &ModelManager,
+    ) -> Result<(), DefaultModelError> {
+        if let Some(available) = available_space(&model_manager.diarization_dir()) {
+            let required = DIARIZATION_MODEL_SIZE_MB * 1024 * 1024;
+            if available < required {
+                warn!(
+                    "Not enough disk space for the speaker detection model: {} MB needed, {} MB free",
+                    DIARIZATION_MODEL_SIZE_MB,
+                    available / (1024 * 1024)
+                );
+                return Err(DefaultModelError::DiskSpace {
+                    required_mb: DIARIZATION_MODEL_SIZE_MB,
+                    available_mb: available / (1024 * 1024),
+                });
+            }
+        }
+        info!("Installing the speaker detection model");
+        match model_manager.download_diarization_model().await {
+            // `Ok` also covers a cancel from the settings.
+            Ok(()) if model_manager.diarization_model_path().is_some() => Ok(()),
+            Ok(()) => Err(DefaultModelError::Cancelled),
+            Err(e) => Err(DefaultModelError::Download {
+                detail: format!("{e:#}"),
+            }),
         }
     }
 

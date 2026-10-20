@@ -105,10 +105,11 @@
     },
     "setup": {
       "title": "Menyiapkan Trigo Whispr",
-      "description": "Trigo Whispr sedang mengunduh dua model pengenalan suaranya. Anda bisa mendikte begitu model pertama siap.",
+      "description": "Trigo Whispr sedang mengunduh modelnya. Anda bisa mulai mendikte begitu model pertama siap.",
       "roles": {
         "dictation": "Dikte langsung",
-        "meetings": "Rapat dan file yang diimpor"
+        "meetings": "Rapat dan file yang diimpor",
+        "speakers": "Deteksi pembicara"
       },
       "pending": "Menunggu",
       "failed": "Gagal",

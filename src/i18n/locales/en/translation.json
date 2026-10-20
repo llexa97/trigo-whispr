@@ -105,17 +105,18 @@
     },
     "setup": {
       "title": "Setting up Trigo Whispr",
-      "description": "Trigo Whispr is downloading its two speech recognition models. You can start dictating as soon as the first one is ready.",
+      "description": "Trigo Whispr is downloading its models. You can start dictating as soon as the first one is ready.",
       "roles": {
         "dictation": "Live dictation",
-        "meetings": "Meetings and imported files"
+        "meetings": "Meetings and imported files",
+        "speakers": "Speaker detection"
       },
       "pending": "Waiting",
       "failed": "Failed",
       "downloadedOf": "{{downloaded}} of {{total}}",
       "start": "Start dictating",
       "waitingForDictation": "Dictation will be available once {{name}} is installed.",
-      "continuesInBackground": "The other model keeps downloading in the background.",
+      "continuesInBackground": "The other models keep downloading in the background.",
       "retry": "Retry",
       "backgroundFailed": "Couldn't install {{name}}",
       "errors": {
