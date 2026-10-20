@@ -2,6 +2,10 @@ name: "Release"
 
 on: workflow_dispatch
 
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
   create-release:
     permissions:
@@ -27,10 +31,29 @@ jobs:
         uses: actions/github-script@v9
         with:
           script: |
+            const tag = `v${{ steps.get-version.outputs.version }}`;
+            const releases = await github.paginate(github.rest.repos.listReleases, {
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+            const existing = releases.find(release => release.tag_name === tag);
+            if (existing) {
+              if (!existing.draft) {
+                throw new Error(`Release ${tag} is already published; bump the application version first.`);
+              }
+              await github.rest.repos.updateRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                release_id: existing.id,
+                target_commitish: context.sha
+              });
+              return existing.id;
+            }
             const { data } = await github.rest.repos.createRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
               tag_name: `v${{ steps.get-version.outputs.version }}`,
+              target_commitish: context.sha,
               name: `v${{ steps.get-version.outputs.version }}`,
               draft: true,
               prerelease: false,
@@ -42,24 +65,12 @@ jobs:
     permissions:
       contents: write
     needs: create-release
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          # Only Windows x64 and Apple Silicon macOS are built (no Linux, Windows ARM or Intel Mac).
-          - platform: "macos-26" # for Arm based macs (M1 and above). Uses macOS 26 for Apple Intelligence SDK.
-            args: "--target aarch64-apple-darwin"
-            target: "aarch64-apple-darwin"
-          - platform: "windows-latest"
-            args: ""
-            target: "x86_64-pc-windows-msvc"
-
     uses: ./.github/workflows/build.yml
     with:
-      platform: ${{ matrix.platform }}
-      target: ${{ matrix.target }}
-      build-args: ${{ matrix.args }}
-      sign-binaries: true
+      platform: "windows-latest"
+      target: "x86_64-pc-windows-msvc"
+      # No Azure certificate or updater signing key is required.
+      sign-binaries: false
       asset-prefix: "trigo-whispr"
       upload-artifacts: false
       release-id: ${{ needs.create-release.outputs.release-id }}
@@ -67,3 +78,29 @@ jobs:
       # stale cached native lib can never be linked into a shipped artifact.
       no-cache: true
     secrets: inherit
+
+  publish-release:
+    permissions:
+      contents: write
+    needs: [create-release, publish-tauri]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish completed Windows release
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const release_id = Number('${{ needs.create-release.outputs.release-id }}');
+            const assets = await github.paginate(github.rest.repos.listReleaseAssets, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id
+            });
+            if (!assets.some(asset => /\.(exe|msi)$/i.test(asset.name) && asset.size > 0)) {
+              throw new Error('No Windows installer was uploaded; keeping the release as a draft.');
+            }
+            await github.rest.repos.updateRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id,
+              draft: false
+            });
