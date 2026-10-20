@@ -121,8 +121,15 @@ impl DefaultModelsInstaller {
         }
         let installer = Arc::clone(self);
         tauri::async_runtime::spawn(async move {
-            let _guard = RunGuard(Arc::clone(&installer));
-            installer.run().await;
+            {
+                let _guard = RunGuard(Arc::clone(&installer));
+                installer.run().await;
+            }
+            // Then the speaker detection model, which nothing waits on.
+            installer
+                .app
+                .state::<Arc<ModelManager>>()
+                .ensure_diarization_model();
         });
     }
 

@@ -80,6 +80,10 @@ impl TranscriptionManager {
             return Ok(None);
         }
         let Some(model) = self.model_manager.diarization_model_path() else {
+            info!(
+                "Speaker detection skipped for {}: its model is not downloaded yet",
+                wav.display()
+            );
             return Ok(None);
         };
         let samples = match track_samples(wav) {

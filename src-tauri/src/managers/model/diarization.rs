@@ -6,6 +6,7 @@
 
 use std::fs;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use anyhow::{bail, Result};
 use hf_hub::api::tokio::CancellationToken;
@@ -16,6 +17,7 @@ use tauri_specta::Event;
 
 use super::download::{HttpDownloadEvent, HttpDownloadOutcome};
 use super::ModelManager;
+use crate::settings::get_settings;
 
 const REPO_ID: &str = "handy-computer/diar_streaming_sortformer_4spk-v2.1-gguf";
 /// Pinned, so the bytes always match [`SHA256`].
@@ -76,6 +78,26 @@ impl ModelManager {
             error,
         }
         .emit(&self.app_handle);
+    }
+
+    /// Downloads the diarization model in the background when speaker
+    /// detection is on and it is missing: at launch (after the default
+    /// models) and when detection is turned on. Turning detection off is how
+    /// the user says no; deleting the model turns it off too.
+    pub fn ensure_diarization_model(self: &Arc<Self>) {
+        if !get_settings(&self.app_handle).speaker_detection_enabled
+            || self.diarization_model_path().is_some()
+            || self.diarization_model_status().downloading
+        {
+            return;
+        }
+        let manager = Arc::clone(self);
+        tauri::async_runtime::spawn(async move {
+            info!("Downloading the speaker detection model");
+            // Failures are logged and reported by the download itself; the
+            // next launch tries again.
+            let _ = manager.download_diarization_model().await;
+        });
     }
 
     /// Downloads the diarization model, resuming a partial download. A

@@ -55,7 +55,10 @@ export const SpeakerDetectionSettings: React.FC = () => {
       toast.error(t("settings.meetings.speakerDetection.deleteFailed"), {
         description: result.error,
       });
+      return;
     }
+    // While detection is on, the model is downloaded again at launch.
+    updateSetting("speaker_detection_enabled", false);
   };
 
   let modelAction: React.ReactNode = null;

@@ -1345,8 +1345,10 @@ async updateFileTranscriptionAudioRetention(retention: MeetingAudioRetention) : 
 }
 },
 /**
- * Stub implementation for non-macOS platforms
- * Always returns false since laptop detection is macOS-specific
+ * Checks if the Mac is a laptop by detecting battery presence
+ * 
+ * This uses pmset to check for battery information.
+ * Returns true if a battery is detected (laptop), false otherwise (desktop)
  */
 async isLaptop() : Promise<Result<boolean, string>> {
     try {
@@ -1479,8 +1481,8 @@ experimental_enabled?: boolean; lazy_stream_close?: boolean; keyboard_implementa
  */
 reliable_paste?: boolean; typing_tool?: TypingTool; external_script_path?: string | null; filler_word_removal_enabled?: boolean; custom_filler_words?: string[] | null; 
 /**
- * Fresh installs default from the OS locale; existing stores are migrated
- * in `apply_settings_migrations`.
+ * No longer exposed in the UI: always `AsTranscribed`, enforced by
+ * `apply_settings_migrations`. Kept so older stores still deserialize.
  */
 chinese_script?: ChineseScript; transcribe_accelerator?: TranscribeAcceleratorSetting; 
 /**
