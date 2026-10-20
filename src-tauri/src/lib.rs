@@ -891,6 +891,7 @@ fn specta_builder() -> Builder<tauri::Wry> {
             commands::meeting::get_meeting_detection_apps,
             commands::meeting::is_meeting_detection_supported,
             commands::meeting::get_mic_usage,
+            commands::meeting::get_system_audio_capture_support,
             commands::meeting::get_meeting_prompt,
             commands::meeting::respond_meeting_prompt,
             helpers::clamshell::is_laptop,

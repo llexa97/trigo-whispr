@@ -55,6 +55,9 @@ jobs:
       - name: Test keyboard utilities
         run: bun run test:keyboard
 
+      - name: Test macOS self-signing script
+        run: bun run test:macos-selfsign
+
       - name: Run ESLint
         run: bun run lint
 

@@ -13,6 +13,7 @@ header comment.
   - `cpal_backend.rs` → `src-tauri/src/meeting/capture/cpal_backend.rs`
   - `mix.rs` → `src-tauri/src/meeting/capture/mix.rs`
   - `win_volume.rs` → `src-tauri/src/meeting/capture/win_volume.rs`
+- Adapted script: `scripts/macos-selfsign.sh` → `scripts/macos-selfsign.sh`
 
 ```text
 MIT License
