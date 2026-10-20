@@ -143,17 +143,19 @@ fn post_process_unless_cancelled<F: Future>(
     .ok_or_else(|| JobError::failed(EngineError::Cancelled.into()))
 }
 
-/// Whether the selected model can be loaded: one is downloaded and selected.
+/// Whether the long transcriptions' model can be loaded: one is downloaded
+/// and selected.
 pub fn model_available(app: &AppHandle) -> bool {
-    let selected = get_settings(app).selected_model;
-    !selected.is_empty()
-        && app
-            .try_state::<Arc<ModelManager>>()
-            .is_some_and(|mm| mm.get_model_path(&selected).is_ok())
+    let Some(mm) = app.try_state::<Arc<ModelManager>>() else {
+        return false;
+    };
+    let model = mm.long_form_model_id(&get_settings(app));
+    !model.is_empty() && mm.get_model_path(&model).is_ok()
 }
 
 impl TranscriptionManager {
-    /// Transcribes a decoded file (16 kHz mono WAV) with the selected model,
+    /// Transcribes a decoded file (16 kHz mono WAV) with the long
+    /// transcriptions' model,
     /// in `language` if given, never translated. `on_progress` gets the
     /// samples done so far, out of `total`, after each chunk.
     fn transcribe_file(
@@ -165,21 +167,14 @@ impl TranscriptionManager {
     ) -> Result<FileTranscript> {
         let total = track_samples(wav)?;
         let _active = BackgroundActive::new(self);
-        self.ensure_model_loaded()?;
+        let (model_id, info) = self.load_long_form_model(cancelled)?;
         let mut settings = get_settings(&self.app_handle);
         settings.translate_to_english = false;
         if let Some(language) = language {
             settings.selected_language = language.to_string();
         }
-        let model_id = self
-            .get_current_model()
-            .unwrap_or_else(|| settings.selected_model.clone());
         let language =
             effective_language_for_model(&settings, self.model_manager.as_ref(), &model_id);
-        let info = self
-            .engine
-            .loaded()
-            .ok_or_else(|| anyhow!("Model is not loaded for transcription."))?;
         let setup = run_setup(&info, &settings, &language);
         info!(
             "Transcribing imported file {} with '{}' ({:.0}s of audio)",
@@ -194,6 +189,7 @@ impl TranscriptionManager {
             model_id: &model_id,
             cancelled,
             mark: self.engine.cancel_mark(),
+            preemptions: self.preemption_count(),
             done: 0,
             on_progress: &mut |done| on_progress(done, total),
         };

@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { commands, type MeetingSegment } from "@/bindings";
+import { useModelName } from "@/hooks/useModelName";
 import { useMeetingsStore } from "@/stores/meetingsStore";
 import { Button } from "../ui/Button";
 import { Dialog } from "../ui/Dialog";
@@ -133,6 +134,7 @@ interface MeetingDetailProps {
 
 export const MeetingDetail: React.FC<MeetingDetailProps> = ({ id, onBack }) => {
   const { t, i18n } = useTranslation();
+  const modelName = useModelName();
   const meeting = useMeetingsStore((s) => s.meetings.find((m) => m.id === id));
   const progress = useMeetingsStore((s) => s.progress[id]);
   const cancelTranscription = useMeetingsStore((s) => s.cancelTranscription);
@@ -343,7 +345,7 @@ export const MeetingDetail: React.FC<MeetingDetailProps> = ({ id, onBack }) => {
         />
         <MetaItem
           label={t("meetings.detail.model")}
-          value={meeting.model_id ?? "—"}
+          value={modelName(meeting.model_id)}
         />
         <MetaItem
           label={t("meetings.detail.systemTrack")}

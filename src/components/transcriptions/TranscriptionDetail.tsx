@@ -17,6 +17,7 @@ import {
 import { toast } from "sonner";
 import { commands, type FileTranscriptionSegment } from "@/bindings";
 import { useSettings } from "@/hooks/useSettings";
+import { useModelName } from "@/hooks/useModelName";
 import { getLanguageLabel } from "@/lib/constants/languages";
 import { useTranscriptionsStore } from "@/stores/transcriptionsStore";
 import { Button } from "../ui/Button";
@@ -129,6 +130,7 @@ export const TranscriptionDetail: React.FC<TranscriptionDetailProps> = ({
   onBack,
 }) => {
   const { t, i18n } = useTranslation();
+  const modelName = useModelName();
   const { getSetting } = useSettings();
   const transcription = useTranscriptionsStore((s) =>
     s.transcriptions.find((x) => x.id === id),
@@ -290,8 +292,12 @@ export const TranscriptionDetail: React.FC<TranscriptionDetailProps> = ({
     }
   };
 
-  const language =
-    transcription.detected_language ?? transcription.language ?? null;
+  // Once transcribed, the language the model actually used: a forced one it
+  // ignored (Parakeet) is not shown as applied.
+  const transcribed = transcription.model_id != null;
+  const language = transcribed
+    ? transcription.detected_language
+    : transcription.language;
 
   let emptyText: string;
   if (segments === null) {
@@ -345,14 +351,16 @@ export const TranscriptionDetail: React.FC<TranscriptionDetailProps> = ({
         />
         <MetaItem
           label={t("transcriptions.detail.model")}
-          value={transcription.model_id ?? "—"}
+          value={modelName(transcription.model_id)}
         />
         <MetaItem
           label={t("transcriptions.detail.language")}
           value={
             language
               ? (getLanguageLabel(language) ?? language)
-              : t("transcriptions.options.languageFromSettings")
+              : transcribed
+                ? t("transcriptions.detail.languageAuto")
+                : t("transcriptions.options.languageFromSettings")
           }
         />
         <MetaItem

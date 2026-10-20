@@ -139,6 +139,19 @@
     "modelSettings": {
       "title": "Paramètres de {{model}}"
     },
+    "modelAssignment": {
+      "title": "Modèles",
+      "none": "Aucun modèle",
+      "saveFailed": "Impossible de changer de modèle",
+      "dictation": {
+        "title": "Dictée",
+        "description": "Modèle utilisé par le raccourci. Un modèle rapide comme Parakeet v3 garde la dictée instantanée."
+      },
+      "longForm": {
+        "title": "Réunions et fichiers",
+        "description": "Modèle utilisé pour transcrire les réunions et les fichiers importés. Whisper Large v3 Turbo est plus lent, mais applique la langue choisie et reste fiable sur les longs enregistrements."
+      }
+    },
     "models": {
       "title": "Modèles de Transcription",
       "description": "Sélectionnez un modèle de transcription ou téléchargez des modèles supplémentaires. Différents modèles offrent différents niveaux de précision et de vitesse.",
@@ -1027,6 +1040,7 @@
       "duration": "Durée",
       "model": "Modèle",
       "language": "Langue",
+      "languageAuto": "Détectée automatiquement",
       "audio": "Audio",
       "audioKept": "Conservé",
       "audioNotKept": "Non conservé",
