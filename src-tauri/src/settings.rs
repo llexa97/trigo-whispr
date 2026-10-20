@@ -1487,6 +1487,22 @@ mod tests {
     use super::*;
 
     #[test]
+    fn speaker_detection_is_on_unless_turned_off() {
+        assert!(get_default_settings().speaker_detection_enabled);
+        // A store from before the setting existed gets it on too.
+        let mut stored = serde_json::to_value(get_default_settings()).unwrap();
+        stored
+            .as_object_mut()
+            .unwrap()
+            .remove("speaker_detection_enabled");
+        let settings: AppSettings = serde_json::from_value(stored.clone()).unwrap();
+        assert!(settings.speaker_detection_enabled);
+        stored["speaker_detection_enabled"] = false.into();
+        let settings: AppSettings = serde_json::from_value(stored).unwrap();
+        assert!(!settings.speaker_detection_enabled);
+    }
+
+    #[test]
     fn stored_binding_returns_the_requested_binding() {
         let settings = get_default_settings();
 
