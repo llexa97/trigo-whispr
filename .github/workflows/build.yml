@@ -32,6 +32,12 @@ on:
         required: false
         type: boolean
         default: false
+      # Sign the updater artifacts (.sig + latest.json) with the minisign key
+      # even when the platform code-signing certificates are not available.
+      sign-updater:
+        required: false
+        type: boolean
+        default: false
       repository:
         required: false
         type: string
@@ -480,15 +486,19 @@ jobs:
           assetNamePattern: ${{ steps.patch-release-name.outputs.platform }}
           args: ${{ inputs.build-args }}
 
-      # Test builds without the signing secrets (Apple certificate, Azure
-      # Trusted Signing, updater key). tauri.unsigned.conf.json drops the
-      # Windows signCommand and the signed updater artifacts; macOS falls back
-      # to the ad-hoc identity ("-") from tauri.conf.json.
+      # Builds without the platform signing secrets (Apple certificate, Azure
+      # Trusted Signing). tauri.unsigned.conf.json drops the Windows signCommand
+      # and the signed updater artifacts; with sign-updater, tauri.release.conf.json
+      # only drops the signCommand so the updater artifacts and latest.json are
+      # still produced and signed with the minisign key. macOS falls back to the
+      # ad-hoc identity ("-") from tauri.conf.json.
       - name: Build with Tauri (unsigned)
         if: ${{ !inputs.sign-binaries }}
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ inputs.sign-updater && secrets.TAURI_SIGNING_PRIVATE_KEY || '' }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ inputs.sign-updater && secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD || '' }}
           # The Vulkan loader and Wayland client library must come from the host
           # graphics stack. Bundling Ubuntu's copies ahead of the system libraries can
           # prevent a newer distro's Vulkan ICD or Mesa stack from loading.
@@ -504,7 +514,7 @@ jobs:
           releaseName: ${{ inputs.release-id && format('v{0}', steps.get-version.outputs.version) || '' }}
           releaseId: ${{ inputs.release-id }}
           assetNamePattern: ${{ steps.patch-release-name.outputs.platform }}
-          args: ${{ inputs.build-args }} --config ${{ github.workspace }}/src-tauri/tauri.unsigned.conf.json
+          args: ${{ inputs.build-args }} --config ${{ github.workspace }}/src-tauri/${{ inputs.sign-updater && 'tauri.release.conf.json' || 'tauri.unsigned.conf.json' }}
 
       # tauri-action uploads release assets before returning. All AppImage
       # filtering therefore happens inside linuxdeploy above; this verifies the

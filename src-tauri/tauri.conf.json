@@ -79,7 +79,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEJBQjcyMDk1MjA2NjAxRjkKUldUNUFXWWdsU0MzdXRRZi8zYzhqV2FaNUVDbDd2Rk5VM1IvWWowVXdmRFNKQ1BrMXF5RFFsLy8K",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEM3NEExNzUyMDc2Q0ZFMEEKUldRSy9td0hVaGRLeC9UbWFRSjhuZUVVV1EwSGcwRE8zZi9JVU53c0xqSGRVVm1VQ2FsUUpTVy8K",
       "endpoints": [
         "https://github.com/llexa97/trigo-whispr/releases/latest/download/latest.json"
       ]

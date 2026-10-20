@@ -25,6 +25,9 @@ const UpdateChecker: React.FC<UpdateCheckerProps> = ({ className = "" }) => {
   const [isInstalling, setIsInstalling] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [showUpToDate, setShowUpToDate] = useState(false);
+  // A manual check or an install failed: say so instead of silently going back
+  // to "Check for updates", and offer the releases page as a fallback.
+  const [updateFailed, setUpdateFailed] = useState(false);
   const [showPortableUpdateDialog, setShowPortableUpdateDialog] =
     useState(false);
   const [portableInstallerUrl, setPortableInstallerUrl] = useState<string>(
@@ -58,6 +61,7 @@ const UpdateChecker: React.FC<UpdateCheckerProps> = ({ className = "" }) => {
       setIsChecking(false);
       setUpdateAvailable(false);
       setShowUpToDate(false);
+      setUpdateFailed(false);
       return;
     }
 
@@ -82,6 +86,7 @@ const UpdateChecker: React.FC<UpdateCheckerProps> = ({ className = "" }) => {
 
     try {
       setIsChecking(true);
+      setUpdateFailed(false);
       const update = await check();
 
       if (update) {
@@ -107,10 +112,18 @@ const UpdateChecker: React.FC<UpdateCheckerProps> = ({ className = "" }) => {
       }
     } catch (error) {
       console.error("Failed to check for updates:", error);
+      if (isManualCheckRef.current) {
+        setUpdateFailed(true);
+      }
     } finally {
       setIsChecking(false);
       isManualCheckRef.current = false;
     }
+  };
+
+  const openReleasesPage = () => {
+    setUpdateFailed(false);
+    openUrl(PORTABLE_RELEASES_URL);
   };
 
   const handleManualUpdateCheck = () => {
@@ -162,6 +175,7 @@ const UpdateChecker: React.FC<UpdateCheckerProps> = ({ className = "" }) => {
       await relaunch();
     } catch (error) {
       console.error("Failed to install update:", error);
+      setUpdateFailed(true);
     } finally {
       setIsInstalling(false);
       setDownloadProgress(0);
@@ -185,6 +199,7 @@ const UpdateChecker: React.FC<UpdateCheckerProps> = ({ className = "" }) => {
           : t("footer.preparing");
     }
     if (isChecking) return t("footer.checkingUpdates");
+    if (updateFailed) return t("footer.updateFailed");
     if (showUpToDate) return t("footer.upToDate");
     if (updateAvailable) return t("footer.updateAvailableShort");
     return t("footer.checkForUpdates");
@@ -192,6 +207,7 @@ const UpdateChecker: React.FC<UpdateCheckerProps> = ({ className = "" }) => {
 
   const getUpdateStatusAction = () => {
     if (!updateChecksEnabled) return undefined;
+    if (updateFailed && !isChecking && !isInstalling) return openReleasesPage;
     if (updateAvailable && !isInstalling) return installUpdate;
     if (!isChecking && !isInstalling && !updateAvailable)
       return handleManualUpdateCheck;
@@ -247,9 +263,11 @@ const UpdateChecker: React.FC<UpdateCheckerProps> = ({ className = "" }) => {
             onClick={getUpdateStatusAction()}
             disabled={isUpdateDisabled}
             className={`transition-colors disabled:opacity-50 tabular-nums ${
-              updateAvailable
-                ? "text-logo-primary hover:text-logo-primary/80 font-medium"
-                : "text-text/60 hover:text-text/80"
+              updateFailed
+                ? "text-red-500 hover:text-red-500/80"
+                : updateAvailable
+                  ? "text-logo-primary hover:text-logo-primary/80 font-medium"
+                  : "text-text/60 hover:text-text/80"
             }`}
           >
             {getUpdateStatusText()}
