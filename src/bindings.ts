@@ -1144,6 +1144,113 @@ async respondMeetingPrompt(response: MeetingPromptResponse) : Promise<void> {
     await TAURI_INVOKE("respond_meeting_prompt", { response });
 },
 /**
+ * The extensions the import accepts, lower case and without the dot.
+ */
+async getSupportedTranscriptionExtensions() : Promise<string[]> {
+    return await TAURI_INVOKE("get_supported_transcription_extensions");
+},
+/**
+ * Queues each file for transcription, in order; the ones that cannot be
+ * decoded are returned with the reason.
+ */
+async importFilesForTranscription(paths: string[], options: FileImportOptions) : Promise<Result<FileImportOutcome, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("import_files_for_transcription", { paths, options }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async listFileTranscriptions(offset: number | null, limit: number | null) : Promise<Result<PaginatedFileTranscriptions, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("list_file_transcriptions", { offset, limit }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Transcriptions whose file name or text contains `query`, newest first.
+ */
+async searchFileTranscriptions(query: string, offset: number | null, limit: number | null) : Promise<Result<PaginatedFileTranscriptions, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("search_file_transcriptions", { query, offset, limit }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async getFileTranscription(id: string) : Promise<Result<FileTranscriptionDetail | null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_file_transcription", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * The decoded audio (16 kHz WAV) of a transcription, if it is kept.
+ */
+async getFileTranscriptionAudioPath(id: string) : Promise<Result<string | null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_file_transcription_audio_path", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Runs a transcription again, with another language or the model now
+ * selected.
+ */
+async retryFileTranscription(id: string, options: FileImportOptions) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("retry_file_transcription", { id, options }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Stops a transcription, or takes it out of the queue. Returns false if it
+ * was neither queued nor running (or is already being saved).
+ */
+async cancelFileTranscription(id: string) : Promise<Result<boolean, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("cancel_file_transcription", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Deletes a transcription and its folder, stopping it first if needed.
+ */
+async deleteFileTranscription(id: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("delete_file_transcription", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async openFileTranscriptionFolder(id: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("open_file_transcription_folder", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async updateFileTranscriptionAudioRetention(retention: MeetingAudioRetention) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("update_file_transcription_audio_retention", { retention }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * Stub implementation for non-macOS platforms
  * Always returns false since laptop detection is macOS-specific
  */
@@ -1161,6 +1268,9 @@ async isLaptop() : Promise<Result<boolean, string>> {
 
 
 export const events = __makeEvents__<{
+fileTranscriptionProgress: FileTranscriptionProgress,
+fileTranscriptionsUpdated: FileTranscriptionsUpdated,
+filesImported: FilesImported,
 historyUpdatePayload: HistoryUpdatePayload,
 meetingAutoStopCountdown: MeetingAutoStopCountdown,
 meetingPromptChanged: MeetingPromptChanged,
@@ -1171,6 +1281,9 @@ meetingsUpdated: MeetingsUpdated,
 streamPhaseEvent: StreamPhaseEvent,
 streamTextEvent: StreamTextEvent
 }>({
+fileTranscriptionProgress: "file-transcription-progress",
+fileTranscriptionsUpdated: "file-transcriptions-updated",
+filesImported: "files-imported",
 historyUpdatePayload: "history-update-payload",
 meetingAutoStopCountdown: "meeting-auto-stop-countdown",
 meetingPromptChanged: "meeting-prompt-changed",
@@ -1229,7 +1342,12 @@ whats_new_last_seen_version?: string; selected_model?: string; onboarding_comple
  * Which input channel to use on the selected microphone device.
  * None means "average all channels" (original behavior).
  */
-selected_channel?: number | null; clamshell_microphone?: string | null; selected_output_device?: string | null; translate_to_english?: boolean; selected_language?: string; overlay_position?: OverlayPosition; debug_mode?: boolean; log_level?: LogLevel; custom_words?: string[]; model_unload_timeout?: ModelUnloadTimeout; word_correction_threshold?: number; history_limit?: number; recording_retention_period?: RecordingRetentionPeriod; meeting_audio_retention?: MeetingAudioRetention; paste_method?: PasteMethod; clipboard_handling?: ClipboardHandling; auto_submit?: boolean; auto_submit_key?: AutoSubmitKey; post_process_enabled?: boolean; post_process_provider_id?: string; post_process_providers?: PostProcessProvider[]; post_process_api_keys?: SecretMap; post_process_models?: Partial<{ [key in string]: string }>; post_process_prompts?: LLMPrompt[]; post_process_selected_prompt_id?: string | null; mute_while_recording?: boolean; append_trailing_space?: boolean; app_language?: string; theme?: Theme; experimental_enabled?: boolean; lazy_stream_close?: boolean; keyboard_implementation?: KeyboardImplementation; show_tray_icon?: boolean; paste_delay_ms?: number; paste_delay_after_ms?: number; 
+selected_channel?: number | null; clamshell_microphone?: string | null; selected_output_device?: string | null; translate_to_english?: boolean; selected_language?: string; overlay_position?: OverlayPosition; debug_mode?: boolean; log_level?: LogLevel; custom_words?: string[]; model_unload_timeout?: ModelUnloadTimeout; word_correction_threshold?: number; history_limit?: number; recording_retention_period?: RecordingRetentionPeriod; meeting_audio_retention?: MeetingAudioRetention; 
+/**
+ * How long the decoded audio of imported files is kept (same choices
+ * as for meetings).
+ */
+file_transcription_audio_retention?: MeetingAudioRetention; paste_method?: PasteMethod; clipboard_handling?: ClipboardHandling; auto_submit?: boolean; auto_submit_key?: AutoSubmitKey; post_process_enabled?: boolean; post_process_provider_id?: string; post_process_providers?: PostProcessProvider[]; post_process_api_keys?: SecretMap; post_process_models?: Partial<{ [key in string]: string }>; post_process_prompts?: LLMPrompt[]; post_process_selected_prompt_id?: string | null; mute_while_recording?: boolean; append_trailing_space?: boolean; app_language?: string; theme?: Theme; experimental_enabled?: boolean; lazy_stream_close?: boolean; keyboard_implementation?: KeyboardImplementation; show_tray_icon?: boolean; paste_delay_ms?: number; paste_delay_after_ms?: number; 
 /**
  * Debug-gated ("beta") receipt-sequenced paste: restore the clipboard only
  * after the target app actually reads the transcript, instead of after a
@@ -1347,6 +1465,114 @@ export type ChineseScript =
 "as_transcribed" | "simplified" | "traditional"
 export type ClipboardHandling = "dont_modify" | "copy_to_clipboard"
 export type CustomSounds = { start: boolean; stop: boolean }
+/**
+ * How the files of one import are to be transcribed.
+ */
+export type FileImportOptions = { 
+/**
+ * Forced language; `None` uses the selected one.
+ */
+language: string | null; 
+/**
+ * Run the transcript through LLM post-processing.
+ */
+post_process: boolean }
+export type FileImportOutcome = { added: FileTranscription[]; rejected: RejectedFile[]; 
+/**
+ * Nothing was imported because no model is downloaded.
+ */
+no_model: boolean }
+export type FileTranscription = { id: string; 
+/**
+ * The imported file's name, as shown in the list.
+ */
+file_name: string; 
+/**
+ * Where the file was imported from (it may have moved since).
+ */
+source_path: string; 
+/**
+ * Folder name, relative to `<app_data_dir>/transcriptions/`.
+ */
+folder: string; duration_ms: number | null; 
+/**
+ * Epoch milliseconds.
+ */
+created_at: number; completed_at: number | null; status: FileTranscriptionStatus; error_code: FileTranscriptionErrorCode | null; 
+/**
+ * Technical detail of the failure, if any.
+ */
+error: string | null; model_id: string | null; 
+/**
+ * Language forced for this file; `None` uses the selected language.
+ */
+language: string | null; detected_language: string | null; 
+/**
+ * Whether the transcript goes through LLM post-processing.
+ */
+post_process: boolean; post_processed_text: string | null; 
+/**
+ * Whether the decoded audio (`audio.wav`) is kept in the folder.
+ */
+has_audio: boolean }
+export type FileTranscriptionDetail = { transcription: FileTranscription; segments: FileTranscriptionSegment[] }
+/**
+ * Why a transcription failed, for the UI to explain in the user's language.
+ */
+export type FileTranscriptionErrorCode = "unsupported_format" | "corrupt_file" | "no_audio_track" | 
+/**
+ * Decoded fine, but nothing was said (or it is all silence).
+ */
+"no_speech" | 
+/**
+ * The source file was moved or deleted before it could be read.
+ */
+"file_missing" | 
+/**
+ * No transcription model is downloaded.
+ */
+"no_model" | 
+/**
+ * Anything else (the engine failed, a disk error…); see `error`.
+ */
+"failed"
+/**
+ * Emitted while a file is decoded and after each chunk of its transcription.
+ */
+export type FileTranscriptionProgress = { id: string; stage: FileTranscriptionStage; 
+/**
+ * 0 to 1, when known (a file whose length its container does not say
+ * decodes without a percentage).
+ */
+progress: number | null; 
+/**
+ * Estimated time left, once a chunk is transcribed.
+ */
+eta_ms: number | null }
+export type FileTranscriptionSegment = { idx: number; start_ms: number; end_ms: number; text: string }
+export type FileTranscriptionStage = "decoding" | "transcribing"
+export type FileTranscriptionStatus = 
+/**
+ * Waiting in the queue.
+ */
+"pending" | 
+/**
+ * The file is being decoded to 16 kHz mono.
+ */
+"decoding" | "transcribing" | "done" | "failed" | 
+/**
+ * Stopped by the user; can be started again.
+ */
+"cancelled"
+/**
+ * Same model as `MeetingsUpdated`.
+ */
+export type FileTranscriptionsUpdated = { action: "added"; transcription: FileTranscription } | { action: "updated"; transcription: FileTranscription } | { action: "deleted"; id: string }
+/**
+ * Files imported from outside the Transcriptions page (the tray): the page
+ * opens and reports the outcome.
+ */
+export type FilesImported = { outcome: FileImportOutcome }
 export type GpuDeviceOption = { id: string; name: string; total_vram_mb: number }
 export type HistoryEntry = { id: number; file_name: string; timestamp: number; saved: boolean; title: string; transcription_text: string; post_processed_text: string | null; post_process_prompt: string | null; post_process_requested: boolean }
 export type HistoryUpdatePayload = { action: "added"; entry: HistoryEntry } | { action: "updated"; entry: HistoryEntry } | { action: "deleted"; id: number } | { action: "toggled"; id: number }
@@ -1553,6 +1779,7 @@ export type OverlayPosition = "top" | "bottom"
  * streaming mode (that is driven purely by model capability).
  */
 export type OverlayStyle = "none" | "minimal" | "live"
+export type PaginatedFileTranscriptions = { transcriptions: FileTranscription[]; has_more: boolean }
 export type PaginatedHistory = { entries: HistoryEntry[]; has_more: boolean }
 export type PaginatedMeetings = { meetings: Meeting[]; has_more: boolean }
 export type PasteMethod = "ctrl_v" | "direct" | "none" | "shift_insert" | "ctrl_shift_v" | "external_script"
@@ -1589,6 +1816,10 @@ requeued: string[];
  * Meetings whose audio could not be found.
  */
 failed: string[] }
+/**
+ * A file that was not imported, and why.
+ */
+export type RejectedFile = { path: string; file_name: string; code: FileTranscriptionErrorCode; detail: string }
 /**
  * A retired ONNX model found on disk.
  */

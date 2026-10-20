@@ -36,9 +36,11 @@ pub use utils::env_flag_enabled;
 
 use env_filter::Builder as EnvFilterBuilder;
 use managers::audio::AudioRecordingManager;
+use managers::file_transcription::FileTranscriptionManager;
 use managers::history::HistoryManager;
 use managers::meeting::MeetingManager;
 use managers::model::ModelManager;
+use managers::transcription::file::{FileTranscriber, FileTranscriptionStore};
 use managers::transcription::meeting::{MeetingStore, MeetingTranscriber};
 use managers::transcription::TranscriptionManager;
 use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
@@ -99,7 +101,7 @@ fn build_console_filter() -> env_filter::Filter {
     builder.build()
 }
 
-fn show_main_window(app: &AppHandle) {
+pub(crate) fn show_main_window(app: &AppHandle) {
     if let Some(main_window) = app.get_webview_window("main") {
         if let Err(e) = main_window.unminimize() {
             log::error!("Failed to unminimize webview window: {}", e);
@@ -200,6 +202,22 @@ fn start_meeting_transcriber(app_handle: &AppHandle, meeting_manager: &Arc<Meeti
     match meeting_manager.queued_meetings() {
         Ok(queued) => queued.iter().for_each(|m| transcriber.enqueue(&m.id)),
         Err(e) => log::error!("Failed to list meetings waiting for transcription: {e}"),
+    }
+    app_handle.manage(transcriber);
+}
+
+/// Transcribes imported files in the background: the ones queued from now
+/// on, and the ones left waiting (or interrupted) by a previous run.
+fn start_file_transcriber(app_handle: &AppHandle, manager: &Arc<FileTranscriptionManager>) {
+    let transcriber = FileTranscriber::new(
+        app_handle,
+        Arc::clone(manager) as Arc<dyn FileTranscriptionStore>,
+    );
+    let listener = transcriber.clone();
+    manager.set_queue_listener(move |id| listener.enqueue(id));
+    match manager.queued() {
+        Ok(queued) => queued.iter().for_each(|t| transcriber.enqueue(&t.id)),
+        Err(e) => log::error!("Failed to list file transcriptions waiting to run: {e}"),
     }
     app_handle.manage(transcriber);
 }
@@ -317,6 +335,11 @@ fn initialize_core_logic(app_handle: &AppHandle) {
     // Runs crash recovery (`self_heal`) before anything can start a meeting.
     let meeting_manager =
         Arc::new(MeetingManager::new(app_handle).expect("Failed to initialize meeting manager"));
+    // Requeues the file transcriptions a previous run was interrupted in.
+    let file_transcription_manager = Arc::new(
+        FileTranscriptionManager::new(app_handle)
+            .expect("Failed to initialize file transcription manager"),
+    );
 
     // Add managers to Tauri's managed state
     app_handle.manage(recording_manager.clone());
@@ -326,6 +349,9 @@ fn initialize_core_logic(app_handle: &AppHandle) {
     app_handle.manage(meeting_manager.clone());
     meeting_manager.start_retention_timer();
     start_meeting_transcriber(app_handle, &meeting_manager);
+    app_handle.manage(file_transcription_manager.clone());
+    file_transcription_manager.start_retention_timer();
+    start_file_transcriber(app_handle, &file_transcription_manager);
     app_handle.manage(tray::TrayState::new());
 
     // Note: Shortcuts are NOT initialized here.
@@ -422,6 +448,9 @@ fn initialize_core_logic(app_handle: &AppHandle) {
             }
             "toggle_meeting" => {
                 crate::meeting::control::toggle_meeting(app, "tray");
+            }
+            "transcribe_file" => {
+                commands::file_transcription::pick_and_import(app);
             }
             "cancel" => {
                 use crate::utils::cancel_current_operation;
@@ -894,6 +923,17 @@ fn specta_builder() -> Builder<tauri::Wry> {
             commands::meeting::get_system_audio_capture_support,
             commands::meeting::get_meeting_prompt,
             commands::meeting::respond_meeting_prompt,
+            commands::file_transcription::get_supported_transcription_extensions,
+            commands::file_transcription::import_files_for_transcription,
+            commands::file_transcription::list_file_transcriptions,
+            commands::file_transcription::search_file_transcriptions,
+            commands::file_transcription::get_file_transcription,
+            commands::file_transcription::get_file_transcription_audio_path,
+            commands::file_transcription::retry_file_transcription,
+            commands::file_transcription::cancel_file_transcription,
+            commands::file_transcription::delete_file_transcription,
+            commands::file_transcription::open_file_transcription_folder,
+            commands::file_transcription::update_file_transcription_audio_retention,
             helpers::clamshell::is_laptop,
         ])
         .events(collect_events![
@@ -906,6 +946,9 @@ fn specta_builder() -> Builder<tauri::Wry> {
             managers::transcription::StreamTextEvent,
             managers::transcription::StreamPhaseEvent,
             managers::transcription::meeting::MeetingTranscriptionProgress,
+            managers::file_transcription::FileTranscriptionsUpdated,
+            managers::transcription::file::FileTranscriptionProgress,
+            commands::file_transcription::FilesImported,
         ])
 }
 

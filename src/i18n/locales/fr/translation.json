@@ -3,6 +3,7 @@
     "settings": "Paramètres...",
     "checkUpdates": "Rechercher des mises à jour...",
     "copyLastTranscript": "Copier la dernière transcription",
+    "transcribeFile": "Transcrire un fichier…",
     "unloadModel": "Décharger le modèle",
     "model": "Modèle",
     "quit": "Quitter",
@@ -29,6 +30,7 @@
     "postProcessing": "Post-traitement",
     "history": "Historique",
     "meetings": "Réunions",
+    "transcriptions": "Transcriptions",
     "debug": "Débogage",
     "about": "À propos"
   },
@@ -955,6 +957,123 @@
       "started": {
         "title": "Enregistrement de la réunion {{app}}",
         "subtitle": "Arrêtez-le depuis la pastille ou la barre d'état"
+      }
+    }
+  },
+  "transcriptions": {
+    "title": "Transcriptions",
+    "loading": "Chargement des transcriptions…",
+    "search": {
+      "placeholder": "Rechercher par nom ou texte",
+      "noResults": "Aucune transcription ne correspond à la recherche."
+    },
+    "empty": {
+      "title": "Aucune transcription",
+      "description": "Déposez un fichier audio ou vidéo ici pour le transcrire en local, sans rien envoyer à l'extérieur."
+    },
+    "drop": {
+      "title": "Déposez un fichier audio ou vidéo ici",
+      "hint": "Plusieurs fichiers déposés d'un coup sont transcrits l'un après l'autre.",
+      "release": "Relâchez pour transcrire {{count}} fichier(s)",
+      "refused": "Ces fichiers ne sont pas pris en charge",
+      "overlay": "Déposez pour transcrire {{count}} fichier(s)",
+      "choose": "Choisir un fichier",
+      "formats": "WAV, MP3, M4A, AAC, FLAC, OGG, Opus, WebM, MP4, MOV, MKV",
+      "filterName": "Audio et vidéo"
+    },
+    "options": {
+      "language": "Langue",
+      "languageFromSettings": "Comme dans les paramètres",
+      "languageAuto": "Détection automatique",
+      "postProcess": "Post-traiter avec le LLM"
+    },
+    "status": {
+      "pending": "En attente",
+      "decoding": "Décodage",
+      "decodingProgress": "Décodage {{percent}} %",
+      "transcribing": "Transcription",
+      "transcribingProgress": "Transcription {{percent}} %",
+      "done": "Terminée",
+      "failed": "Erreur",
+      "cancelled": "Annulée"
+    },
+    "errors": {
+      "unsupported_format": "Ce format n'est pas pris en charge.",
+      "corrupt_file": "Le fichier est endommagé ou illisible.",
+      "no_audio_track": "Le fichier n'a pas de piste audio.",
+      "no_speech": "Aucune parole détectée.",
+      "file_missing": "Le fichier a été déplacé ou supprimé.",
+      "no_model": "Téléchargez d'abord un modèle de transcription.",
+      "failed": "La transcription a échoué.",
+      "noModelTitle": "Aucun modèle de transcription",
+      "openModels": "Ouvrir les modèles",
+      "importFailed": "Impossible d'importer les fichiers",
+      "copy": "Impossible de copier la transcription",
+      "export": "Impossible d'exporter la transcription",
+      "openFolder": "Impossible d'ouvrir le dossier",
+      "retry": "Impossible de relancer la transcription",
+      "cancel": "Impossible d'annuler la transcription",
+      "delete": "Impossible de supprimer la transcription"
+    },
+    "import": {
+      "rejected": "{{name}} n'a pas été importé",
+      "unsupportedTitle": "Fichiers non pris en charge ignorés",
+      "longFileTitle": "Fichier long",
+      "longFile": "{{name}} dure {{duration}} : sa transcription prendra du temps. Vous pouvez continuer à utiliser l'application en attendant."
+    },
+    "detail": {
+      "back": "Retour aux transcriptions",
+      "date": "Importé le",
+      "duration": "Durée",
+      "model": "Modèle",
+      "language": "Langue",
+      "audio": "Audio",
+      "audioKept": "Conservé",
+      "audioNotKept": "Non conservé",
+      "source": "Fichier d'origine",
+      "eta": "environ {{time}} restantes",
+      "transcript": "Transcription",
+      "postProcessed": "Post-traité",
+      "loading": "Chargement…",
+      "exported": "Transcription exportée",
+      "playFrom": "Lire à partir de {{time}}",
+      "empty": {
+        "pending": "En attente de son tour…",
+        "decoding": "Lecture du fichier…",
+        "transcribing": "Transcription en cours…",
+        "done": "Aucun texte.",
+        "failed": "Aucune transcription.",
+        "cancelled": "La transcription a été annulée. Relancez-la pour obtenir un texte."
+      }
+    },
+    "actions": {
+      "copy": "Copier",
+      "export": "Exporter {{format}}",
+      "retry": "Relancer",
+      "cancel": "Annuler",
+      "openFolder": "Ouvrir le dossier",
+      "delete": "Supprimer"
+    },
+    "retry": {
+      "title": "Relancer la transcription",
+      "description": "L'audio conservé (ou à défaut le fichier d'origine) est transcrit à nouveau.",
+      "model": "Le modèle sélectionné dans l'application est utilisé ; changez-le dans Modèles pour en essayer un autre.",
+      "cancel": "Annuler",
+      "confirm": "Transcrire"
+    },
+    "delete": {
+      "title": "Supprimer cette transcription ?",
+      "description": "La transcription de {{name}} et son audio conservé seront supprimés. Le fichier d'origine n'est pas modifié.",
+      "cancel": "Annuler",
+      "confirm": "Supprimer"
+    },
+    "settings": {
+      "open": "Paramètres",
+      "back": "Transcriptions",
+      "title": "Fichiers importés",
+      "retention": {
+        "label": "Conserver l'audio décodé",
+        "description": "Durée de conservation d'une copie de l'audio, pour la lecture et les nouvelles transcriptions. Les textes sont toujours conservés."
       }
     }
   }

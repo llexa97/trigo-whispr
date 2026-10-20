@@ -7,6 +7,7 @@ import {
   Info,
   Sparkles,
   Cpu,
+  FileAudio,
   Users,
 } from "lucide-react";
 import { type } from "@tauri-apps/plugin-os";
@@ -23,6 +24,7 @@ import {
   ModelsSettings,
 } from "./settings";
 import { MeetingsSection } from "./meetings/MeetingsSection";
+import { TranscriptionsSection } from "./transcriptions/TranscriptionsSection";
 
 // Meeting capture is available on Windows and macOS only.
 const meetingsSupported = () => ["windows", "macos"].includes(type());
@@ -62,6 +64,12 @@ export const SECTIONS_CONFIG = {
     icon: Users,
     component: MeetingsSection,
     enabled: meetingsSupported,
+  },
+  transcriptions: {
+    labelKey: "sidebar.transcriptions",
+    icon: FileAudio,
+    component: TranscriptionsSection,
+    enabled: () => true,
   },
   models: {
     labelKey: "sidebar.models",

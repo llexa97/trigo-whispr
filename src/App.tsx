@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useLayoutEffect,
   useState,
@@ -29,6 +30,8 @@ import {
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { Sidebar, SidebarSection, SECTIONS_CONFIG } from "./components/Sidebar";
 import { WhatsNewGate } from "./components/whats-new";
+import { DropOverlay } from "./components/transcriptions/DropOverlay";
+import { useFileImport } from "./components/transcriptions/useFileImport";
 import { useSettings } from "./hooks/useSettings";
 import { useSettingsStore } from "./stores/settingsStore";
 import { commands } from "@/bindings";
@@ -77,6 +80,16 @@ function App() {
     (state) => state.refreshOutputDevices,
   );
   const hasCompletedPostOnboardingInit = useRef(false);
+  // Files dropped anywhere on the window (or picked from the tray) open the
+  // Transcriptions page and are queued there.
+  const navigateToSection = useCallback(
+    (section: SidebarSection) => setCurrentSection(section),
+    [],
+  );
+  useFileImport(
+    onboardingStep === "done" && onboardingPreview === null,
+    navigateToSection,
+  );
   const settingsScrollRef = useRef<HTMLDivElement>(null);
   const isShowingOnboarding =
     onboardingPreview !== null ||
@@ -443,6 +456,7 @@ function App() {
         </div>
         {/* Fixed footer at bottom */}
         <Footer />
+        {currentSection !== "transcriptions" && <DropOverlay />}
       </div>
     );
   }

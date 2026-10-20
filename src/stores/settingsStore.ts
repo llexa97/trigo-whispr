@@ -205,6 +205,12 @@ const settingUpdaters: {
     );
     if (result.status === "error") throw new Error(result.error);
   },
+  file_transcription_audio_retention: async (value) => {
+    const result = await commands.updateFileTranscriptionAudioRetention(
+      value as MeetingAudioRetention,
+    );
+    if (result.status === "error") throw new Error(result.error);
+  },
   meeting_detection_enabled: (value) =>
     commands.changeMeetingDetectionEnabledSetting(value as boolean),
   meeting_detection_apps: (value) =>
