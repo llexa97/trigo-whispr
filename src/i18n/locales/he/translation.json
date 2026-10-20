@@ -102,6 +102,27 @@
         "checkFailed": "בדיקת ההרשאות נכשלה. נסה שוב.",
         "requestFailed": "בקשת ההרשאה נכשלה. נסה שוב."
       }
+    },
+    "setup": {
+      "title": "הגדרת Trigo Whispr",
+      "description": "Trigo Whispr מוריד את שני מודלי זיהוי הדיבור שלו. אפשר להתחיל להכתיב ברגע שהראשון מוכן.",
+      "roles": {
+        "dictation": "הכתבה חיה",
+        "meetings": "פגישות וקבצים מיובאים"
+      },
+      "pending": "ממתין",
+      "failed": "נכשל",
+      "downloadedOf": "{{downloaded}} מתוך {{total}}",
+      "start": "התחל להכתיב",
+      "waitingForDictation": "ההכתבה תהיה זמינה לאחר התקנת {{name}}.",
+      "continuesInBackground": "המודל השני ממשיך לרדת ברקע.",
+      "retry": "נסה שוב",
+      "backgroundFailed": "לא ניתן להתקין את {{name}}",
+      "errors": {
+        "diskSpace": "אין מספיק מקום בדיסק: נדרשים {{required}}, פנויים {{available}}. פנה מקום ונסה שוב.",
+        "cancelled": "ההורדה בוטלה.",
+        "download": "ההורדה נכשלה. בדוק את החיבור לאינטרנט ונסה שוב."
+      }
     }
   },
   "modelSelector": {
@@ -781,7 +802,11 @@
     "modelLoadFailedUnknown": "מודל לא ידוע",
     "pasteFailedTitle": "ההדבקה נכשלה",
     "pasteFailed": "לא ניתן היה להדביק את הטקסט ביישום הפעיל.",
-    "transcriptionFailedTitle": "התמלול נכשל"
+    "transcriptionFailedTitle": "התמלול נכשל",
+    "modelDownloadingTitle": "המודל עדיין יורד",
+    "modelDownloading": "ההכתבה תפעל ברגע שמודל זיהוי הדיבור יותקן.",
+    "noModelTitle": "אין מודל זיהוי דיבור",
+    "noModel": "הורד מודל מהגדרות המודלים כדי להתחיל להכתיב."
   },
   "appLanguage": {
     "title": "שפת האפליקציה",

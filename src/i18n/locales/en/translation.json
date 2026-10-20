@@ -102,6 +102,27 @@
         "checkFailed": "Failed to check permissions. Please try again.",
         "requestFailed": "Failed to request permission. Please try again."
       }
+    },
+    "setup": {
+      "title": "Setting up Trigo Whispr",
+      "description": "Trigo Whispr is downloading its two speech recognition models. You can start dictating as soon as the first one is ready.",
+      "roles": {
+        "dictation": "Live dictation",
+        "meetings": "Meetings and imported files"
+      },
+      "pending": "Waiting",
+      "failed": "Failed",
+      "downloadedOf": "{{downloaded}} of {{total}}",
+      "start": "Start dictating",
+      "waitingForDictation": "Dictation will be available once {{name}} is installed.",
+      "continuesInBackground": "The other model keeps downloading in the background.",
+      "retry": "Retry",
+      "backgroundFailed": "Couldn't install {{name}}",
+      "errors": {
+        "diskSpace": "Not enough disk space: {{required}} needed, {{available}} free. Free up some space, then retry.",
+        "cancelled": "The download was cancelled.",
+        "download": "The download failed. Check your internet connection, then retry."
+      }
     }
   },
   "modelSelector": {
@@ -784,7 +805,11 @@
     "modelLoadFailedUnknown": "unknown model",
     "pasteFailedTitle": "Failed to Paste Text",
     "pasteFailed": "Text could not be pasted into the active application.",
-    "transcriptionFailedTitle": "Transcription Failed"
+    "transcriptionFailedTitle": "Transcription Failed",
+    "modelDownloadingTitle": "Model still downloading",
+    "modelDownloading": "Dictation will work as soon as the speech recognition model is installed.",
+    "noModelTitle": "No speech recognition model",
+    "noModel": "Download a model from the Models settings to start dictating."
   },
   "appLanguage": {
     "title": "Application Language",

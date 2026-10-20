@@ -845,6 +845,12 @@ impl ModelManager {
         Ok(manager)
     }
 
+    /// Where Hugging Face downloads are written: the active HF cache (it may
+    /// not exist yet).
+    pub fn download_dir(&self) -> PathBuf {
+        Cache::from_env().path().clone()
+    }
+
     pub fn get_available_models(&self) -> Vec<ModelInfo> {
         let mut list: Vec<ModelInfo> = {
             let models = self.available_models.lock().unwrap();

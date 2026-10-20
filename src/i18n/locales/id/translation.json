@@ -102,6 +102,27 @@
         "checkFailed": "Gagal memeriksa izin. Silakan coba lagi.",
         "requestFailed": "Gagal meminta izin. Silakan coba lagi."
       }
+    },
+    "setup": {
+      "title": "Menyiapkan Trigo Whispr",
+      "description": "Trigo Whispr sedang mengunduh dua model pengenalan suaranya. Anda bisa mendikte begitu model pertama siap.",
+      "roles": {
+        "dictation": "Dikte langsung",
+        "meetings": "Rapat dan file yang diimpor"
+      },
+      "pending": "Menunggu",
+      "failed": "Gagal",
+      "downloadedOf": "{{downloaded}} dari {{total}}",
+      "start": "Mulai mendikte",
+      "waitingForDictation": "Dikte akan tersedia setelah {{name}} terpasang.",
+      "continuesInBackground": "Model lainnya terus diunduh di latar belakang.",
+      "retry": "Coba lagi",
+      "backgroundFailed": "Tidak dapat memasang {{name}}",
+      "errors": {
+        "diskSpace": "Ruang disk tidak cukup: perlu {{required}}, tersedia {{available}}. Kosongkan ruang, lalu coba lagi.",
+        "cancelled": "Unduhan dibatalkan.",
+        "download": "Unduhan gagal. Periksa koneksi internet Anda, lalu coba lagi."
+      }
     }
   },
   "modelSelector": {
@@ -784,7 +805,11 @@
     "modelLoadFailedUnknown": "model tidak dikenal",
     "pasteFailedTitle": "Gagal Menempelkan Teks",
     "pasteFailed": "Teks tidak dapat ditempelkan ke aplikasi aktif.",
-    "transcriptionFailedTitle": "Transkripsi Gagal"
+    "transcriptionFailedTitle": "Transkripsi Gagal",
+    "modelDownloadingTitle": "Model masih diunduh",
+    "modelDownloading": "Dikte akan berfungsi begitu model pengenalan suara terpasang.",
+    "noModelTitle": "Tidak ada model pengenalan suara",
+    "noModel": "Unduh model dari pengaturan Model untuk mulai mendikte."
   },
   "appLanguage": {
     "title": "Bahasa Aplikasi",

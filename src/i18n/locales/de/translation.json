@@ -102,6 +102,27 @@
         "checkFailed": "Berechtigungsprüfung fehlgeschlagen. Bitte erneut versuchen.",
         "requestFailed": "Berechtigungsanfrage fehlgeschlagen. Bitte erneut versuchen."
       }
+    },
+    "setup": {
+      "title": "Trigo Whispr wird eingerichtet",
+      "description": "Trigo Whispr lädt seine zwei Spracherkennungsmodelle herunter. Sie können diktieren, sobald das erste bereit ist.",
+      "roles": {
+        "dictation": "Live-Diktat",
+        "meetings": "Besprechungen und importierte Dateien"
+      },
+      "pending": "Wartet",
+      "failed": "Fehlgeschlagen",
+      "downloadedOf": "{{downloaded}} von {{total}}",
+      "start": "Diktieren starten",
+      "waitingForDictation": "Das Diktat ist verfügbar, sobald {{name}} installiert ist.",
+      "continuesInBackground": "Das andere Modell wird im Hintergrund weiter heruntergeladen.",
+      "retry": "Erneut versuchen",
+      "backgroundFailed": "{{name}} konnte nicht installiert werden",
+      "errors": {
+        "diskSpace": "Nicht genügend Speicherplatz: {{required}} benötigt, {{available}} frei. Geben Sie Speicherplatz frei und versuchen Sie es erneut.",
+        "cancelled": "Der Download wurde abgebrochen.",
+        "download": "Der Download ist fehlgeschlagen. Prüfen Sie Ihre Internetverbindung und versuchen Sie es erneut."
+      }
     }
   },
   "modelSelector": {
@@ -781,7 +802,11 @@
     "modelLoadFailedUnknown": "unbekanntes Modell",
     "pasteFailedTitle": "Text konnte nicht eingefügt werden",
     "pasteFailed": "Der Text konnte nicht in die aktive Anwendung eingefügt werden.",
-    "transcriptionFailedTitle": "Transkription fehlgeschlagen"
+    "transcriptionFailedTitle": "Transkription fehlgeschlagen",
+    "modelDownloadingTitle": "Modell wird noch heruntergeladen",
+    "modelDownloading": "Das Diktat funktioniert, sobald das Spracherkennungsmodell installiert ist.",
+    "noModelTitle": "Kein Spracherkennungsmodell",
+    "noModel": "Laden Sie in den Modell-Einstellungen ein Modell herunter, um zu diktieren."
   },
   "appLanguage": {
     "title": "Anwendungssprache",

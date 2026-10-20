@@ -3,6 +3,7 @@ use crate::apple_intelligence;
 use crate::audio_feedback::{play_feedback_sound, play_feedback_sound_blocking, SoundType};
 use crate::audio_toolkit::VadPolicy;
 use crate::managers::audio::{recording_error_type, AudioRecordingManager};
+use crate::managers::default_models::DefaultModelsInstaller;
 use crate::managers::history::HistoryManager;
 use crate::managers::model::ModelManager;
 use crate::managers::transcription::policy::{live_decode, LiveDecode, ModelTraits};
@@ -417,6 +418,21 @@ impl ShortcutAction for TranscribeAction {
                 .get_model_path(&selected_model)
             {
                 warn!("Not starting recording: no model can transcribe it ({})", e);
+                // Say why instead of silently ignoring the shortcut. The app
+                // usually sits in the tray, so bring the window up to show it.
+                let error_type = if app.state::<Arc<DefaultModelsInstaller>>().is_running() {
+                    "model_downloading"
+                } else {
+                    "no_model"
+                };
+                crate::show_main_window(app);
+                let _ = app.emit(
+                    "recording-error",
+                    RecordingErrorEvent {
+                        error_type: error_type.to_string(),
+                        detail: None,
+                    },
+                );
                 return;
             }
         }

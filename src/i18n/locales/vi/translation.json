@@ -102,6 +102,27 @@
         "checkFailed": "Không thể kiểm tra quyền. Vui lòng thử lại.",
         "requestFailed": "Không thể yêu cầu quyền. Vui lòng thử lại."
       }
+    },
+    "setup": {
+      "title": "Đang thiết lập Trigo Whispr",
+      "description": "Trigo Whispr đang tải xuống hai mô hình nhận dạng giọng nói. Bạn có thể đọc chính tả ngay khi mô hình đầu tiên sẵn sàng.",
+      "roles": {
+        "dictation": "Đọc chính tả trực tiếp",
+        "meetings": "Cuộc họp và tệp đã nhập"
+      },
+      "pending": "Đang chờ",
+      "failed": "Thất bại",
+      "downloadedOf": "{{downloaded}} / {{total}}",
+      "start": "Bắt đầu đọc chính tả",
+      "waitingForDictation": "Đọc chính tả sẽ khả dụng khi {{name}} được cài đặt.",
+      "continuesInBackground": "Mô hình còn lại tiếp tục tải xuống trong nền.",
+      "retry": "Thử lại",
+      "backgroundFailed": "Không thể cài đặt {{name}}",
+      "errors": {
+        "diskSpace": "Không đủ dung lượng đĩa: cần {{required}}, còn trống {{available}}. Hãy giải phóng dung lượng rồi thử lại.",
+        "cancelled": "Đã hủy tải xuống.",
+        "download": "Tải xuống thất bại. Hãy kiểm tra kết nối internet rồi thử lại."
+      }
     }
   },
   "modelSelector": {
@@ -781,7 +802,11 @@
     "modelLoadFailedUnknown": "mô hình không xác định",
     "pasteFailedTitle": "Không thể dán văn bản",
     "pasteFailed": "Không thể dán văn bản vào ứng dụng đang hoạt động.",
-    "transcriptionFailedTitle": "Phiên âm thất bại"
+    "transcriptionFailedTitle": "Phiên âm thất bại",
+    "modelDownloadingTitle": "Mô hình vẫn đang tải xuống",
+    "modelDownloading": "Đọc chính tả sẽ hoạt động ngay khi mô hình nhận dạng giọng nói được cài đặt.",
+    "noModelTitle": "Không có mô hình nhận dạng giọng nói",
+    "noModel": "Tải xuống một mô hình trong phần cài đặt Mô hình để bắt đầu đọc chính tả."
   },
   "appLanguage": {
     "title": "Ngôn ngữ ứng dụng",

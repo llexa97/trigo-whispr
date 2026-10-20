@@ -743,6 +743,19 @@ async rescanLocalModels() : Promise<Result<null, string>> {
     else return { status: "error", error: e  as any };
 }
 },
+/**
+ * Where the two default models stand (ready, queued, downloading, failed).
+ */
+async getDefaultModelsStatus() : Promise<DefaultModelsStatus> {
+    return await TAURI_INVOKE("get_default_models_status");
+},
+/**
+ * Download whichever default models are still missing (the setup screen's
+ * Retry). A no-op while a pass is already running.
+ */
+async retryDefaultModels() : Promise<void> {
+    await TAURI_INVOKE("retry_default_models");
+},
 async updateMicrophoneMode(alwaysOn: boolean) : Promise<Result<null, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("update_microphone_mode", { alwaysOn }) };
@@ -1465,6 +1478,43 @@ export type ChineseScript =
 "as_transcribed" | "simplified" | "traditional"
 export type ClipboardHandling = "dont_modify" | "copy_to_clipboard"
 export type CustomSounds = { start: boolean; stop: boolean }
+export type DefaultModelError = 
+/**
+ * Not enough free space where the model is written.
+ */
+{ kind: "disk_space"; required_mb: number; available_mb: number } | 
+/**
+ * The download was cancelled (from the Models page).
+ */
+{ kind: "cancelled" } | 
+/**
+ * Every attempt failed: Hugging Face, retries and mirrors. Usually no
+ * connection; `detail` is the backend message, for the logs and the UI.
+ */
+{ kind: "download"; detail: string }
+/**
+ * What a default model is installed for, so the UI can label it.
+ */
+export type DefaultModelRole = "dictation" | 
+/**
+ * Meetings and imported files.
+ */
+"meetings"
+export type DefaultModelState = 
+/**
+ * On disk (models dir or HF cache).
+ */
+"ready" | 
+/**
+ * Missing, waiting for its turn (or for a retry).
+ */
+"pending" | "downloading" | "failed"
+export type DefaultModelStatus = { model_id: string; role: DefaultModelRole; name: string; size_mb: number; state: DefaultModelState; error: DefaultModelError | null }
+export type DefaultModelsStatus = { models: DefaultModelStatus[]; 
+/**
+ * Whether an install pass is under way.
+ */
+running: boolean }
 /**
  * How the files of one import are to be transcribed.
  */

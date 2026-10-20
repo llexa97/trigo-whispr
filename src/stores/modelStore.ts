@@ -272,6 +272,9 @@ export const useModelStore = create<ModelsStore>()(
         set(
           produce((state) => {
             state.downloadProgress[progress.model_id] = progress;
+            // Downloads also start from the backend (the default models), so
+            // the first progress event is what tells the UI one is running.
+            state.downloadingModels[progress.model_id] = true;
           }),
         );
 

@@ -102,6 +102,27 @@
         "checkFailed": "检查权限失败。请重试。",
         "requestFailed": "请求权限失败。请重试。"
       }
+    },
+    "setup": {
+      "title": "正在设置 Trigo Whispr",
+      "description": "Trigo Whispr 正在下载两个语音识别模型。第一个模型就绪后即可开始听写。",
+      "roles": {
+        "dictation": "实时听写",
+        "meetings": "会议和导入的文件"
+      },
+      "pending": "等待中",
+      "failed": "失败",
+      "downloadedOf": "{{downloaded}} / {{total}}",
+      "start": "开始听写",
+      "waitingForDictation": "{{name}} 安装完成后即可使用听写。",
+      "continuesInBackground": "另一个模型将在后台继续下载。",
+      "retry": "重试",
+      "backgroundFailed": "无法安装 {{name}}",
+      "errors": {
+        "diskSpace": "磁盘空间不足：需要 {{required}}，可用 {{available}}。请释放空间后重试。",
+        "cancelled": "下载已取消。",
+        "download": "下载失败。请检查网络连接后重试。"
+      }
     }
   },
   "modelSelector": {
@@ -781,7 +802,11 @@
     "modelLoadFailedUnknown": "未知模型",
     "pasteFailedTitle": "粘贴文本失败",
     "pasteFailed": "无法将文本粘贴到当前活动的应用程序中。",
-    "transcriptionFailedTitle": "转录失败"
+    "transcriptionFailedTitle": "转录失败",
+    "modelDownloadingTitle": "模型仍在下载",
+    "modelDownloading": "语音识别模型安装完成后即可听写。",
+    "noModelTitle": "没有语音识别模型",
+    "noModel": "请在模型设置中下载一个模型以开始听写。"
   },
   "appLanguage": {
     "title": "应用语言",
