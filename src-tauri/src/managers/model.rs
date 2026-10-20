@@ -18,6 +18,7 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use tauri::{AppHandle, Emitter, Manager};
 
+pub mod diarization;
 mod download;
 
 use download::{HttpDownloadOutcome, DOWNLOAD_STALL_TIMEOUT};

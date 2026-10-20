@@ -727,6 +727,23 @@
           "delete_after_transcription": "Delete after transcription"
         }
       },
+      "speaker_detection_enabled": {
+        "label": "Sprekers herkennen",
+        "description": "Onderscheidt de personen in vergaderingen en geïmporteerde bestanden (maximaal 4), op deze computer. Klik op het label van een spreker om die een naam te geven."
+      },
+      "speakerDetection": {
+        "title": "Sprekerherkenning",
+        "description": "Geldt voor vergaderingen en de pagina Transcripties.",
+        "model": "Model voor sprekerherkenning",
+        "modelReady": "Gedownload ({{size}} MB). Gebruikt na elke transcriptie.",
+        "modelMissing": "Download het om sprekers te herkennen. Zonder dit model houden transcripties hun huidige labels.",
+        "download": "Downloaden ({{size}} MB)",
+        "downloading": "Downloaden… {{percent}}%",
+        "cancel": "Annuleren",
+        "delete": "Verwijderen",
+        "downloadFailed": "Downloaden van het model voor sprekerherkenning mislukt",
+        "deleteFailed": "Kan het model voor sprekerherkenning niet verwijderen"
+      },
       "privacy": "Everything stays on this computer: audio and transcripts are never sent anywhere. Recording people may require their consent: always let the participants know."
     }
   },
@@ -1075,5 +1092,11 @@
         "description": "How long a copy of the audio is kept for playback and new transcriptions. The transcripts are always kept."
       }
     }
+  },
+  "speakers": {
+    "person": "Spreker {{n}}",
+    "rename": "{{name}} hernoemen",
+    "nameLabel": "Naam van de spreker",
+    "renameError": "Kan de spreker niet hernoemen"
   }
 }

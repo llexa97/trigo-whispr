@@ -727,6 +727,23 @@
           "delete_after_transcription": "Delete after transcription"
         }
       },
+      "speaker_detection_enabled": {
+        "label": "Rileva gli interlocutori",
+        "description": "Distingue le persone nelle riunioni e nei file importati (fino a 4), su questo computer. Fai clic sull’etichetta di un interlocutore per dargli un nome."
+      },
+      "speakerDetection": {
+        "title": "Rilevamento degli interlocutori",
+        "description": "Si applica alle riunioni e alla pagina Trascrizioni.",
+        "model": "Modello di rilevamento degli interlocutori",
+        "modelReady": "Scaricato ({{size}} MB). Usato dopo ogni trascrizione.",
+        "modelMissing": "Scaricalo per rilevare gli interlocutori. Senza, le trascrizioni mantengono le etichette attuali.",
+        "download": "Scarica ({{size}} MB)",
+        "downloading": "Download in corso… {{percent}}%",
+        "cancel": "Annulla",
+        "delete": "Elimina",
+        "downloadFailed": "Download del modello di rilevamento degli interlocutori non riuscito",
+        "deleteFailed": "Impossibile eliminare il modello di rilevamento degli interlocutori"
+      },
       "privacy": "Everything stays on this computer: audio and transcripts are never sent anywhere. Recording people may require their consent: always let the participants know."
     }
   },
@@ -1075,5 +1092,11 @@
         "description": "How long a copy of the audio is kept for playback and new transcriptions. The transcripts are always kept."
       }
     }
+  },
+  "speakers": {
+    "person": "Interlocutore {{n}}",
+    "rename": "Rinomina {{name}}",
+    "nameLabel": "Nome dell’interlocutore",
+    "renameError": "Impossibile rinominare l’interlocutore"
   }
 }

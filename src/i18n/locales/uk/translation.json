@@ -727,6 +727,23 @@
           "delete_after_transcription": "Delete after transcription"
         }
       },
+      "speaker_detection_enabled": {
+        "label": "Розпізнавати мовців",
+        "description": "Розрізняє людей на зустрічах та в імпортованих файлах (до 4) на цьому комп’ютері. Натисніть мітку мовця, щоб дати йому ім’я."
+      },
+      "speakerDetection": {
+        "title": "Розпізнавання мовців",
+        "description": "Застосовується до зустрічей і сторінки «Транскрипції».",
+        "model": "Модель розпізнавання мовців",
+        "modelReady": "Завантажено ({{size}} МБ). Використовується після кожної транскрипції.",
+        "modelMissing": "Завантажте її, щоб розпізнавати мовців. Без неї транскрипції зберігають поточні мітки.",
+        "download": "Завантажити ({{size}} МБ)",
+        "downloading": "Завантаження… {{percent}}%",
+        "cancel": "Скасувати",
+        "delete": "Видалити",
+        "downloadFailed": "Не вдалося завантажити модель розпізнавання мовців",
+        "deleteFailed": "Не вдалося видалити модель розпізнавання мовців"
+      },
       "privacy": "Everything stays on this computer: audio and transcripts are never sent anywhere. Recording people may require their consent: always let the participants know."
     }
   },
@@ -1075,5 +1092,11 @@
         "description": "How long a copy of the audio is kept for playback and new transcriptions. The transcripts are always kept."
       }
     }
+  },
+  "speakers": {
+    "person": "Мовець {{n}}",
+    "rename": "Перейменувати: {{name}}",
+    "nameLabel": "Ім’я мовця",
+    "renameError": "Не вдалося перейменувати мовця"
   }
 }

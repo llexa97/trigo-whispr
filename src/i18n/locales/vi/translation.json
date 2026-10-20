@@ -727,6 +727,23 @@
           "delete_after_transcription": "Delete after transcription"
         }
       },
+      "speaker_detection_enabled": {
+        "label": "Nhận diện người nói",
+        "description": "Phân biệt những người trong cuộc họp và tệp đã nhập (tối đa 4) trên máy tính này. Nhấp vào nhãn của người nói để đặt tên."
+      },
+      "speakerDetection": {
+        "title": "Nhận diện người nói",
+        "description": "Áp dụng cho cuộc họp và trang Bản chép lời.",
+        "model": "Mô hình nhận diện người nói",
+        "modelReady": "Đã tải xuống ({{size}} MB). Được dùng sau mỗi lần chép lời.",
+        "modelMissing": "Tải xuống để nhận diện người nói. Nếu không có, bản chép lời giữ nguyên nhãn hiện tại.",
+        "download": "Tải xuống ({{size}} MB)",
+        "downloading": "Đang tải xuống… {{percent}}%",
+        "cancel": "Hủy",
+        "delete": "Xóa",
+        "downloadFailed": "Không tải xuống được mô hình nhận diện người nói",
+        "deleteFailed": "Không thể xóa mô hình nhận diện người nói"
+      },
       "privacy": "Everything stays on this computer: audio and transcripts are never sent anywhere. Recording people may require their consent: always let the participants know."
     }
   },
@@ -1075,5 +1092,11 @@
         "description": "How long a copy of the audio is kept for playback and new transcriptions. The transcripts are always kept."
       }
     }
+  },
+  "speakers": {
+    "person": "Người nói {{n}}",
+    "rename": "Đổi tên {{name}}",
+    "nameLabel": "Tên người nói",
+    "renameError": "Không thể đổi tên người nói"
   }
 }

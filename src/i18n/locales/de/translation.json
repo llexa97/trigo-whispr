@@ -727,6 +727,23 @@
           "delete_after_transcription": "Delete after transcription"
         }
       },
+      "speaker_detection_enabled": {
+        "label": "Sprecher erkennen",
+        "description": "Unterscheidet die Personen in Meetings und importierten Dateien (bis zu 4), auf diesem Computer. Klicken Sie auf die Bezeichnung eines Sprechers, um ihn zu benennen."
+      },
+      "speakerDetection": {
+        "title": "Sprechererkennung",
+        "description": "Gilt für Meetings und die Seite Transkriptionen.",
+        "model": "Modell zur Sprechererkennung",
+        "modelReady": "Heruntergeladen ({{size}} MB). Wird nach jeder Transkription verwendet.",
+        "modelMissing": "Laden Sie es herunter, um Sprecher zu erkennen. Ohne es behalten Transkripte ihre bisherigen Bezeichnungen.",
+        "download": "Herunterladen ({{size}} MB)",
+        "downloading": "Wird heruntergeladen… {{percent}} %",
+        "cancel": "Abbrechen",
+        "delete": "Löschen",
+        "downloadFailed": "Download des Modells zur Sprechererkennung fehlgeschlagen",
+        "deleteFailed": "Das Modell zur Sprechererkennung konnte nicht gelöscht werden"
+      },
       "privacy": "Everything stays on this computer: audio and transcripts are never sent anywhere. Recording people may require their consent: always let the participants know."
     }
   },
@@ -1075,5 +1092,11 @@
         "description": "How long a copy of the audio is kept for playback and new transcriptions. The transcripts are always kept."
       }
     }
+  },
+  "speakers": {
+    "person": "Sprecher {{n}}",
+    "rename": "{{name}} umbenennen",
+    "nameLabel": "Name des Sprechers",
+    "renameError": "Sprecher konnte nicht umbenannt werden"
   }
 }

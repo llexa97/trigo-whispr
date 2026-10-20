@@ -727,6 +727,23 @@
           "delete_after_transcription": "Delete after transcription"
         }
       },
+      "speaker_detection_enabled": {
+        "label": "Распознавать спикеров",
+        "description": "Различает людей на встречах и в импортированных файлах (до 4) на этом компьютере. Нажмите на метку спикера, чтобы дать ему имя."
+      },
+      "speakerDetection": {
+        "title": "Распознавание спикеров",
+        "description": "Применяется к встречам и странице «Транскрипции».",
+        "model": "Модель распознавания спикеров",
+        "modelReady": "Загружена ({{size}} МБ). Используется после каждой транскрипции.",
+        "modelMissing": "Загрузите её, чтобы распознавать спикеров. Без неё транскрипции сохраняют текущие метки.",
+        "download": "Загрузить ({{size}} МБ)",
+        "downloading": "Загрузка… {{percent}}%",
+        "cancel": "Отмена",
+        "delete": "Удалить",
+        "downloadFailed": "Не удалось загрузить модель распознавания спикеров",
+        "deleteFailed": "Не удалось удалить модель распознавания спикеров"
+      },
       "privacy": "Everything stays on this computer: audio and transcripts are never sent anywhere. Recording people may require their consent: always let the participants know."
     }
   },
@@ -1075,5 +1092,11 @@
         "description": "How long a copy of the audio is kept for playback and new transcriptions. The transcripts are always kept."
       }
     }
+  },
+  "speakers": {
+    "person": "Спикер {{n}}",
+    "rename": "Переименовать: {{name}}",
+    "nameLabel": "Имя спикера",
+    "renameError": "Не удалось переименовать спикера"
   }
 }

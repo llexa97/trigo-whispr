@@ -148,6 +148,8 @@ impl JobQueue {
                     if !tm.dictation_busy() {
                         tm.cancel_transcription();
                     }
+                    // No dictation uses the diarizer.
+                    tm.cancel_diarization();
                 }
             }),
         )

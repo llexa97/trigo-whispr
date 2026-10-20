@@ -727,6 +727,23 @@
           "delete_after_transcription": "Delete after transcription"
         }
       },
+      "speaker_detection_enabled": {
+        "label": "识别发言人",
+        "description": "在本机上区分会议和导入文件中的人(最多 4 人)。点击发言人标签即可为其命名。"
+      },
+      "speakerDetection": {
+        "title": "发言人识别",
+        "description": "适用于会议和转写页面。",
+        "model": "发言人识别模型",
+        "modelReady": "已下载({{size}} MB)。在每次转写后使用。",
+        "modelMissing": "下载后即可识别发言人。没有它时,转写稿保留当前标签。",
+        "download": "下载({{size}} MB)",
+        "downloading": "正在下载… {{percent}}%",
+        "cancel": "取消",
+        "delete": "删除",
+        "downloadFailed": "发言人识别模型下载失败",
+        "deleteFailed": "无法删除发言人识别模型"
+      },
       "privacy": "Everything stays on this computer: audio and transcripts are never sent anywhere. Recording people may require their consent: always let the participants know."
     }
   },
@@ -1075,5 +1092,11 @@
         "description": "How long a copy of the audio is kept for playback and new transcriptions. The transcripts are always kept."
       }
     }
+  },
+  "speakers": {
+    "person": "发言人 {{n}}",
+    "rename": "重命名 {{name}}",
+    "nameLabel": "发言人名称",
+    "renameError": "无法重命名发言人"
   }
 }

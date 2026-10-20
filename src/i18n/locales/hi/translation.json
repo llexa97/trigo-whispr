@@ -727,6 +727,23 @@
           "delete_after_transcription": "Delete after transcription"
         }
       },
+      "speaker_detection_enabled": {
+        "label": "वक्ताओं की पहचान करें",
+        "description": "इस कंप्यूटर पर मीटिंग और आयात की गई फ़ाइलों में लोगों (अधिकतम 4) को अलग पहचानता है। नाम देने के लिए किसी वक्ता के लेबल पर क्लिक करें।"
+      },
+      "speakerDetection": {
+        "title": "वक्ता पहचान",
+        "description": "मीटिंग और ट्रांसक्रिप्शन पेज पर लागू होता है।",
+        "model": "वक्ता पहचान मॉडल",
+        "modelReady": "डाउनलोड हो गया ({{size}} MB)। हर ट्रांसक्रिप्शन के बाद उपयोग होता है।",
+        "modelMissing": "वक्ताओं की पहचान के लिए इसे डाउनलोड करें। इसके बिना ट्रांसक्रिप्ट अपने मौजूदा लेबल रखते हैं।",
+        "download": "डाउनलोड करें ({{size}} MB)",
+        "downloading": "डाउनलोड हो रहा है… {{percent}}%",
+        "cancel": "रद्द करें",
+        "delete": "हटाएँ",
+        "downloadFailed": "वक्ता पहचान मॉडल डाउनलोड नहीं हो सका",
+        "deleteFailed": "वक्ता पहचान मॉडल हटाया नहीं जा सका"
+      },
       "privacy": "Everything stays on this computer: audio and transcripts are never sent anywhere. Recording people may require their consent: always let the participants know."
     }
   },
@@ -1075,5 +1092,11 @@
         "description": "How long a copy of the audio is kept for playback and new transcriptions. The transcripts are always kept."
       }
     }
+  },
+  "speakers": {
+    "person": "वक्ता {{n}}",
+    "rename": "{{name}} का नाम बदलें",
+    "nameLabel": "वक्ता का नाम",
+    "renameError": "वक्ता का नाम नहीं बदला जा सका"
   }
 }

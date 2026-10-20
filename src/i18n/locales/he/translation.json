@@ -727,6 +727,23 @@
           "delete_after_transcription": "Delete after transcription"
         }
       },
+      "speaker_detection_enabled": {
+        "label": "זיהוי דוברים",
+        "description": "מבחין בין האנשים בפגישות ובקבצים מיובאים (עד 4) במחשב זה. לחצו על התווית של דובר כדי לתת לו שם."
+      },
+      "speakerDetection": {
+        "title": "זיהוי דוברים",
+        "description": "חל על פגישות ועל דף התמלולים.",
+        "model": "מודל זיהוי דוברים",
+        "modelReady": "הורד ({{size}} MB). בשימוש אחרי כל תמלול.",
+        "modelMissing": "הורידו אותו כדי לזהות דוברים. בלעדיו התמלולים שומרים על התוויות הנוכחיות.",
+        "download": "הורדה ({{size}} MB)",
+        "downloading": "מוריד… {{percent}}%",
+        "cancel": "ביטול",
+        "delete": "מחיקה",
+        "downloadFailed": "הורדת מודל זיהוי הדוברים נכשלה",
+        "deleteFailed": "לא ניתן למחוק את מודל זיהוי הדוברים"
+      },
       "privacy": "Everything stays on this computer: audio and transcripts are never sent anywhere. Recording people may require their consent: always let the participants know."
     }
   },
@@ -1075,5 +1092,11 @@
         "description": "How long a copy of the audio is kept for playback and new transcriptions. The transcripts are always kept."
       }
     }
+  },
+  "speakers": {
+    "person": "דובר {{n}}",
+    "rename": "שינוי שם: {{name}}",
+    "nameLabel": "שם הדובר",
+    "renameError": "לא ניתן לשנות את שם הדובר"
   }
 }

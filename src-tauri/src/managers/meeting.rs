@@ -18,7 +18,7 @@ use crate::meeting::capture::{
     MIC_FILE_NAME, SYSTEM_FILE_NAME,
 };
 use crate::meeting::power::SleepGuard;
-use crate::meeting::transcript::{render_markdown, MeetingInfo, TranscriptFile};
+use crate::meeting::transcript::{render_markdown, write_markdown, MeetingInfo, TranscriptFile};
 use crate::settings::{get_settings, MeetingAudioRetention};
 use crate::tray_i18n::get_tray_translations;
 use anyhow::{anyhow, bail, Result};
@@ -618,7 +618,12 @@ impl MeetingManager {
             return Ok(None);
         };
         let segments = store::segments(&conn, id)?;
-        Ok(Some(MeetingDetail { meeting, segments }))
+        let speaker_names = store::speaker_names(&conn, id)?;
+        Ok(Some(MeetingDetail {
+            meeting,
+            segments,
+            speaker_names,
+        }))
     }
 
     /// The transcript rendered as `transcript.md`.
@@ -626,7 +631,27 @@ impl MeetingManager {
         let conn = self.conn()?;
         let m = store::get(&conn, id)?.ok_or_else(|| anyhow!("Meeting {id} not found"))?;
         let segments = store::segments(&conn, id)?;
-        Ok(render_markdown(&meeting_info(m), &segments))
+        let names = store::speaker_names(&conn, id)?;
+        Ok(render_markdown(&meeting_info(m), &segments, &names))
+    }
+
+    /// Names a person the diarizer found in the meeting (an empty name goes
+    /// back to "Intervenant N"), and rewrites `transcript.md` to match.
+    pub fn rename_speaker(&self, id: &str, speaker_id: u32, name: &str) -> Result<()> {
+        let conn = self.conn()?;
+        let meeting = store::get(&conn, id)?.ok_or_else(|| anyhow!("Meeting {id} not found"))?;
+        store::set_speaker_name(&conn, id, speaker_id, name.trim())?;
+        let segments = store::segments(&conn, id)?;
+        if !segments.is_empty() {
+            let names = store::speaker_names(&conn, id)?;
+            let folder_path = self.meetings_dir.join(&meeting.folder);
+            if let Err(e) = write_markdown(&folder_path, &meeting_info(meeting), &segments, &names)
+            {
+                warn!("Failed to rewrite transcript.md of meeting {id}: {e:#}");
+            }
+        }
+        self.emit_meeting(id, false);
+        Ok(())
     }
 
     pub fn rename(&self, id: &str, title: &str) -> Result<()> {

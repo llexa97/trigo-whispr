@@ -727,6 +727,23 @@
           "delete_after_transcription": "Supprimer après la transcription"
         }
       },
+      "speaker_detection_enabled": {
+        "label": "Détecter les intervenants",
+        "description": "Distingue les personnes dans les réunions et les fichiers importés (jusqu’à 4), sur cet ordinateur. Cliquez sur le libellé d’un intervenant pour le nommer."
+      },
+      "speakerDetection": {
+        "title": "Détection des intervenants",
+        "description": "S’applique aux réunions et à la page Transcriptions.",
+        "model": "Modèle de détection des intervenants",
+        "modelReady": "Téléchargé ({{size}} Mo). Utilisé après chaque transcription.",
+        "modelMissing": "Téléchargez-le pour détecter les intervenants. Sans lui, les transcriptions gardent leurs libellés actuels.",
+        "download": "Télécharger ({{size}} Mo)",
+        "downloading": "Téléchargement… {{percent}} %",
+        "cancel": "Annuler",
+        "delete": "Supprimer",
+        "downloadFailed": "Échec du téléchargement du modèle de détection des intervenants",
+        "deleteFailed": "Impossible de supprimer le modèle de détection des intervenants"
+      },
       "privacy": "Tout reste sur cet ordinateur : l'audio et les transcriptions ne sont jamais envoyés nulle part. Enregistrer des personnes peut nécessiter leur consentement : prévenez toujours les participants."
     }
   },
@@ -1075,5 +1092,11 @@
         "description": "Durée de conservation d'une copie de l'audio, pour la lecture et les nouvelles transcriptions. Les textes sont toujours conservés."
       }
     }
+  },
+  "speakers": {
+    "person": "Intervenant {{n}}",
+    "rename": "Renommer {{name}}",
+    "nameLabel": "Nom de l’intervenant",
+    "renameError": "Impossible de renommer l’intervenant"
   }
 }

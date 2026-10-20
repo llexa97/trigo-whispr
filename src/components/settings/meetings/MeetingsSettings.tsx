@@ -15,6 +15,7 @@ import { SettingsGroup } from "../../ui/SettingsGroup";
 import { ToggleSwitch } from "../../ui/ToggleSwitch";
 import { ShortcutInput } from "../ShortcutInput";
 import { MeetingCaptureTest } from "../debug/MeetingCaptureTest";
+import { SpeakerDetectionSettings } from "./SpeakerDetectionSettings";
 
 const AUTO_STOP_MODES: MeetingAutoStop[] = ["ask", "auto", "never"];
 const RETENTIONS: MeetingAudioRetention[] = [
@@ -155,6 +156,8 @@ export const MeetingsSettings: React.FC = () => {
         <ShortcutInput shortcutId="toggle_meeting_recording" grouped={true} />
         {osType === "macos" && <MeetingCaptureTest />}
       </SettingsGroup>
+
+      <SpeakerDetectionSettings />
 
       <div className="px-4 flex items-start gap-2 text-xs text-mid-gray">
         <ShieldCheck className="w-4 h-4 shrink-0" aria-hidden="true" />

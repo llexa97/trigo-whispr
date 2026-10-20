@@ -36,6 +36,15 @@ pub fn track_samples(path: &Path) -> Result<u64> {
     Ok(u64::from(reader.duration()))
 }
 
+/// A whole track, as f32 in [-1, 1]. For the diarizer, which takes the
+/// recording in one run; it runs in the worker process, so the app itself
+/// never holds a long track.
+pub fn read_track(path: &Path) -> Result<Vec<f32>> {
+    let mut reader = open(path)?;
+    let samples = reader.duration() as usize;
+    read_block(&mut reader, samples)
+}
+
 fn open(path: &Path) -> Result<WavReader<BufReader<File>>> {
     let reader =
         WavReader::open(path).with_context(|| format!("Failed to open {}", path.display()))?;

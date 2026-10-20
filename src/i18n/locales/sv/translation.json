@@ -727,6 +727,23 @@
           "delete_after_transcription": "Delete after transcription"
         }
       },
+      "speaker_detection_enabled": {
+        "label": "Identifiera talare",
+        "description": "Skiljer personerna åt i möten och importerade filer (upp till 4), på den här datorn. Klicka på en talares etikett för att namnge den."
+      },
+      "speakerDetection": {
+        "title": "Talaridentifiering",
+        "description": "Gäller möten och sidan Transkriptioner.",
+        "model": "Modell för talaridentifiering",
+        "modelReady": "Nedladdad ({{size}} MB). Används efter varje transkription.",
+        "modelMissing": "Ladda ner den för att identifiera talare. Utan den behåller transkriptioner sina nuvarande etiketter.",
+        "download": "Ladda ner ({{size}} MB)",
+        "downloading": "Laddar ner… {{percent}} %",
+        "cancel": "Avbryt",
+        "delete": "Ta bort",
+        "downloadFailed": "Det gick inte att ladda ner modellen för talaridentifiering",
+        "deleteFailed": "Det gick inte att ta bort modellen för talaridentifiering"
+      },
       "privacy": "Everything stays on this computer: audio and transcripts are never sent anywhere. Recording people may require their consent: always let the participants know."
     }
   },
@@ -1075,5 +1092,11 @@
         "description": "How long a copy of the audio is kept for playback and new transcriptions. The transcripts are always kept."
       }
     }
+  },
+  "speakers": {
+    "person": "Talare {{n}}",
+    "rename": "Byt namn på {{name}}",
+    "nameLabel": "Talarens namn",
+    "renameError": "Det gick inte att byta namn på talaren"
   }
 }

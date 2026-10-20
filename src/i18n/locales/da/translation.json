@@ -727,6 +727,23 @@
           "delete_after_transcription": "Delete after transcription"
         }
       },
+      "speaker_detection_enabled": {
+        "label": "Genkend talere",
+        "description": "Skelner mellem personerne i møder og importerede filer (op til 4) på denne computer. Klik på en talers etiket for at navngive vedkommende."
+      },
+      "speakerDetection": {
+        "title": "Talergenkendelse",
+        "description": "Gælder møder og siden Transskriptioner.",
+        "model": "Model til talergenkendelse",
+        "modelReady": "Downloadet ({{size}} MB). Bruges efter hver transskription.",
+        "modelMissing": "Download den for at genkende talere. Uden den beholder transskriptioner deres nuværende etiketter.",
+        "download": "Download ({{size}} MB)",
+        "downloading": "Downloader… {{percent}} %",
+        "cancel": "Annuller",
+        "delete": "Slet",
+        "downloadFailed": "Download af modellen til talergenkendelse mislykkedes",
+        "deleteFailed": "Kunne ikke slette modellen til talergenkendelse"
+      },
       "privacy": "Everything stays on this computer: audio and transcripts are never sent anywhere. Recording people may require their consent: always let the participants know."
     }
   },
@@ -1075,5 +1092,11 @@
         "description": "How long a copy of the audio is kept for playback and new transcriptions. The transcripts are always kept."
       }
     }
+  },
+  "speakers": {
+    "person": "Taler {{n}}",
+    "rename": "Omdøb {{name}}",
+    "nameLabel": "Talerens navn",
+    "renameError": "Kunne ikke omdøbe taleren"
   }
 }

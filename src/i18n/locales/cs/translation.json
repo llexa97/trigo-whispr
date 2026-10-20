@@ -727,6 +727,23 @@
           "delete_after_transcription": "Delete after transcription"
         }
       },
+      "speaker_detection_enabled": {
+        "label": "Rozpoznávat mluvčí",
+        "description": "Rozliší osoby na schůzkách a v importovaných souborech (až 4), na tomto počítači. Kliknutím na označení mluvčího mu dáte jméno."
+      },
+      "speakerDetection": {
+        "title": "Rozpoznávání mluvčích",
+        "description": "Platí pro schůzky a stránku Přepisy.",
+        "model": "Model rozpoznávání mluvčích",
+        "modelReady": "Staženo ({{size}} MB). Používá se po každém přepisu.",
+        "modelMissing": "Stáhněte jej pro rozpoznávání mluvčích. Bez něj si přepisy ponechají současná označení.",
+        "download": "Stáhnout ({{size}} MB)",
+        "downloading": "Stahování… {{percent}} %",
+        "cancel": "Zrušit",
+        "delete": "Smazat",
+        "downloadFailed": "Stažení modelu rozpoznávání mluvčích se nezdařilo",
+        "deleteFailed": "Model rozpoznávání mluvčích se nepodařilo smazat"
+      },
       "privacy": "Everything stays on this computer: audio and transcripts are never sent anywhere. Recording people may require their consent: always let the participants know."
     }
   },
@@ -1075,5 +1092,11 @@
         "description": "How long a copy of the audio is kept for playback and new transcriptions. The transcripts are always kept."
       }
     }
+  },
+  "speakers": {
+    "person": "Mluvčí {{n}}",
+    "rename": "Přejmenovat {{name}}",
+    "nameLabel": "Jméno mluvčího",
+    "renameError": "Mluvčího se nepodařilo přejmenovat"
   }
 }

@@ -9,6 +9,7 @@ mod chinese_script;
 pub mod cli;
 mod clipboard;
 mod commands;
+pub mod diarization;
 pub mod engine_supervisor;
 mod helpers;
 mod input;
@@ -872,6 +873,10 @@ fn specta_builder() -> Builder<tauri::Wry> {
             commands::models::set_active_model,
             commands::models::get_current_model,
             commands::models::get_long_form_model,
+            commands::models::get_diarization_model_status,
+            commands::models::download_diarization_model,
+            commands::models::cancel_diarization_model_download,
+            commands::models::delete_diarization_model,
             commands::models::set_long_form_model,
             commands::models::get_transcription_model_status,
             commands::models::is_model_loading,
@@ -917,6 +922,7 @@ fn specta_builder() -> Builder<tauri::Wry> {
             commands::meeting::open_meeting_folder,
             commands::meeting::get_meeting,
             commands::meeting::rename_meeting,
+            commands::meeting::rename_meeting_speaker,
             commands::meeting::delete_meeting,
             commands::meeting::get_meeting_audio_paths,
             commands::meeting::retry_meeting_transcription,
@@ -926,6 +932,7 @@ fn specta_builder() -> Builder<tauri::Wry> {
             commands::meeting::change_show_meeting_indicator_setting,
             commands::meeting::change_meeting_consent_reminder_setting,
             commands::meeting::change_meeting_detection_enabled_setting,
+            commands::meeting::change_speaker_detection_enabled_setting,
             commands::meeting::change_meeting_detection_apps_setting,
             commands::meeting::change_meeting_auto_start_setting,
             commands::meeting::change_meeting_auto_stop_setting,
@@ -944,6 +951,7 @@ fn specta_builder() -> Builder<tauri::Wry> {
             commands::file_transcription::get_file_transcription,
             commands::file_transcription::get_file_transcription_audio_path,
             commands::file_transcription::retry_file_transcription,
+            commands::file_transcription::rename_file_transcription_speaker,
             commands::file_transcription::cancel_file_transcription,
             commands::file_transcription::delete_file_transcription,
             commands::file_transcription::open_file_transcription_folder,
@@ -963,6 +971,8 @@ fn specta_builder() -> Builder<tauri::Wry> {
             managers::file_transcription::FileTranscriptionsUpdated,
             managers::transcription::file::FileTranscriptionProgress,
             commands::file_transcription::FilesImported,
+            managers::model::diarization::DiarizationModelChanged,
+            managers::model::diarization::DiarizationModelProgress,
         ])
 }
 

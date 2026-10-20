@@ -27,6 +27,7 @@ use super::TranscriptionManager;
 use super::{effective_language_for_model, post_process_transcription_text, run_setup};
 use crate::audio_toolkit::audio::file::{decode_to_wav, DecodeError, DecodeHooks};
 use crate::audio_toolkit::constants::WHISPER_SAMPLE_RATE;
+use crate::diarization::{renumber_by_appearance, speakers_of};
 use crate::engine_supervisor::EngineError;
 use crate::managers::file_transcription::store::{
     FileTranscriptionErrorCode, FileTranscriptionSegment, FileTranscriptionStatus,
@@ -199,7 +200,7 @@ impl TranscriptionManager {
         // meetings' pause grouping: a monologue would otherwise be one
         // segment, useless as subtitles.
         let output_language = setup.output_language(&settings, track.language.clone());
-        let segments = track
+        let mut segments: Vec<FileTranscriptionSegment> = track
             .segments
             .iter()
             .filter_map(|segment| {
@@ -219,8 +220,21 @@ impl TranscriptionManager {
                 start_ms: segment.start_ms as i64,
                 end_ms: segment.end_ms as i64,
                 text,
+                speaker_id: None,
             })
             .collect();
+        // Segment by segment: a sentence is rarely shared by two people.
+        if let Some(turns) = self.diarize(wav, cancelled)? {
+            let spans: Vec<(u64, u64)> = segments
+                .iter()
+                .map(|s| (s.start_ms.max(0) as u64, s.end_ms.max(0) as u64))
+                .collect();
+            let mut speakers = speakers_of(&turns, &spans);
+            renumber_by_appearance(&mut speakers);
+            for (segment, speaker_id) in segments.iter_mut().zip(speakers) {
+                segment.speaker_id = speaker_id;
+            }
+        }
         Ok(FileTranscript {
             segments,
             model_id,

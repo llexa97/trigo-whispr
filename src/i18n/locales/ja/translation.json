@@ -727,6 +727,23 @@
           "delete_after_transcription": "Delete after transcription"
         }
       },
+      "speaker_detection_enabled": {
+        "label": "話者を識別",
+        "description": "会議とインポートしたファイルの人物(最大 4 人)をこのコンピューター上で区別します。話者のラベルをクリックすると名前を付けられます。"
+      },
+      "speakerDetection": {
+        "title": "話者識別",
+        "description": "会議と文字起こしページに適用されます。",
+        "model": "話者識別モデル",
+        "modelReady": "ダウンロード済み ({{size}} MB)。各文字起こしの後に使用されます。",
+        "modelMissing": "話者を識別するにはダウンロードしてください。ない場合、文字起こしは現在のラベルのままです。",
+        "download": "ダウンロード ({{size}} MB)",
+        "downloading": "ダウンロード中… {{percent}}%",
+        "cancel": "キャンセル",
+        "delete": "削除",
+        "downloadFailed": "話者識別モデルのダウンロードに失敗しました",
+        "deleteFailed": "話者識別モデルを削除できませんでした"
+      },
       "privacy": "Everything stays on this computer: audio and transcripts are never sent anywhere. Recording people may require their consent: always let the participants know."
     }
   },
@@ -1075,5 +1092,11 @@
         "description": "How long a copy of the audio is kept for playback and new transcriptions. The transcripts are always kept."
       }
     }
+  },
+  "speakers": {
+    "person": "話者 {{n}}",
+    "rename": "{{name}} の名前を変更",
+    "nameLabel": "話者の名前",
+    "renameError": "話者の名前を変更できませんでした"
   }
 }

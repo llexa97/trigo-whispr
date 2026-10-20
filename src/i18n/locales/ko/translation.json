@@ -727,6 +727,23 @@
           "delete_after_transcription": "Delete after transcription"
         }
       },
+      "speaker_detection_enabled": {
+        "label": "화자 구분",
+        "description": "이 컴퓨터에서 회의와 가져온 파일의 사람들(최대 4명)을 구분합니다. 화자 라벨을 클릭하면 이름을 지정할 수 있습니다."
+      },
+      "speakerDetection": {
+        "title": "화자 구분",
+        "description": "회의와 전사 페이지에 적용됩니다.",
+        "model": "화자 구분 모델",
+        "modelReady": "다운로드됨({{size}}MB). 각 전사 후에 사용됩니다.",
+        "modelMissing": "화자를 구분하려면 다운로드하세요. 없으면 전사본은 현재 라벨을 유지합니다.",
+        "download": "다운로드({{size}}MB)",
+        "downloading": "다운로드 중… {{percent}}%",
+        "cancel": "취소",
+        "delete": "삭제",
+        "downloadFailed": "화자 구분 모델을 다운로드하지 못했습니다",
+        "deleteFailed": "화자 구분 모델을 삭제할 수 없습니다"
+      },
       "privacy": "Everything stays on this computer: audio and transcripts are never sent anywhere. Recording people may require their consent: always let the participants know."
     }
   },
@@ -1075,5 +1092,11 @@
         "description": "How long a copy of the audio is kept for playback and new transcriptions. The transcripts are always kept."
       }
     }
+  },
+  "speakers": {
+    "person": "화자 {{n}}",
+    "rename": "{{name}} 이름 바꾸기",
+    "nameLabel": "화자 이름",
+    "renameError": "화자 이름을 바꿀 수 없습니다"
   }
 }

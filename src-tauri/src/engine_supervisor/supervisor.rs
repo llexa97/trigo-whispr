@@ -30,7 +30,9 @@ use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{mpsc, Arc, Mutex, MutexGuard};
 use std::thread;
 use std::time::{Duration, Instant};
-use transcribe_cpp::{Backend, RunOptions, StreamOptions, StreamText, StreamUpdate, Transcript};
+use transcribe_cpp::{
+    Backend, RunOptions, SpeakerSegment, StreamOptions, StreamText, StreamUpdate, Transcript,
+};
 
 /// Spawn, backend init and device listing. Listing first opens the GPU,
 /// which on macOS compiles ggml's Metal library when the system shader cache
@@ -205,6 +207,12 @@ enum Command {
     },
     StreamReset {
         id: u64,
+    },
+    Diarize {
+        wav: PathBuf,
+        samples: usize,
+        epoch: u64,
+        reply: Reply<Result<Vec<SpeakerSegment>, EngineError>>,
     },
 }
 
@@ -426,6 +434,25 @@ impl EngineSupervisor {
         self.ask(|reply| Command::Transcribe {
             pcm,
             run,
+            epoch,
+            reply,
+        })
+        .unwrap_or_else(|| Err(engine_stopped()))
+    }
+
+    /// Diarize a 16 kHz mono WAV of `samples` samples with the loaded
+    /// diarization model, cancelled by any cancel since `mark`. The worker
+    /// reads the file. A crash or hang is retried once, like a transcription.
+    pub fn diarize_since(
+        &self,
+        mark: CancelMark,
+        wav: PathBuf,
+        samples: usize,
+    ) -> Result<Vec<SpeakerSegment>, EngineError> {
+        let epoch = mark.0;
+        self.ask(|reply| Command::Diarize {
+            wav,
+            samples,
             epoch,
             reply,
         })
@@ -681,6 +708,20 @@ impl Owner {
                         self.end_stream();
                     }
                 }
+                Command::Diarize {
+                    wav,
+                    samples,
+                    epoch,
+                    reply,
+                } => {
+                    let request = Request::Diarize { wav };
+                    let _ = reply.send(self.run_batch(&request, None, samples, epoch).and_then(
+                        |response| match response {
+                            Response::Speakers(turns) => Ok(turns),
+                            other => Err(unexpected(&other).into()),
+                        },
+                    ));
+                }
             }
         }
         // Every handle is gone.
@@ -876,19 +917,35 @@ impl Owner {
         result
     }
 
-    /// Retry once after a crash or hang, on CPU if it happened on the GPU.
-    /// Not after a hang on CPU, and never for an explicitly chosen device.
     fn transcribe(
         &mut self,
         pcm: &[f32],
         run: &RunOptions,
         epoch: u64,
     ) -> Result<Transcript, EngineError> {
-        // A stream left open would make the worker refuse the run.
-        self.end_stream();
         let request = Request::Run {
             options: run.clone(),
         };
+        match self.run_batch(&request, Some(pcm), pcm.len(), epoch)? {
+            Response::Transcript(transcript) => Ok(transcript),
+            other => Err(unexpected(&other).into()),
+        }
+    }
+
+    /// One batch request on `samples` of audio (`pcm`, or a WAV the worker
+    /// reads itself), cancellable since `epoch`. Retried once after a crash
+    /// or hang, on CPU if it happened on the GPU. Not after a hang on CPU,
+    /// and never for an explicitly chosen device.
+    fn run_batch(
+        &mut self,
+        request: &Request,
+        pcm: Option<&[f32]>,
+        samples: usize,
+        epoch: u64,
+    ) -> Result<Response, EngineError> {
+        // A stream left open would make the worker refuse the run.
+        self.end_stream();
+        let what = request_name(request);
         let mut retried = false;
         loop {
             if self.shared.cancelled_since(epoch) {
@@ -897,18 +954,17 @@ impl Owner {
             // A respawn here runs under the load deadline; the run's own
             // deadline starts only once the model is loaded.
             self.ensure_worker()?;
-            let deadline = self.deadlines().run(pcm.len());
-            match self.call_work(&request, Some(pcm), deadline, epoch) {
-                Ok(Response::Transcript(transcript)) => return Ok(transcript),
-                Ok(other) => return Err(unexpected(&other).into()),
+            let deadline = self.deadlines().run(samples);
+            match self.call_work(request, pcm, deadline, epoch) {
+                Ok(response) => return Ok(response),
                 Err(failure) if failure.worker_lost() => {
-                    let on_gpu = self.worker_lost("transcription", &failure);
+                    let on_gpu = self.worker_lost(what, &failure);
                     let pinned = self.spec.as_ref().is_some_and(LoadSpec::pinned);
                     let hung_on_cpu = matches!(failure, Failure::Hung(_)) && !on_gpu;
                     if retried || pinned || hung_on_cpu {
                         return Err(failure.into());
                     }
-                    warn!("Retrying the transcription in a fresh worker");
+                    warn!("Retrying the {what} in a fresh worker");
                     retried = true;
                 }
                 Err(failure) => return Err(failure.into()),
@@ -1444,6 +1500,7 @@ fn request_name(request: &Request) -> &'static str {
         Request::Feed => "stream feed",
         Request::Finalize { .. } => "stream finalize",
         Request::StreamReset => "stream reset",
+        Request::Diarize { .. } => "diarization",
     }
 }
 
@@ -1967,6 +2024,51 @@ mod tests {
         assert!(!engine.shared.gpu_unavailable());
         engine.transcribe(pcm, RunOptions::default()).unwrap();
         set_fault(None, false);
+    }
+
+    /// A diarization model loads in the worker and finds the speakers of a
+    /// WAV it reads itself. Needs `TRIGO_WHISPR_TEST_DIARIZE_MODEL` (the
+    /// Sortformer GGUF) and `TRIGO_WHISPR_TEST_DIARIZE_WAV` (16 kHz mono, two
+    /// or more voices).
+    #[test]
+    #[ignore]
+    fn diarizes_a_wav_in_a_cpu_worker() {
+        let engine = EngineSupervisor::new(false);
+        let info = engine
+            .load(LoadSpec {
+                path: env_path("TRIGO_WHISPR_TEST_DIARIZE_MODEL"),
+                backend: Backend::Cpu,
+                device: DeviceSelector::Auto,
+            })
+            .unwrap();
+        assert!(info.diarizer);
+        assert!(!info.on_gpu);
+        let wav = env_path("TRIGO_WHISPR_TEST_DIARIZE_WAV");
+        let samples = crate::meeting::track::track_samples(&wav).unwrap() as usize;
+        let t = Instant::now();
+        let turns = engine
+            .diarize_since(engine.cancel_mark(), wav, samples)
+            .unwrap();
+        println!(
+            "{} turns in {:?} for {:.1}s of audio",
+            turns.len(),
+            t.elapsed(),
+            samples as f64 / SAMPLE_RATE
+        );
+        for turn in &turns {
+            println!("  [{} -> {}] S{}", turn.t0_ms, turn.t1_ms, turn.speaker_id);
+        }
+        let mut speakers: Vec<i32> = turns.iter().map(|t| t.speaker_id).collect();
+        speakers.sort_unstable();
+        speakers.dedup();
+        assert!(
+            speakers.len() >= 2,
+            "expected several speakers: {speakers:?}"
+        );
+        // A transcription request is refused, not crashed on.
+        assert!(engine
+            .transcribe(vec![0.0; 16_000], RunOptions::default())
+            .is_err());
     }
 
     /// A worker hung in native code still exits when its parent goes away

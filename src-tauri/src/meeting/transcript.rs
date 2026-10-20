@@ -13,6 +13,7 @@ use transcribe_cpp::Transcript;
 
 use super::crosstalk::{drop_echoed_segments, split_crosstalk, CrosstalkOptions};
 use crate::audio_toolkit::chunking::join_transcripts;
+use crate::diarization::{renumber_by_appearance, speakers_of, SpeakerName, Turn};
 
 /// A pause longer than this between two pieces of one speaker starts a new
 /// segment.
@@ -117,6 +118,31 @@ pub fn speaker_label(speaker: Speaker) -> &'static str {
     }
 }
 
+/// A segment's label in the Markdown export: the person's name, or
+/// "Intervenant N", when the diarizer told people apart.
+pub fn segment_label(segment: &MeetingSegment, names: &[SpeakerName]) -> String {
+    match segment.speaker_id {
+        Some(id) => person_label(id, names),
+        None => speaker_label(segment.speaker).to_string(),
+    }
+}
+
+/// A diarized person's label: the name the user gave, or "Intervenant N".
+pub fn person_label(speaker_id: u32, names: &[SpeakerName]) -> String {
+    names
+        .iter()
+        .find(|n| n.speaker_id == speaker_id)
+        .map(|n| n.name.clone())
+        .unwrap_or_else(|| format!("Intervenant {speaker_id}"))
+}
+
+/// Speaker turns found by the diarizer on each track, when it ran.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct TrackTurns<'a> {
+    pub mic: Option<&'a [Turn]>,
+    pub system: Option<&'a [Turn]>,
+}
+
 /// Merges the tracks into one chronological transcript. The mic's echo of
 /// the system track is removed first, word by word when both tracks have
 /// word timestamps, else segment by segment. Without a system track the mic
@@ -126,21 +152,41 @@ pub fn merge_tracks(
     system: Option<&TrackTranscript>,
     opts: &CrosstalkOptions,
 ) -> Vec<MeetingSegment> {
+    merge_tracks_with_speakers(mic, system, opts, TrackTurns::default())
+}
+
+/// [`merge_tracks`], with the people in the room or on the call told apart
+/// by the diarizer's `turns`: the system track's ("Others"), or the mic's
+/// when there is no system track. The user's own mic is never diarized.
+pub fn merge_tracks_with_speakers(
+    mic: Option<&TrackTranscript>,
+    system: Option<&TrackTranscript>,
+    opts: &CrosstalkOptions,
+    turns: TrackTurns<'_>,
+) -> Vec<MeetingSegment> {
     let mut pieces: Vec<Piece> = Vec::new();
     match (mic, system) {
         (Some(mic), Some(system)) => {
             if mic.has_word_timestamps() && system.has_word_timestamps() {
                 let split = split_crosstalk(&mic.words, &system.words, opts);
                 pieces.extend(words_as(Speaker::Me, &split.you_words));
-                pieces.extend(words_as(Speaker::Others, &split.far_words));
+                pieces.extend(diarized(
+                    words_as(Speaker::Others, &split.far_words).collect(),
+                    turns.system,
+                ));
             } else {
                 let kept = drop_echoed_segments(&mic.segments, &system.segments, opts);
                 pieces.extend(segments_as(Speaker::Me, &kept));
-                pieces.extend(segments_as(Speaker::Others, &system.segments));
+                pieces.extend(diarized(
+                    segments_as(Speaker::Others, &system.segments).collect(),
+                    turns.system,
+                ));
             }
         }
-        (Some(mic), None) => pieces.extend(track_as(Speaker::MicOnly, mic)),
-        (None, Some(system)) => pieces.extend(track_as(Speaker::Others, system)),
+        (Some(mic), None) => pieces.extend(diarized(track_as(Speaker::MicOnly, mic), turns.mic)),
+        (None, Some(system)) => {
+            pieces.extend(diarized(track_as(Speaker::Others, system), turns.system))
+        }
         (None, None) => {}
     }
     group(pieces)
@@ -149,6 +195,8 @@ pub fn merge_tracks(
 /// A word or a model segment, attributed.
 struct Piece {
     speaker: Speaker,
+    /// The person, among the track's, when the track was diarized.
+    speaker_id: Option<u32>,
     start_ms: u64,
     end_ms: u64,
     text: String,
@@ -157,6 +205,7 @@ struct Piece {
 fn words_as(speaker: Speaker, words: &[TimedWord]) -> impl Iterator<Item = Piece> + '_ {
     words.iter().map(move |w| Piece {
         speaker,
+        speaker_id: None,
         start_ms: w.start_ms,
         end_ms: w.end_ms,
         text: w.text.clone(),
@@ -166,6 +215,7 @@ fn words_as(speaker: Speaker, words: &[TimedWord]) -> impl Iterator<Item = Piece
 fn segments_as(speaker: Speaker, segments: &[TimedSegment]) -> impl Iterator<Item = Piece> + '_ {
     segments.iter().map(move |s| Piece {
         speaker,
+        speaker_id: None,
         start_ms: s.start_ms,
         end_ms: s.end_ms,
         text: s.text.clone(),
@@ -180,11 +230,25 @@ fn track_as(speaker: Speaker, track: &TrackTranscript) -> Vec<Piece> {
     }
 }
 
+/// One track's pieces, in time order, each given its person from `turns`.
+fn diarized(mut pieces: Vec<Piece>, turns: Option<&[Turn]>) -> Vec<Piece> {
+    let Some(turns) = turns else {
+        return pieces;
+    };
+    pieces.sort_by_key(|p| (p.start_ms, p.end_ms));
+    let spans: Vec<(u64, u64)> = pieces.iter().map(|p| (p.start_ms, p.end_ms)).collect();
+    for (piece, speaker_id) in pieces.iter_mut().zip(speakers_of(turns, &spans)) {
+        piece.speaker_id = speaker_id;
+    }
+    pieces
+}
+
 /// Consecutive pieces of one speaker, in time order, joined into segments; a
 /// change of speaker or a pause over [`MAX_PAUSE_MS`] starts a new one.
 fn group(mut pieces: Vec<Piece>) -> Vec<MeetingSegment> {
     struct Group {
         speaker: Speaker,
+        speaker_id: Option<u32>,
         start_ms: u64,
         end_ms: u64,
         texts: Vec<String>,
@@ -196,6 +260,7 @@ fn group(mut pieces: Vec<Piece>) -> Vec<MeetingSegment> {
         match groups.last_mut() {
             Some(last)
                 if last.speaker == piece.speaker
+                    && last.speaker_id == piece.speaker_id
                     && piece.start_ms.saturating_sub(last.end_ms) <= MAX_PAUSE_MS =>
             {
                 last.end_ms = last.end_ms.max(piece.end_ms);
@@ -203,6 +268,7 @@ fn group(mut pieces: Vec<Piece>) -> Vec<MeetingSegment> {
             }
             _ => groups.push(Group {
                 speaker: piece.speaker,
+                speaker_id: piece.speaker_id,
                 start_ms: piece.start_ms,
                 end_ms: piece.end_ms,
                 texts: vec![piece.text],
@@ -214,6 +280,7 @@ fn group(mut pieces: Vec<Piece>) -> Vec<MeetingSegment> {
         .map(|g| MeetingSegment {
             idx: 0,
             speaker: g.speaker,
+            speaker_id: g.speaker_id,
             start_ms: g.start_ms as i64,
             end_ms: g.end_ms as i64,
             text: join_transcripts(&g.texts),
@@ -223,13 +290,21 @@ fn group(mut pieces: Vec<Piece>) -> Vec<MeetingSegment> {
 }
 
 /// Drops empty segments and numbers the rest in order.
+/// People (diarized speakers) are numbered by first appearance among the
+/// segments kept, so none is skipped.
 pub fn renumber(segments: Vec<MeetingSegment>) -> Vec<MeetingSegment> {
-    segments
+    let kept: Vec<MeetingSegment> = segments
         .into_iter()
         .filter(|s| !s.text.is_empty())
+        .collect();
+    let mut speaker_ids: Vec<Option<u32>> = kept.iter().map(|s| s.speaker_id).collect();
+    renumber_by_appearance(&mut speaker_ids);
+    kept.into_iter()
+        .zip(speaker_ids)
         .enumerate()
-        .map(|(idx, s)| MeetingSegment {
+        .map(|(idx, (s, speaker_id))| MeetingSegment {
             idx: idx as i64,
+            speaker_id,
             ..s
         })
         .collect()
@@ -290,7 +365,11 @@ fn format_date(epoch_ms: i64) -> String {
 }
 
 /// `transcript.md`.
-pub fn render_markdown(meeting: &MeetingInfo, segments: &[MeetingSegment]) -> String {
+pub fn render_markdown(
+    meeting: &MeetingInfo,
+    segments: &[MeetingSegment],
+    names: &[SpeakerName],
+) -> String {
     let mut header = vec![
         format_date(meeting.started_at),
         format_duration(meeting.duration_ms),
@@ -303,7 +382,7 @@ pub fn render_markdown(meeting: &MeetingInfo, segments: &[MeetingSegment]) -> St
         md.push_str(&format!(
             "\n**[{}] {} :** {}\n",
             format_timestamp(segment.start_ms.max(0) as u64),
-            speaker_label(segment.speaker),
+            segment_label(segment, names),
             segment.text
         ));
     }
@@ -311,11 +390,22 @@ pub fn render_markdown(meeting: &MeetingInfo, segments: &[MeetingSegment]) -> St
 }
 
 /// Writes `transcript.json` and `transcript.md` into the meeting's folder,
-/// each replaced whole so a crash never leaves half a file.
+/// each replaced whole so a crash never leaves half a file. A new
+/// transcript's people have no names yet.
 pub fn write_transcript_files(dir: &Path, file: &TranscriptFile) -> Result<()> {
     let json = serde_json::to_string_pretty(file)?;
     write_replacing(&dir.join(TRANSCRIPT_JSON), json.as_bytes())?;
-    let md = render_markdown(&file.meeting, &file.segments);
+    write_markdown(dir, &file.meeting, &file.segments, &[])
+}
+
+/// Writes `transcript.md` into the meeting's folder, replaced whole.
+pub fn write_markdown(
+    dir: &Path,
+    meeting: &MeetingInfo,
+    segments: &[MeetingSegment],
+    names: &[SpeakerName],
+) -> Result<()> {
+    let md = render_markdown(meeting, segments, names);
     write_replacing(&dir.join(TRANSCRIPT_MD), md.as_bytes())
 }
 
@@ -486,6 +576,143 @@ mod tests {
         assert_eq!(merged.len(), 1);
     }
 
+    fn turn(start_ms: u64, end_ms: u64, speaker: u32) -> Turn {
+        Turn {
+            start_ms,
+            end_ms,
+            speaker,
+        }
+    }
+
+    fn people(segments: &[MeetingSegment]) -> Vec<(Speaker, Option<u32>, &str)> {
+        segments
+            .iter()
+            .map(|s| (s.speaker, s.speaker_id, s.text.as_str()))
+            .collect()
+    }
+
+    #[test]
+    fn diarized_people_on_the_call_get_their_own_segments() {
+        let mic = track_of_words(vec![tw("Bonjour", 0, 400)]);
+        // Two people alternate without a pause long enough to split them.
+        let system = track_of_words(vec![
+            tw(" Salut", 1_000, 1_300),
+            tw(" Alice", 1_350, 1_700),
+            tw(" Oui", 2_000, 2_200),
+            tw(" Bob", 2_250, 2_500),
+            tw(" encore", 2_600, 2_900),
+        ]);
+        let turns = [
+            turn(900, 1_800, 3),
+            turn(1_900, 2_550, 1),
+            turn(2_550, 3_000, 3),
+        ];
+        let merged = merge_tracks_with_speakers(
+            Some(&mic),
+            Some(&system),
+            &CrosstalkOptions::default(),
+            TrackTurns {
+                mic: None,
+                system: Some(&turns),
+            },
+        );
+        // Numbered by first appearance: the diarizer's 3 is the first one.
+        assert_eq!(
+            people(&merged),
+            vec![
+                (Speaker::Me, None, "Bonjour"),
+                (Speaker::Others, Some(1), "Salut Alice"),
+                (Speaker::Others, Some(2), "Oui Bob"),
+                (Speaker::Others, Some(1), "encore"),
+            ]
+        );
+    }
+
+    #[test]
+    fn people_are_renumbered_once_emptied_segments_are_dropped() {
+        // The first person only said a filler word, removed by clean-up.
+        let segment = |idx, speaker_id, text: &str| MeetingSegment {
+            idx,
+            speaker: Speaker::Others,
+            speaker_id: Some(speaker_id),
+            start_ms: idx * 1_000,
+            end_ms: idx * 1_000 + 500,
+            text: text.into(),
+        };
+        let kept = renumber(vec![
+            segment(0, 1, ""),
+            segment(1, 2, "Bonjour"),
+            segment(2, 3, "Salut"),
+            segment(3, 2, "Ça va ?"),
+        ]);
+        assert_eq!(
+            people(&kept),
+            vec![
+                (Speaker::Others, Some(1), "Bonjour"),
+                (Speaker::Others, Some(2), "Salut"),
+                (Speaker::Others, Some(1), "Ça va ?"),
+            ]
+        );
+        assert_eq!(kept.iter().map(|s| s.idx).collect::<Vec<_>>(), [0, 1, 2]);
+    }
+
+    #[test]
+    fn a_room_recorded_on_the_mic_alone_is_diarized() {
+        let mic = track_of_words(vec![tw("Un", 0, 300), tw(" deux", 400, 700)]);
+        let turns = [turn(0, 350, 1), turn(350, 800, 2)];
+        let merged = merge_tracks_with_speakers(
+            Some(&mic),
+            None,
+            &CrosstalkOptions::default(),
+            TrackTurns {
+                mic: Some(&turns),
+                system: None,
+            },
+        );
+        assert_eq!(
+            people(&merged),
+            vec![
+                (Speaker::MicOnly, Some(1), "Un"),
+                (Speaker::MicOnly, Some(2), "deux"),
+            ]
+        );
+    }
+
+    #[test]
+    fn named_people_label_the_markdown() {
+        let meeting = MeetingInfo {
+            id: "m".into(),
+            title: "t".into(),
+            started_at: 0,
+            duration_ms: 1_000,
+            source_app: None,
+        };
+        let segment = |speaker, speaker_id| MeetingSegment {
+            idx: 0,
+            speaker,
+            speaker_id,
+            start_ms: 0,
+            end_ms: 500,
+            text: "x".into(),
+        };
+        let names = [SpeakerName {
+            speaker_id: 2,
+            name: "Alice".into(),
+        }];
+        let md = render_markdown(
+            &meeting,
+            &[
+                segment(Speaker::Me, None),
+                segment(Speaker::Others, Some(1)),
+                segment(Speaker::Others, Some(2)),
+            ],
+            &names,
+        );
+        assert!(md.contains("] Moi :** x"));
+        assert!(md.contains("] Intervenant 1 :** x"));
+        assert!(md.contains("] Alice :** x"));
+    }
+
     #[test]
     fn echo_is_removed_from_me_at_word_level() {
         let mic = track_of_words(vec![
@@ -569,6 +796,7 @@ mod tests {
             MeetingSegment {
                 idx: 0,
                 speaker: Speaker::Me,
+                speaker_id: None,
                 start_ms: 72_000,
                 end_ms: 75_000,
                 text: "Bonjour.".into(),
@@ -576,12 +804,13 @@ mod tests {
             MeetingSegment {
                 idx: 1,
                 speaker: Speaker::Others,
+                speaker_id: None,
                 start_ms: 80_500,
                 end_ms: 82_000,
                 text: "Salut.".into(),
             },
         ];
-        let md = render_markdown(&meeting, &segments);
+        let md = render_markdown(&meeting, &segments, &[]);
         let lines: Vec<&str> = md.lines().collect();
         assert_eq!(lines[0], "# Point hebdo");
         assert!(lines[1].ends_with(" · 1 h 02 min · Microsoft Teams"));
@@ -606,6 +835,7 @@ mod tests {
             segments: vec![MeetingSegment {
                 idx: 0,
                 speaker: Speaker::MicOnly,
+                speaker_id: None,
                 start_ms: 0,
                 end_ms: 1_000,
                 text: "Bonjour.".into(),

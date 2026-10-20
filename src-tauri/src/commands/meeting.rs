@@ -181,6 +181,22 @@ pub async fn get_meeting(
     blocking(&meeting_manager, move |m| m.get(&id)).await
 }
 
+/// Names a person the speaker detection found in a meeting; an empty name
+/// goes back to "Speaker N".
+#[tauri::command]
+#[specta::specta]
+pub async fn rename_meeting_speaker(
+    meeting_manager: State<'_, Arc<MeetingManager>>,
+    id: String,
+    speaker_id: u32,
+    name: String,
+) -> Result<(), String> {
+    blocking(&meeting_manager, move |m| {
+        m.rename_speaker(&id, speaker_id, &name)
+    })
+    .await
+}
+
 #[tauri::command]
 #[specta::specta]
 pub async fn rename_meeting(
@@ -280,6 +296,12 @@ fn update_settings(app: &AppHandle, change: impl FnOnce(&mut crate::settings::Ap
 pub fn change_meeting_detection_enabled_setting(app: AppHandle, enabled: bool) {
     update_settings(&app, |s| s.meeting_detection_enabled = enabled);
     detection::sync(&app);
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn change_speaker_detection_enabled_setting(app: AppHandle, enabled: bool) {
+    update_settings(&app, |s| s.speaker_detection_enabled = enabled);
 }
 
 /// Per-app overrides of the detection catalog's defaults.

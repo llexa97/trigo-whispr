@@ -15,7 +15,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
-import { commands, type MeetingSegment } from "@/bindings";
+import { commands, type MeetingSegment, type SpeakerName } from "@/bindings";
 import { useModelName } from "@/hooks/useModelName";
 import { useMeetingsStore } from "@/stores/meetingsStore";
 import { Button } from "../ui/Button";
@@ -139,6 +139,7 @@ export const MeetingDetail: React.FC<MeetingDetailProps> = ({ id, onBack }) => {
   const progress = useMeetingsStore((s) => s.progress[id]);
   const cancelTranscription = useMeetingsStore((s) => s.cancelTranscription);
   const [segments, setSegments] = useState<MeetingSegment[] | null>(null);
+  const [speakerNames, setSpeakerNames] = useState<SpeakerName[]>([]);
   const [audio, setAudio] = useState<AudioSources | null>(null);
   const [currentMs, setCurrentMs] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
@@ -159,6 +160,7 @@ export const MeetingDetail: React.FC<MeetingDetailProps> = ({ id, onBack }) => {
       if (cancelled) return;
       if (result.status === "ok") {
         setSegments(result.data?.segments ?? []);
+        setSpeakerNames(result.data?.speaker_names ?? []);
       } else {
         console.error("Failed to load meeting:", result.error);
         setSegments([]);
@@ -295,6 +297,19 @@ export const MeetingDetail: React.FC<MeetingDetailProps> = ({ id, onBack }) => {
     transcriptContent = (
       <MeetingTranscript
         segments={segments}
+        speakerNames={speakerNames}
+        onRenameSpeaker={async (speakerId, name) => {
+          const result = await commands.renameMeetingSpeaker(
+            meeting.id,
+            speakerId,
+            name,
+          );
+          if (result.status !== "ok") {
+            toast.error(t("speakers.renameError"), {
+              description: result.error,
+            });
+          }
+        }}
         currentMs={showPlayer ? currentMs : null}
         onSeek={
           showPlayer ? (ms) => playerRef.current?.seekAndPlay(ms) : undefined

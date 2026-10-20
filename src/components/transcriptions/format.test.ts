@@ -30,8 +30,20 @@ assert.equal(srtTimestamp(0), "00:00:00,000");
 assert.equal(srtTimestamp(3_723_045), "01:02:03,045");
 
 const segments: FileTranscriptionSegment[] = [
-  { idx: 0, start_ms: 0, end_ms: 1_500, text: " Bonjour à tous. " },
-  { idx: 1, start_ms: 61_000, end_ms: 61_000, text: "Deuxième phrase." },
+  {
+    idx: 0,
+    start_ms: 0,
+    end_ms: 1_500,
+    text: " Bonjour à tous. ",
+    speaker_id: null,
+  },
+  {
+    idx: 1,
+    start_ms: 61_000,
+    end_ms: 61_000,
+    text: "Deuxième phrase.",
+    speaker_id: null,
+  },
 ];
 
 assert.equal(toPlainText(segments), "Bonjour à tous.\nDeuxième phrase.\n");
@@ -52,6 +64,29 @@ const md = toMarkdown(transcription, segments, {
 });
 assert.ok(md.startsWith("# Mémo.m4a\n\n## Post-processed\n\nRésumé.\n"));
 assert.ok(md.includes("**[00:01:01]** Deuxième phrase."));
+
+// Speaker detection: each segment after its speaker's label.
+const diarized: FileTranscriptionSegment[] = segments.map((s, i) => ({
+  ...s,
+  speaker_id: i + 1,
+}));
+const speakerOf = (s: FileTranscriptionSegment) =>
+  s.speaker_id === 1
+    ? "Alice"
+    : s.speaker_id
+      ? `Speaker ${s.speaker_id}`
+      : undefined;
+assert.equal(
+  toPlainText(diarized, speakerOf),
+  "Alice: Bonjour à tous.\nSpeaker 2: Deuxième phrase.\n",
+);
+assert.ok(toSrt(diarized, speakerOf).includes("\nAlice: Bonjour à tous.\n"));
+const diarizedMd = toMarkdown(transcription, diarized, {
+  transcript: "Transcript",
+  postProcessed: "Post-processed",
+  speakerOf,
+});
+assert.ok(diarizedMd.includes("**[00:01:01] Speaker 2:** Deuxième phrase."));
 
 assert.equal(exportFileName("Réunion: Q3.m4a", "srt"), "Réunion Q3.srt");
 assert.equal(exportFileName("noext", "txt"), "noext.txt");

@@ -350,10 +350,22 @@ impl FileTranscriptionManager {
             return Ok(None);
         };
         let segments = store::segments(&conn, id)?;
+        let speaker_names = store::speaker_names(&conn, id)?;
         Ok(Some(FileTranscriptionDetail {
             transcription,
             segments,
+            speaker_names,
         }))
+    }
+
+    /// Names a person the diarizer found in the transcript; an empty name
+    /// goes back to "Speaker N".
+    pub fn rename_speaker(&self, id: &str, speaker_id: u32, name: &str) -> Result<()> {
+        let conn = self.conn()?;
+        store::get(&conn, id)?.ok_or_else(|| anyhow!("Transcription {id} not found"))?;
+        store::set_speaker_name(&conn, id, speaker_id, name.trim())?;
+        self.emit_row(id);
+        Ok(())
     }
 
     /// The decoded audio, if it is kept.

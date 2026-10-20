@@ -3,6 +3,27 @@ import { formatTimestamp } from "../meetings/format";
 
 export type ExportFormat = "txt" | "md" | "srt";
 
+/** A segment's speaker label, when speaker detection told people apart. */
+export type SpeakerOf = (
+  segment: FileTranscriptionSegment,
+) => string | undefined;
+
+/** The segment's text, after its speaker's label when it has one. */
+const withSpeaker = (
+  segment: FileTranscriptionSegment,
+  speakerOf?: SpeakerOf,
+): string => {
+  const text = segment.text.trim();
+  const speaker = speakerOf?.(segment);
+  return speaker ? `${speaker}: ${text}` : text;
+};
+
+export interface ExportLabels {
+  transcript: string;
+  postProcessed: string;
+  speakerOf?: SpeakerOf;
+}
+
 /** Lower-case extension of a path, without the dot. */
 export const extensionOf = (path: string): string => {
   const name = path.split(/[\\/]/).pop() ?? "";
@@ -26,8 +47,10 @@ export const baseName = (path: string): string =>
   path.split(/[\\/]/).pop() || path;
 
 /** The transcript as plain paragraphs. */
-export const toPlainText = (segments: FileTranscriptionSegment[]): string =>
-  segments.map((s) => s.text.trim()).join("\n") + "\n";
+export const toPlainText = (
+  segments: FileTranscriptionSegment[],
+  speakerOf?: SpeakerOf,
+): string => segments.map((s) => withSpeaker(s, speakerOf)).join("\n") + "\n";
 
 /** `hh:mm:ss,mmm`, as SubRip wants it. */
 export const srtTimestamp = (ms: number): string => {
@@ -40,12 +63,15 @@ export const srtTimestamp = (ms: number): string => {
 };
 
 /** SubRip subtitles, one cue per segment. */
-export const toSrt = (segments: FileTranscriptionSegment[]): string =>
+export const toSrt = (
+  segments: FileTranscriptionSegment[],
+  speakerOf?: SpeakerOf,
+): string =>
   segments
     .map((s, i) => {
       // A cue must last; untimed segments get at least one second.
       const end = Math.max(s.end_ms, s.start_ms + 1000);
-      return `${i + 1}\n${srtTimestamp(s.start_ms)} --> ${srtTimestamp(end)}\n${s.text.trim()}\n`;
+      return `${i + 1}\n${srtTimestamp(s.start_ms)} --> ${srtTimestamp(end)}\n${withSpeaker(s, speakerOf)}\n`;
     })
     .join("\n");
 
@@ -53,7 +79,7 @@ export const toSrt = (segments: FileTranscriptionSegment[]): string =>
 export const toMarkdown = (
   transcription: FileTranscription,
   segments: FileTranscriptionSegment[],
-  labels: { transcript: string; postProcessed: string },
+  labels: ExportLabels,
 ): string => {
   const lines = [`# ${transcription.file_name}`, ""];
   if (transcription.post_processed_text) {
@@ -66,7 +92,14 @@ export const toMarkdown = (
   }
   lines.push(`## ${labels.transcript}`, "");
   for (const s of segments) {
-    lines.push(`**[${formatTimestamp(s.start_ms)}]** ${s.text.trim()}`, "");
+    const time = formatTimestamp(s.start_ms);
+    const speaker = labels.speakerOf?.(s);
+    lines.push(
+      speaker
+        ? `**[${time}] ${speaker}:** ${s.text.trim()}`
+        : `**[${time}]** ${s.text.trim()}`,
+      "",
+    );
   }
   return lines.join("\n");
 };
@@ -75,13 +108,13 @@ export const renderExport = (
   format: ExportFormat,
   transcription: FileTranscription,
   segments: FileTranscriptionSegment[],
-  labels: { transcript: string; postProcessed: string },
+  labels: ExportLabels,
 ): string => {
   switch (format) {
     case "txt":
-      return toPlainText(segments);
+      return toPlainText(segments, labels.speakerOf);
     case "srt":
-      return toSrt(segments);
+      return toSrt(segments, labels.speakerOf);
     case "md":
       return toMarkdown(transcription, segments, labels);
   }
