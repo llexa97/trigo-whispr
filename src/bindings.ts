@@ -1384,7 +1384,13 @@ selected_model?: string;
  * means the default ([`DEFAULT_LONG_FORM_MODEL`] once downloaded, else
  * the dictation model); see `ModelManager::long_form_model_id`.
  */
-long_form_model?: string; onboarding_completed?: boolean; always_on_microphone?: boolean; selected_microphone?: string | null; 
+long_form_model?: string; 
+/**
+ * `selected_model` was set to [`DEFAULT_LONG_FORM_MODEL`] only because
+ * [`DEFAULT_DICTATION_MODEL`] couldn't be installed; dictation moves to
+ * the latter once it is. Cleared by any model the user picks.
+ */
+dictation_model_is_fallback?: boolean; onboarding_completed?: boolean; always_on_microphone?: boolean; selected_microphone?: string | null; 
 /**
  * Which input channel to use on the selected microphone device.
  * None means "average all channels" (original behavior).

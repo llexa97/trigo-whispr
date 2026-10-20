@@ -1,4 +1,6 @@
-use crate::managers::default_models::{DefaultModelsInstaller, DefaultModelsStatus};
+use crate::managers::default_models::{
+    clear_dictation_fallback, DefaultModelsInstaller, DefaultModelsStatus,
+};
 use crate::managers::model::{ModelInfo, ModelManager, RetiredModel};
 use crate::managers::transcription::{ModelStateEvent, TranscriptionManager};
 use crate::settings::{get_settings, write_settings, ModelUnloadTimeout};
@@ -202,7 +204,10 @@ pub async fn set_active_model(
     _transcription_manager: State<'_, Arc<TranscriptionManager>>,
     model_id: String,
 ) -> Result<(), String> {
-    switch_active_model(&app_handle, &model_id)
+    switch_active_model(&app_handle, &model_id)?;
+    // An explicit choice is never replaced by the default models installer.
+    clear_dictation_fallback(&app_handle);
+    Ok(())
 }
 
 #[tauri::command]

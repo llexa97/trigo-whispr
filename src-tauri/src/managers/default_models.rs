@@ -15,7 +15,9 @@
 //! `default-models-status`.
 
 use crate::managers::model::ModelManager;
-use crate::settings::{get_settings, write_settings};
+use crate::settings::{
+    get_settings, write_settings, DEFAULT_DICTATION_MODEL, DEFAULT_LONG_FORM_MODEL,
+};
 use log::{error, info, warn};
 use serde::Serialize;
 use specta::Type;
@@ -25,15 +27,8 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tauri::{AppHandle, Emitter, Manager};
 
-/// Parakeet TDT 0.6B v3, Q8_0: live dictation.
-pub const DICTATION_MODEL_ID: &str =
-    "handy-computer/parakeet-tdt-0.6b-v3-gguf/parakeet-tdt-0.6b-v3-Q8_0.gguf";
-/// Whisper Large v3 Turbo, Q8_0: meetings and imported files.
-pub const MEETING_MODEL_ID: &str =
-    "handy-computer/whisper-large-v3-turbo-gguf/whisper-large-v3-turbo-Q8_0.gguf";
-
 /// Download order: dictation first, so the app is usable sooner.
-pub const DEFAULT_MODEL_IDS: [&str; 2] = [DICTATION_MODEL_ID, MEETING_MODEL_ID];
+pub const DEFAULT_MODEL_IDS: [&str; 2] = [DEFAULT_DICTATION_MODEL, DEFAULT_LONG_FORM_MODEL];
 
 /// What a default model is installed for, so the UI can label it.
 #[derive(Serialize, Clone, Copy, Debug, PartialEq, Eq, Type)]
@@ -164,7 +159,7 @@ impl DefaultModelsInstaller {
                 };
                 DefaultModelStatus {
                     model_id: id.to_string(),
-                    role: if id == DICTATION_MODEL_ID {
+                    role: if id == DEFAULT_DICTATION_MODEL {
                         DefaultModelRole::Dictation
                     } else {
                         DefaultModelRole::Meetings
@@ -246,7 +241,7 @@ impl DefaultModelsInstaller {
                 .is_some_and(|m| m.is_downloaded)
             {
                 self.set_error(model_id, None);
-                self.select_if_unset(model_id).await;
+                self.select_for_dictation(model_id).await;
             }
             self.emit_status();
         }
@@ -313,19 +308,24 @@ impl DefaultModelsInstaller {
         }
     }
 
-    /// Make `model_id` the active model when none usable is selected. Parakeet
-    /// comes first, so it wins whenever it is available; Whisper only takes
-    /// over the selection when Parakeet couldn't be installed.
-    async fn select_if_unset(&self, model_id: &str) {
+    /// Make `model_id` the dictation model when none usable is selected.
+    /// Parakeet comes first, so it wins whenever it is available; Whisper only
+    /// stands in when Parakeet couldn't be installed, and hands dictation back
+    /// to it once a later pass installs it.
+    async fn select_for_dictation(&self, model_id: &str) {
         let settings = get_settings(&self.app);
         let model_manager = self.app.state::<Arc<ModelManager>>();
         let selection_usable = !settings.selected_model.is_empty()
             && model_manager
                 .get_model_info(&settings.selected_model)
                 .is_some_and(|m| m.is_downloaded);
-        if selection_usable {
+        let replaces_fallback = model_id == DEFAULT_DICTATION_MODEL
+            && settings.dictation_model_is_fallback
+            && settings.selected_model == DEFAULT_LONG_FORM_MODEL;
+        if selection_usable && !replaces_fallback {
             return;
         }
+        let is_fallback = model_id != DEFAULT_DICTATION_MODEL;
 
         if !settings.onboarding_completed {
             // The setup screen loads it (and completes onboarding) when the
@@ -334,12 +334,19 @@ impl DefaultModelsInstaller {
             info!("Selecting default model {} (onboarding pending)", model_id);
             let mut settings = settings;
             settings.selected_model = model_id.to_string();
+            settings.dictation_model_is_fallback = is_fallback;
             write_settings(&self.app, settings);
             let _ = self.app.emit("models-updated", ());
             return;
         }
 
-        info!("Selecting default model {}", model_id);
+        if is_fallback {
+            // Written first: the flag must hold as soon as the fallback does.
+            let mut settings = settings;
+            settings.dictation_model_is_fallback = true;
+            write_settings(&self.app, settings);
+        }
+        info!("Selecting default model {} for dictation", model_id);
         let app = self.app.clone();
         let id = model_id.to_string();
         // Loading the model blocks until it is in memory.
@@ -348,10 +355,25 @@ impl DefaultModelsInstaller {
         })
         .await;
         match result {
-            Ok(Ok(())) => crate::tray::update_tray_menu(&self.app),
+            Ok(Ok(())) => {
+                if !is_fallback {
+                    clear_dictation_fallback(&self.app);
+                }
+                crate::tray::update_tray_menu(&self.app);
+            }
             Ok(Err(e)) => error!("Failed to select default model {}: {}", model_id, e),
             Err(e) => error!("Default model selection task failed: {}", e),
         }
+    }
+}
+
+/// The user (or the installer) settled the dictation model: it no longer
+/// stands in for Parakeet.
+pub fn clear_dictation_fallback(app: &AppHandle) {
+    let mut settings = get_settings(app);
+    if settings.dictation_model_is_fallback {
+        settings.dictation_model_is_fallback = false;
+        write_settings(app, settings);
     }
 }
 

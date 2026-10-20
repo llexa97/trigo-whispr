@@ -476,6 +476,7 @@ fn initialize_core_logic(app_handle: &AppHandle) {
                 std::thread::spawn(move || {
                     match commands::models::switch_active_model(&app_clone, &model_id) {
                         Ok(()) => {
+                            managers::default_models::clear_dictation_fallback(&app_clone);
                             log::info!("Model switched to {} via tray.", model_id);
                         }
                         Err(e) => {
