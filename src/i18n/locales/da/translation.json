@@ -626,6 +626,17 @@
         "warnings": "Advarsler",
         "none": "ingen",
         "failed": "Optagelsen mislykkedes: {{error}}"
+      },
+      "micUsage": {
+        "title": "Apps, der bruger mikrofonen",
+        "description": "Live-output fra mødedetektionen: apps, der bruger mikrofonen, og den mødeapp, hver enkelt svarer til.",
+        "watch": "Overvåg",
+        "stop": "Stop",
+        "unsupported": "Understøttes endnu ikke på denne platform.",
+        "nobody": "Ingen app bruger mikrofonen.",
+        "own": "Trigo Whispr (ignoreret)",
+        "unknown": "ikke en mødeapp",
+        "failed": "Aflæsning mislykkedes: {{error}}"
       }
     },
     "about": {

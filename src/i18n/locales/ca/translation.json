@@ -626,6 +626,17 @@
         "warnings": "Avisos",
         "none": "cap",
         "failed": "La captura ha fallat: {{error}}"
+      },
+      "micUsage": {
+        "title": "Apps que fan servir el micròfon",
+        "description": "Sortida en directe de la sonda de detecció de reunions: apps que fan servir el micròfon i l'app de reunions corresponent.",
+        "watch": "Observar",
+        "stop": "Aturar",
+        "unsupported": "Encara no és compatible amb aquesta plataforma.",
+        "nobody": "Cap app fa servir el micròfon.",
+        "own": "Trigo Whispr (ignorat)",
+        "unknown": "no és una app de reunions",
+        "failed": "Error de la sonda: {{error}}"
       }
     },
     "about": {

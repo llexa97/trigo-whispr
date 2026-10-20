@@ -613,6 +613,17 @@
         "none": "无",
         "failed": "录制失败：{{error}}"
       },
+      "micUsage": {
+        "title": "正在使用麦克风的应用",
+        "description": "会议检测探针的实时输出：正在使用麦克风的应用及其对应的会议应用。",
+        "watch": "监视",
+        "stop": "停止",
+        "unsupported": "此平台尚不支持。",
+        "nobody": "没有应用在使用麦克风。",
+        "own": "Trigo Whispr（已忽略）",
+        "unknown": "不是会议应用",
+        "failed": "探针失败：{{error}}"
+      },
       "whatsNewPreview": {
         "title": "预览新功能",
         "description": "打开最新内置发行说明，且不标记为已查看",

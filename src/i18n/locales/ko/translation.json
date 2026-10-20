@@ -608,6 +608,17 @@
         "none": "없음",
         "failed": "캡처 실패: {{error}}"
       },
+      "micUsage": {
+        "title": "마이크를 사용하는 앱",
+        "description": "회의 감지 프로브의 실시간 출력: 마이크를 사용하는 앱과 각 앱에 해당하는 회의 앱.",
+        "watch": "모니터링",
+        "stop": "중지",
+        "unsupported": "이 플랫폼에서는 아직 지원되지 않습니다.",
+        "nobody": "마이크를 사용하는 앱이 없습니다.",
+        "own": "Trigo Whispr (무시됨)",
+        "unknown": "회의 앱 아님",
+        "failed": "프로브 실패: {{error}}"
+      },
       "paths": {
         "appData": "앱 데이터:",
         "models": "모델:",

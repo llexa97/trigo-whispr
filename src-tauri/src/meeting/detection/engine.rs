@@ -416,6 +416,12 @@ mod tests {
             None
         }
 
+        /// A poll whose probe reading failed: the service skips the tick,
+        /// so only the clock moves.
+        fn failed_poll(&mut self) {
+            self.now += POLL_INTERVAL;
+        }
+
         fn poll_for(&mut self, duration: Duration) -> Vec<Action> {
             let from = self.now;
             let mut all = Vec::new();
@@ -607,6 +613,20 @@ mod tests {
         h.release_mic("zoom.exe");
         assert!(h.poll_for(Duration::from_secs(10)).is_empty());
         h.take_mic("zoom.exe");
+        assert!(h.poll_for(Duration::from_secs(60)).is_empty());
+    }
+
+    #[test]
+    fn failed_readings_do_not_end_a_running_meeting() {
+        let mut h = Harness::new();
+        h.auto_stop = MeetingAutoStop::Auto;
+        h.take_mic("zoom.exe");
+        h.detected("zoom");
+        h.poll();
+        // The registry cannot be read for a minute, well past the grace.
+        for _ in 0..30 {
+            h.failed_poll();
+        }
         assert!(h.poll_for(Duration::from_secs(60)).is_empty());
     }
 

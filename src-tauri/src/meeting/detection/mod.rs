@@ -11,6 +11,7 @@ pub mod catalog;
 pub mod engine;
 pub mod prompt;
 pub mod service;
+pub mod windows;
 
 use anyhow::Result;
 use std::path::PathBuf;
@@ -46,8 +47,9 @@ pub trait MicUsageProbe: Send {
     fn supported(&self) -> bool;
 }
 
-/// Backend for platforms without one (Linux, and Windows/macOS until their
-/// backends land): never sees anyone.
+/// Backend for platforms without one (Linux, and macOS until its backend
+/// lands): never sees anyone.
+#[cfg_attr(windows, allow(dead_code))]
 pub struct NullProbe;
 
 impl MicUsageProbe for NullProbe {
@@ -62,5 +64,12 @@ impl MicUsageProbe for NullProbe {
 
 /// The probe for the current platform.
 pub fn platform_probe() -> Box<dyn MicUsageProbe> {
-    Box::new(NullProbe)
+    #[cfg(windows)]
+    {
+        Box::new(self::windows::WindowsMicProbe::new())
+    }
+    #[cfg(not(windows))]
+    {
+        Box::new(NullProbe)
+    }
 }

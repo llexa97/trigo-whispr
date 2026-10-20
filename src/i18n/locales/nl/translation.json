@@ -626,6 +626,17 @@
         "warnings": "Waarschuwingen",
         "none": "geen",
         "failed": "Opname mislukt: {{error}}"
+      },
+      "micUsage": {
+        "title": "Apps die de microfoon gebruiken",
+        "description": "Live-uitvoer van de vergaderdetectie: apps die de microfoon gebruiken en de bijbehorende vergaderapp.",
+        "watch": "Volgen",
+        "stop": "Stoppen",
+        "unsupported": "Nog niet ondersteund op dit platform.",
+        "nobody": "Geen enkele app gebruikt de microfoon.",
+        "own": "Trigo Whispr (genegeerd)",
+        "unknown": "geen vergaderapp",
+        "failed": "Detectie mislukt: {{error}}"
       }
     },
     "about": {

@@ -626,6 +626,17 @@
         "warnings": "Peringatan",
         "none": "tidak ada",
         "failed": "Tangkapan gagal: {{error}}"
+      },
+      "micUsage": {
+        "title": "Aplikasi yang menggunakan mikrofon",
+        "description": "Keluaran langsung probe deteksi rapat: aplikasi yang menggunakan mikrofon dan aplikasi rapat yang sesuai.",
+        "watch": "Pantau",
+        "stop": "Hentikan",
+        "unsupported": "Belum didukung di platform ini.",
+        "nobody": "Tidak ada aplikasi yang menggunakan mikrofon.",
+        "own": "Trigo Whispr (diabaikan)",
+        "unknown": "bukan aplikasi rapat",
+        "failed": "Probe gagal: {{error}}"
       }
     },
     "about": {

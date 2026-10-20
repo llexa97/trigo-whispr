@@ -8,7 +8,7 @@ use crate::managers::transcription::meeting::MeetingTranscriber;
 use crate::meeting::capture::{self, CaptureConfig, CaptureOutput};
 use crate::meeting::detection::prompt::MeetingPrompt;
 use crate::meeting::detection::service::{
-    self as detection, MeetingDetectionApp, MeetingPromptResponse,
+    self as detection, MeetingDetectionApp, MeetingPromptResponse, MicUsageReport,
 };
 use crate::settings::{MeetingAudioRetention, MeetingAutoStop};
 use serde::Serialize;
@@ -329,6 +329,22 @@ pub fn get_meeting_detection_apps() -> Vec<MeetingDetectionApp> {
 #[specta::specta]
 pub fn is_meeting_detection_supported() -> bool {
     detection::supported()
+}
+
+/// Debug: the apps the platform probe sees using the microphone right now.
+#[tauri::command]
+#[specta::specta]
+pub fn get_mic_usage() -> MicUsageReport {
+    detection::mic_usage_report()
+}
+
+/// Whether this machine can record the system track of a meeting (macOS
+/// version, platform). Whether the tap really delivers audio is only known
+/// once a capture runs.
+#[tauri::command]
+#[specta::specta]
+pub fn get_system_audio_capture_support() -> capture::SystemAudioCaptureSupport {
+    capture::system_audio_capture_support()
 }
 
 /// What the detection popup should show (it may load after the event).

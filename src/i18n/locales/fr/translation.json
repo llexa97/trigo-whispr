@@ -613,6 +613,17 @@
         "none": "aucun",
         "failed": "Échec de la capture : {{error}}"
       },
+      "micUsage": {
+        "title": "Apps utilisant le micro",
+        "description": "Sortie en direct de la sonde de détection des réunions : apps utilisant le micro et l'app de réunion correspondante.",
+        "watch": "Surveiller",
+        "stop": "Arrêter",
+        "unsupported": "Pas encore pris en charge sur cette plateforme.",
+        "nobody": "Aucune app n'utilise le micro.",
+        "own": "Trigo Whispr (ignoré)",
+        "unknown": "pas une app de réunion",
+        "failed": "Échec de la sonde : {{error}}"
+      },
       "whatsNewPreview": {
         "title": "Aperçu des nouveautés",
         "description": "Ouvrir la dernière note de version intégrée sans la marquer comme vue",

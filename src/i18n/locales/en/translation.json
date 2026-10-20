@@ -626,6 +626,17 @@
         "warnings": "Warnings",
         "none": "none",
         "failed": "Capture failed: {{error}}"
+      },
+      "micUsage": {
+        "title": "Apps Using the Microphone",
+        "description": "Live output of the meeting detection probe: apps using the microphone and the meeting app each one maps to.",
+        "watch": "Watch",
+        "stop": "Stop",
+        "unsupported": "Not supported on this platform yet.",
+        "nobody": "No app is using the microphone.",
+        "own": "Trigo Whispr (ignored)",
+        "unknown": "not a meeting app",
+        "failed": "Probe failed: {{error}}"
       }
     },
     "about": {

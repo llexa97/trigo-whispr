@@ -153,21 +153,58 @@ pub trait CaptureSession: Send {
     fn system_mode(&self) -> Option<SystemCaptureMode>;
 }
 
+/// Why the system track can or cannot be recorded on this machine.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "snake_case")]
+pub enum SystemAudioCaptureReason {
+    Ok,
+    /// macOS older than 14.6: no Core Audio process tap.
+    MacosTooOld,
+    /// No system audio backend on this platform (Linux).
+    UnsupportedPlatform,
+}
+
+/// Static support check for the system track. It does not tell whether the
+/// user granted the macOS consent or whether the tap delivers real audio:
+/// an unsigned or ad-hoc signed build records digital silence, which is
+/// reported at capture time through [`CaptureWarning::SystemAudioSilent`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Type)]
+pub struct SystemAudioCaptureSupport {
+    pub supported: bool,
+    pub reason: SystemAudioCaptureReason,
+}
+
+/// Whether, and if not why not, this platform can record the system output.
+pub fn system_audio_capture_support() -> SystemAudioCaptureSupport {
+    #[cfg(target_os = "macos")]
+    let reason = {
+        use objc2_foundation::{NSOperatingSystemVersion, NSProcessInfo};
+        let recent_enough = NSProcessInfo::processInfo().isOperatingSystemAtLeastVersion(
+            NSOperatingSystemVersion {
+                majorVersion: 14,
+                minorVersion: 6,
+                patchVersion: 0,
+            },
+        );
+        if recent_enough {
+            SystemAudioCaptureReason::Ok
+        } else {
+            SystemAudioCaptureReason::MacosTooOld
+        }
+    };
+    #[cfg(target_os = "windows")]
+    let reason = SystemAudioCaptureReason::Ok;
+    #[cfg(not(any(target_os = "windows", target_os = "macos")))]
+    let reason = SystemAudioCaptureReason::UnsupportedPlatform;
+    SystemAudioCaptureSupport {
+        supported: reason == SystemAudioCaptureReason::Ok,
+        reason,
+    }
+}
+
 /// Whether this platform can record the system output.
 pub fn system_capture_supported() -> bool {
-    #[cfg(target_os = "macos")]
-    {
-        use objc2_foundation::{NSOperatingSystemVersion, NSProcessInfo};
-        NSProcessInfo::processInfo().isOperatingSystemAtLeastVersion(NSOperatingSystemVersion {
-            majorVersion: 14,
-            minorVersion: 6,
-            patchVersion: 0,
-        })
-    }
-    #[cfg(not(target_os = "macos"))]
-    {
-        cfg!(target_os = "windows")
-    }
+    system_audio_capture_support().supported
 }
 
 /// Whether meeting capture (at least the microphone track) is available.
@@ -209,12 +246,24 @@ mod tests {
             serde_json::to_string(&SystemCaptureMode::ProcessLoopback).unwrap(),
             r#""process_loopback""#
         );
+        assert_eq!(
+            serde_json::to_string(&SystemAudioCaptureSupport {
+                supported: false,
+                reason: SystemAudioCaptureReason::MacosTooOld,
+            })
+            .unwrap(),
+            r#"{"supported":false,"reason":"macos_too_old"}"#
+        );
     }
 
     #[cfg(target_os = "linux")]
     #[test]
     fn linux_is_unsupported() {
         assert!(!system_capture_supported());
+        assert_eq!(
+            system_audio_capture_support().reason,
+            SystemAudioCaptureReason::UnsupportedPlatform
+        );
         let err = start_capture(CaptureConfig {
             mic_device: None,
             capture_system: true,
