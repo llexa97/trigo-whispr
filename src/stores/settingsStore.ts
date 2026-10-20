@@ -213,6 +213,8 @@ const settingUpdaters: {
   },
   meeting_detection_enabled: (value) =>
     commands.changeMeetingDetectionEnabledSetting(value as boolean),
+  speaker_detection_enabled: (value) =>
+    commands.changeSpeakerDetectionEnabledSetting(value as boolean),
   meeting_detection_apps: (value) =>
     commands.changeMeetingDetectionAppsSetting(
       value as Partial<{ [key in string]: boolean }>,

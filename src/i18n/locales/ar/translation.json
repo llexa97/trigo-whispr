@@ -105,17 +105,18 @@
     },
     "setup": {
       "title": "إعداد Trigo Whispr",
-      "description": "يقوم Trigo Whispr بتنزيل نموذجَي التعرّف على الكلام. يمكنك بدء الإملاء فور جاهزية النموذج الأول.",
+      "description": "يقوم Trigo Whispr بتنزيل نماذجه. يمكنك بدء الإملاء بمجرد أن يصبح الأول جاهزًا.",
       "roles": {
         "dictation": "الإملاء المباشر",
-        "meetings": "الاجتماعات والملفات المستوردة"
+        "meetings": "الاجتماعات والملفات المستوردة",
+        "speakers": "اكتشاف المتحدثين"
       },
       "pending": "في الانتظار",
       "failed": "فشل",
       "downloadedOf": "{{downloaded}} من {{total}}",
       "start": "ابدأ الإملاء",
       "waitingForDictation": "سيتوفر الإملاء بعد تثبيت {{name}}.",
-      "continuesInBackground": "يستمر تنزيل النموذج الآخر في الخلفية.",
+      "continuesInBackground": "يستمر تنزيل النماذج الأخرى في الخلفية.",
       "retry": "إعادة المحاولة",
       "backgroundFailed": "تعذّر تثبيت {{name}}",
       "errors": {
@@ -727,6 +728,23 @@
           "delete_after_transcription": "Delete after transcription"
         }
       },
+      "speaker_detection_enabled": {
+        "label": "اكتشاف المتحدثين",
+        "description": "يميّز الأشخاص في الاجتماعات والملفات المستوردة (حتى 4) على هذا الكمبيوتر. انقر على تسمية المتحدث لتسميته."
+      },
+      "speakerDetection": {
+        "title": "اكتشاف المتحدثين",
+        "description": "ينطبق على الاجتماعات وصفحة النسخ.",
+        "model": "نموذج اكتشاف المتحدثين",
+        "modelReady": "تم التنزيل ({{size}} ميغابايت). يُستخدم بعد كل نسخ.",
+        "modelMissing": "نزّله لاكتشاف المتحدثين. بدونه تحتفظ النصوص بتسمياتها الحالية.",
+        "download": "تنزيل ({{size}} ميغابايت)",
+        "downloading": "جارٍ التنزيل… {{percent}}٪",
+        "cancel": "إلغاء",
+        "delete": "حذف",
+        "downloadFailed": "فشل تنزيل نموذج اكتشاف المتحدثين",
+        "deleteFailed": "تعذّر حذف نموذج اكتشاف المتحدثين"
+      },
       "privacy": "Everything stays on this computer: audio and transcripts are never sent anywhere. Recording people may require their consent: always let the participants know."
     }
   },
@@ -1075,5 +1093,11 @@
         "description": "How long a copy of the audio is kept for playback and new transcriptions. The transcripts are always kept."
       }
     }
+  },
+  "speakers": {
+    "person": "المتحدث {{n}}",
+    "rename": "إعادة تسمية {{name}}",
+    "nameLabel": "اسم المتحدث",
+    "renameError": "تعذّرت إعادة تسمية المتحدث"
   }
 }

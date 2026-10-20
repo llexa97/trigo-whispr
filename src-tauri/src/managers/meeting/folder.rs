@@ -590,6 +590,7 @@ mod tests {
             segments: vec![MeetingSegment {
                 idx: 0,
                 speaker: Speaker::Others,
+                speaker_id: None,
                 start_ms: 0,
                 end_ms: 900,
                 text: "salut".into(),

@@ -600,6 +600,10 @@ pub struct AppSettings {
     /// Offer to record when a known meeting app starts using the microphone.
     #[serde(default = "default_meeting_detection_enabled")]
     pub meeting_detection_enabled: bool,
+    /// Tell the people in meetings and imported files apart (#30), once the
+    /// speaker detection model is downloaded.
+    #[serde(default = "default_speaker_detection_enabled")]
+    pub speaker_detection_enabled: bool,
     /// Per-app overrides of the catalog's `default_enabled`, keyed by catalog
     /// id (`meeting::detection::catalog`).
     #[serde(default)]
@@ -769,6 +773,10 @@ fn default_show_meeting_indicator() -> bool {
 }
 
 fn default_meeting_consent_reminder() -> bool {
+    true
+}
+
+fn default_speaker_detection_enabled() -> bool {
     true
 }
 
@@ -1167,6 +1175,7 @@ pub fn get_default_settings() -> AppSettings {
         meeting_indicator_position: None,
         meeting_consent_reminder: default_meeting_consent_reminder(),
         meeting_detection_enabled: default_meeting_detection_enabled(),
+        speaker_detection_enabled: default_speaker_detection_enabled(),
         meeting_detection_apps: HashMap::new(),
         meeting_auto_start: false,
         meeting_auto_stop: MeetingAutoStop::default(),
@@ -1476,6 +1485,22 @@ pub fn get_recording_retention_period(app: &AppHandle) -> RecordingRetentionPeri
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn speaker_detection_is_on_unless_turned_off() {
+        assert!(get_default_settings().speaker_detection_enabled);
+        // A store from before the setting existed gets it on too.
+        let mut stored = serde_json::to_value(get_default_settings()).unwrap();
+        stored
+            .as_object_mut()
+            .unwrap()
+            .remove("speaker_detection_enabled");
+        let settings: AppSettings = serde_json::from_value(stored.clone()).unwrap();
+        assert!(settings.speaker_detection_enabled);
+        stored["speaker_detection_enabled"] = false.into();
+        let settings: AppSettings = serde_json::from_value(stored).unwrap();
+        assert!(!settings.speaker_detection_enabled);
+    }
 
     #[test]
     fn stored_binding_returns_the_requested_binding() {

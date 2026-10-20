@@ -15,7 +15,11 @@ import {
   XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
-import { commands, type FileTranscriptionSegment } from "@/bindings";
+import {
+  commands,
+  type FileTranscriptionSegment,
+  type SpeakerName,
+} from "@/bindings";
 import { useSettings } from "@/hooks/useSettings";
 import { useModelName } from "@/hooks/useModelName";
 import { getLanguageLabel } from "@/lib/constants/languages";
@@ -32,7 +36,14 @@ import {
   MeetingAudioPlayer,
   type MeetingAudioPlayerHandle,
 } from "../meetings/MeetingAudioPlayer";
-import { exportFileName, renderExport, type ExportFormat } from "./format";
+import { SpeakerChip } from "../speakers/SpeakerChip";
+import { personClasses, personLabel, personName } from "../speakers/speakers";
+import {
+  exportFileName,
+  renderExport,
+  type ExportFormat,
+  type ExportLabels,
+} from "./format";
 import { LanguageOverride } from "./LanguageOverride";
 import { TranscriptionStatusBadge } from "./TranscriptionStatusBadge";
 
@@ -78,9 +89,11 @@ const ActionButton: React.FC<{
 
 const Transcript: React.FC<{
   segments: FileTranscriptionSegment[];
+  speakerNames: SpeakerName[];
+  onRenameSpeaker: (speakerId: number, name: string) => void;
   currentMs: number | null;
   onSeek?: (ms: number) => void;
-}> = ({ segments, currentMs, onSeek }) => {
+}> = ({ segments, speakerNames, onRenameSpeaker, currentMs, onSeek }) => {
   const { t } = useTranslation();
   return (
     <ol className="space-y-1">
@@ -109,6 +122,14 @@ const Transcript: React.FC<{
               <span className="text-xs font-mono text-text/60 pt-0.5 shrink-0">
                 {`[${time}]`}
               </span>
+            )}
+            {segment.speaker_id != null && (
+              <SpeakerChip
+                label={personLabel(t, segment.speaker_id, speakerNames)}
+                name={personName(segment.speaker_id, speakerNames)}
+                className={personClasses(segment.speaker_id)}
+                onRename={(name) => onRenameSpeaker(segment.speaker_id!, name)}
+              />
             )}
             <p className="text-sm text-text/90 select-text whitespace-pre-wrap break-words">
               {segment.text}
@@ -140,6 +161,7 @@ export const TranscriptionDetail: React.FC<TranscriptionDetailProps> = ({
   const [segments, setSegments] = useState<FileTranscriptionSegment[] | null>(
     null,
   );
+  const [speakerNames, setSpeakerNames] = useState<SpeakerName[]>([]);
   const [audioSrc, setAudioSrc] = useState<string | null>(null);
   const [currentMs, setCurrentMs] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
@@ -162,6 +184,7 @@ export const TranscriptionDetail: React.FC<TranscriptionDetailProps> = ({
       if (cancelled) return;
       if (result.status === "ok") {
         setSegments(result.data?.segments ?? []);
+        setSpeakerNames(result.data?.speaker_names ?? []);
       } else {
         console.error("Failed to load the transcription:", result.error);
         setSegments([]);
@@ -201,9 +224,24 @@ export const TranscriptionDetail: React.FC<TranscriptionDetailProps> = ({
     transcription.status === "transcribing";
   const queued = transcription.status === "pending";
   const hasTranscript = (segments?.length ?? 0) > 0;
-  const labels = {
+  const labels: ExportLabels = {
     transcript: t("transcriptions.detail.transcript"),
     postProcessed: t("transcriptions.detail.postProcessed"),
+    speakerOf: (segment) =>
+      segment.speaker_id != null
+        ? personLabel(t, segment.speaker_id, speakerNames)
+        : undefined,
+  };
+
+  const handleRenameSpeaker = async (speakerId: number, name: string) => {
+    const result = await commands.renameFileTranscriptionSpeaker(
+      transcription.id,
+      speakerId,
+      name,
+    );
+    if (result.status !== "ok") {
+      toast.error(t("speakers.renameError"), { description: result.error });
+    }
   };
 
   const handleCopy = async () => {
@@ -513,6 +551,8 @@ export const TranscriptionDetail: React.FC<TranscriptionDetailProps> = ({
         {hasTranscript && segments ? (
           <Transcript
             segments={segments}
+            speakerNames={speakerNames}
+            onRenameSpeaker={handleRenameSpeaker}
             currentMs={audioSrc ? currentMs : null}
             onSeek={
               audioSrc ? (ms) => playerRef.current?.seekAndPlay(ms) : undefined

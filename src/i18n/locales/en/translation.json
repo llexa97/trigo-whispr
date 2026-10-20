@@ -105,17 +105,18 @@
     },
     "setup": {
       "title": "Setting up Trigo Whispr",
-      "description": "Trigo Whispr is downloading its two speech recognition models. You can start dictating as soon as the first one is ready.",
+      "description": "Trigo Whispr is downloading its models. You can start dictating as soon as the first one is ready.",
       "roles": {
         "dictation": "Live dictation",
-        "meetings": "Meetings and imported files"
+        "meetings": "Meetings and imported files",
+        "speakers": "Speaker detection"
       },
       "pending": "Waiting",
       "failed": "Failed",
       "downloadedOf": "{{downloaded}} of {{total}}",
       "start": "Start dictating",
       "waitingForDictation": "Dictation will be available once {{name}} is installed.",
-      "continuesInBackground": "The other model keeps downloading in the background.",
+      "continuesInBackground": "The other models keep downloading in the background.",
       "retry": "Retry",
       "backgroundFailed": "Couldn't install {{name}}",
       "errors": {
@@ -727,6 +728,23 @@
           "delete_after_transcription": "Delete after transcription"
         }
       },
+      "speaker_detection_enabled": {
+        "label": "Detect speakers",
+        "description": "Tell the people in meetings and imported files apart (up to 4), on this computer. Click a speaker's label to name them."
+      },
+      "speakerDetection": {
+        "title": "Speaker detection",
+        "description": "Applies to meetings and to the Transcriptions page.",
+        "model": "Speaker detection model",
+        "modelReady": "Downloaded ({{size}} MB). Used after each transcription.",
+        "modelMissing": "Download it to detect speakers. Without it, transcripts keep their current labels.",
+        "download": "Download ({{size}} MB)",
+        "downloading": "Downloading… {{percent}}%",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "downloadFailed": "Speaker detection model download failed",
+        "deleteFailed": "Could not delete the speaker detection model"
+      },
       "privacy": "Everything stays on this computer: audio and transcripts are never sent anywhere. Recording people may require their consent: always let the participants know."
     }
   },
@@ -1075,5 +1093,11 @@
         "description": "How long a copy of the audio is kept for playback and new transcriptions. The transcripts are always kept."
       }
     }
+  },
+  "speakers": {
+    "person": "Speaker {{n}}",
+    "rename": "Rename {{name}}",
+    "nameLabel": "Speaker name",
+    "renameError": "Could not rename the speaker"
   }
 }

@@ -105,17 +105,18 @@
     },
     "setup": {
       "title": "Installation de Trigo Whispr",
-      "description": "Trigo Whispr télécharge ses deux modèles de reconnaissance vocale. Vous pourrez dicter dès que le premier sera prêt.",
+      "description": "Trigo Whispr télécharge ses modèles. Vous pourrez dicter dès que le premier sera prêt.",
       "roles": {
         "dictation": "Dictée en direct",
-        "meetings": "Réunions et fichiers importés"
+        "meetings": "Réunions et fichiers importés",
+        "speakers": "Détection des intervenants"
       },
       "pending": "En attente",
       "failed": "Échec",
       "downloadedOf": "{{downloaded}} sur {{total}}",
       "start": "Commencer à dicter",
       "waitingForDictation": "La dictée sera disponible dès que {{name}} sera installé.",
-      "continuesInBackground": "L'autre modèle continue de se télécharger en arrière-plan.",
+      "continuesInBackground": "Les autres modèles continuent de se télécharger en arrière-plan.",
       "retry": "Réessayer",
       "backgroundFailed": "Impossible d'installer {{name}}",
       "errors": {
@@ -727,6 +728,23 @@
           "delete_after_transcription": "Supprimer après la transcription"
         }
       },
+      "speaker_detection_enabled": {
+        "label": "Détecter les intervenants",
+        "description": "Distingue les personnes dans les réunions et les fichiers importés (jusqu’à 4), sur cet ordinateur. Cliquez sur le libellé d’un intervenant pour le nommer."
+      },
+      "speakerDetection": {
+        "title": "Détection des intervenants",
+        "description": "S’applique aux réunions et à la page Transcriptions.",
+        "model": "Modèle de détection des intervenants",
+        "modelReady": "Téléchargé ({{size}} Mo). Utilisé après chaque transcription.",
+        "modelMissing": "Téléchargez-le pour détecter les intervenants. Sans lui, les transcriptions gardent leurs libellés actuels.",
+        "download": "Télécharger ({{size}} Mo)",
+        "downloading": "Téléchargement… {{percent}} %",
+        "cancel": "Annuler",
+        "delete": "Supprimer",
+        "downloadFailed": "Échec du téléchargement du modèle de détection des intervenants",
+        "deleteFailed": "Impossible de supprimer le modèle de détection des intervenants"
+      },
       "privacy": "Tout reste sur cet ordinateur : l'audio et les transcriptions ne sont jamais envoyés nulle part. Enregistrer des personnes peut nécessiter leur consentement : prévenez toujours les participants."
     }
   },
@@ -1075,5 +1093,11 @@
         "description": "Durée de conservation d'une copie de l'audio, pour la lecture et les nouvelles transcriptions. Les textes sont toujours conservés."
       }
     }
+  },
+  "speakers": {
+    "person": "Intervenant {{n}}",
+    "rename": "Renommer {{name}}",
+    "nameLabel": "Nom de l’intervenant",
+    "renameError": "Impossible de renommer l’intervenant"
   }
 }

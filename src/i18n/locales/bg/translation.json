@@ -105,17 +105,18 @@
     },
     "setup": {
       "title": "Настройване на Trigo Whispr",
-      "description": "Trigo Whispr изтегля двата си модела за разпознаване на реч. Можете да диктувате, щом първият е готов.",
+      "description": "Trigo Whispr изтегля своите модели. Можете да диктувате веднага щом първият е готов.",
       "roles": {
         "dictation": "Диктовка на живо",
-        "meetings": "Срещи и импортирани файлове"
+        "meetings": "Срещи и импортирани файлове",
+        "speakers": "Разпознаване на говорители"
       },
       "pending": "Изчакване",
       "failed": "Неуспешно",
       "downloadedOf": "{{downloaded}} от {{total}}",
       "start": "Започнете диктовка",
       "waitingForDictation": "Диктовката ще е налична, след като {{name}} бъде инсталиран.",
-      "continuesInBackground": "Другият модел продължава да се изтегля във фонов режим.",
+      "continuesInBackground": "Останалите модели продължават да се изтеглят във фонов режим.",
       "retry": "Опитай отново",
       "backgroundFailed": "{{name}} не можа да бъде инсталиран",
       "errors": {
@@ -727,6 +728,23 @@
           "delete_after_transcription": "Delete after transcription"
         }
       },
+      "speaker_detection_enabled": {
+        "label": "Разпознаване на говорители",
+        "description": "Различава хората в срещите и импортираните файлове (до 4) на този компютър. Щракнете върху етикета на говорител, за да му дадете име."
+      },
+      "speakerDetection": {
+        "title": "Разпознаване на говорители",
+        "description": "Важи за срещите и страницата „Транскрипции“.",
+        "model": "Модел за разпознаване на говорители",
+        "modelReady": "Изтеглен ({{size}} MB). Използва се след всяка транскрипция.",
+        "modelMissing": "Изтеглете го, за да разпознавате говорители. Без него транскрипциите запазват текущите си етикети.",
+        "download": "Изтегляне ({{size}} MB)",
+        "downloading": "Изтегляне… {{percent}}%",
+        "cancel": "Отказ",
+        "delete": "Изтриване",
+        "downloadFailed": "Изтеглянето на модела за разпознаване на говорители не бе успешно",
+        "deleteFailed": "Моделът за разпознаване на говорители не можа да бъде изтрит"
+      },
       "privacy": "Everything stays on this computer: audio and transcripts are never sent anywhere. Recording people may require their consent: always let the participants know."
     }
   },
@@ -1075,5 +1093,11 @@
         "description": "How long a copy of the audio is kept for playback and new transcriptions. The transcripts are always kept."
       }
     }
+  },
+  "speakers": {
+    "person": "Говорител {{n}}",
+    "rename": "Преименуване: {{name}}",
+    "nameLabel": "Име на говорителя",
+    "renameError": "Говорителят не можа да бъде преименуван"
   }
 }

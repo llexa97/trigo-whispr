@@ -105,17 +105,18 @@
     },
     "setup": {
       "title": "Trigo Whispr kuruluyor",
-      "description": "Trigo Whispr iki konuşma tanıma modelini indiriyor. İlki hazır olur olmaz dikte etmeye başlayabilirsiniz.",
+      "description": "Trigo Whispr modellerini indiriyor. İlki hazır olur olmaz dikte etmeye başlayabilirsiniz.",
       "roles": {
         "dictation": "Canlı dikte",
-        "meetings": "Toplantılar ve içe aktarılan dosyalar"
+        "meetings": "Toplantılar ve içe aktarılan dosyalar",
+        "speakers": "Konuşmacı algılama"
       },
       "pending": "Bekliyor",
       "failed": "Başarısız",
       "downloadedOf": "{{downloaded}} / {{total}}",
       "start": "Dikteye başla",
       "waitingForDictation": "Dikte, {{name}} yüklendiğinde kullanılabilir olacak.",
-      "continuesInBackground": "Diğer model arka planda inmeye devam ediyor.",
+      "continuesInBackground": "Diğer modeller arka planda inmeye devam ediyor.",
       "retry": "Yeniden dene",
       "backgroundFailed": "{{name}} yüklenemedi",
       "errors": {
@@ -727,6 +728,23 @@
           "delete_after_transcription": "Delete after transcription"
         }
       },
+      "speaker_detection_enabled": {
+        "label": "Konuşmacıları algıla",
+        "description": "Toplantılardaki ve içe aktarılan dosyalardaki kişileri (en fazla 4) bu bilgisayarda ayırt eder. Ad vermek için bir konuşmacının etiketine tıklayın."
+      },
+      "speakerDetection": {
+        "title": "Konuşmacı algılama",
+        "description": "Toplantılar ve Transkripsiyonlar sayfası için geçerlidir.",
+        "model": "Konuşmacı algılama modeli",
+        "modelReady": "İndirildi ({{size}} MB). Her transkripsiyondan sonra kullanılır.",
+        "modelMissing": "Konuşmacıları algılamak için indirin. Olmadan transkripsiyonlar mevcut etiketlerini korur.",
+        "download": "İndir ({{size}} MB)",
+        "downloading": "İndiriliyor… %{{percent}}",
+        "cancel": "İptal",
+        "delete": "Sil",
+        "downloadFailed": "Konuşmacı algılama modeli indirilemedi",
+        "deleteFailed": "Konuşmacı algılama modeli silinemedi"
+      },
       "privacy": "Everything stays on this computer: audio and transcripts are never sent anywhere. Recording people may require their consent: always let the participants know."
     }
   },
@@ -1075,5 +1093,11 @@
         "description": "How long a copy of the audio is kept for playback and new transcriptions. The transcripts are always kept."
       }
     }
+  },
+  "speakers": {
+    "person": "Konuşmacı {{n}}",
+    "rename": "{{name}} adını değiştir",
+    "nameLabel": "Konuşmacı adı",
+    "renameError": "Konuşmacının adı değiştirilemedi"
   }
 }

@@ -1,6 +1,7 @@
 use crate::managers::default_models::{
     clear_dictation_fallback, DefaultModelsInstaller, DefaultModelsStatus,
 };
+use crate::managers::model::diarization::DiarizationModelStatus;
 use crate::managers::model::{ModelInfo, ModelManager, RetiredModel};
 use crate::managers::transcription::{ModelStateEvent, TranscriptionManager};
 use crate::settings::{get_settings, write_settings, ModelUnloadTimeout};
@@ -293,4 +294,41 @@ pub fn get_default_models_status(
 #[specta::specta]
 pub fn retry_default_models(installer: State<'_, Arc<DefaultModelsInstaller>>) {
     installer.ensure_installed();
+}
+
+/// The speaker detection model (#30): downloaded on request, apart from the
+/// transcription models.
+#[tauri::command]
+#[specta::specta]
+pub fn get_diarization_model_status(
+    model_manager: State<'_, Arc<ModelManager>>,
+) -> DiarizationModelStatus {
+    model_manager.diarization_model_status()
+}
+
+/// Downloads the speaker detection model; progress and the outcome come as
+/// `DiarizationModelProgress` and `DiarizationModelChanged` events.
+#[tauri::command]
+#[specta::specta]
+pub async fn download_diarization_model(
+    model_manager: State<'_, Arc<ModelManager>>,
+) -> Result<(), String> {
+    model_manager
+        .download_diarization_model()
+        .await
+        .map_err(|e| format!("{e:#}"))
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn cancel_diarization_model_download(model_manager: State<'_, Arc<ModelManager>>) {
+    model_manager.cancel_diarization_model_download();
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn delete_diarization_model(model_manager: State<'_, Arc<ModelManager>>) -> Result<(), String> {
+    model_manager
+        .delete_diarization_model()
+        .map_err(|e| format!("{e:#}"))
 }

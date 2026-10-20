@@ -105,17 +105,18 @@
     },
     "setup": {
       "title": "Configurazione di Trigo Whispr",
-      "description": "Trigo Whispr sta scaricando i suoi due modelli di riconoscimento vocale. Potrai dettare non appena il primo sarà pronto.",
+      "description": "Trigo Whispr sta scaricando i suoi modelli. Potrai dettare non appena il primo sarà pronto.",
       "roles": {
         "dictation": "Dettatura dal vivo",
-        "meetings": "Riunioni e file importati"
+        "meetings": "Riunioni e file importati",
+        "speakers": "Rilevamento degli interlocutori"
       },
       "pending": "In attesa",
       "failed": "Non riuscito",
       "downloadedOf": "{{downloaded}} di {{total}}",
       "start": "Inizia a dettare",
       "waitingForDictation": "La dettatura sarà disponibile quando {{name}} sarà installato.",
-      "continuesInBackground": "L'altro modello continua a scaricarsi in background.",
+      "continuesInBackground": "Gli altri modelli continuano a scaricarsi in background.",
       "retry": "Riprova",
       "backgroundFailed": "Impossibile installare {{name}}",
       "errors": {
@@ -727,6 +728,23 @@
           "delete_after_transcription": "Delete after transcription"
         }
       },
+      "speaker_detection_enabled": {
+        "label": "Rileva gli interlocutori",
+        "description": "Distingue le persone nelle riunioni e nei file importati (fino a 4), su questo computer. Fai clic sull’etichetta di un interlocutore per dargli un nome."
+      },
+      "speakerDetection": {
+        "title": "Rilevamento degli interlocutori",
+        "description": "Si applica alle riunioni e alla pagina Trascrizioni.",
+        "model": "Modello di rilevamento degli interlocutori",
+        "modelReady": "Scaricato ({{size}} MB). Usato dopo ogni trascrizione.",
+        "modelMissing": "Scaricalo per rilevare gli interlocutori. Senza, le trascrizioni mantengono le etichette attuali.",
+        "download": "Scarica ({{size}} MB)",
+        "downloading": "Download in corso… {{percent}}%",
+        "cancel": "Annulla",
+        "delete": "Elimina",
+        "downloadFailed": "Download del modello di rilevamento degli interlocutori non riuscito",
+        "deleteFailed": "Impossibile eliminare il modello di rilevamento degli interlocutori"
+      },
       "privacy": "Everything stays on this computer: audio and transcripts are never sent anywhere. Recording people may require their consent: always let the participants know."
     }
   },
@@ -1075,5 +1093,11 @@
         "description": "How long a copy of the audio is kept for playback and new transcriptions. The transcripts are always kept."
       }
     }
+  },
+  "speakers": {
+    "person": "Interlocutore {{n}}",
+    "rename": "Rinomina {{name}}",
+    "nameLabel": "Nome dell’interlocutore",
+    "renameError": "Impossibile rinominare l’interlocutore"
   }
 }

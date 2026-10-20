@@ -11,6 +11,7 @@ import TrigoWhisprTextLogo from "../icons/TrigoWhisprTextLogo";
 import { Button } from "../ui/Button";
 import { useModelStore } from "../../stores/modelStore";
 import { useDefaultModels } from "../../hooks/useDefaultModels";
+import { useDiarizationDownload } from "../../hooks/useDiarizationDownload";
 import { formatModelSize } from "../../lib/utils/format";
 
 interface ModelSetupProps {
@@ -36,8 +37,9 @@ export const defaultModelErrorMessage = (
   }
 };
 
-// First-run step: shows the two models Trigo installs on its own (the backend
-// starts them at launch) and lets the user in as soon as dictation's is ready.
+// First-run step: shows the models Trigo installs on its own (the backend
+// starts them at launch: dictation, meetings and, while it is on, speaker
+// detection) and lets the user in as soon as dictation's is ready.
 const ModelSetup: React.FC<ModelSetupProps> = ({
   onComplete,
   preview = false,
@@ -45,6 +47,7 @@ const ModelSetup: React.FC<ModelSetupProps> = ({
   const { t, i18n } = useTranslation();
   const status = useDefaultModels();
   const { downloadProgress, downloadStats, selectModel } = useModelStore();
+  const diarization = useDiarizationDownload();
   const [starting, setStarting] = useState(false);
 
   if (!status) {
@@ -105,8 +108,14 @@ const ModelSetup: React.FC<ModelSetupProps> = ({
 
       <ul className="w-full max-w-[560px] min-h-0 overflow-y-auto rounded-xl border-2 border-mid-gray/20 divide-y divide-mid-gray/20">
         {status.models.map((model) => {
-          const progress = downloadProgress[model.model_id];
-          const speed = downloadStats[model.model_id]?.speed ?? 0;
+          // The speaker detection model reports its own progress.
+          const speakers = model.role === "speakers";
+          const progress = speakers
+            ? diarization
+            : downloadProgress[model.model_id];
+          const speed = speakers
+            ? (diarization?.speed ?? 0)
+            : (downloadStats[model.model_id]?.speed ?? 0);
           const remainingMb =
             progress && progress.total > 0
               ? (progress.total - progress.downloaded) / (1024 * 1024)

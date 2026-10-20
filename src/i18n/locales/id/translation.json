@@ -105,10 +105,11 @@
     },
     "setup": {
       "title": "Menyiapkan Trigo Whispr",
-      "description": "Trigo Whispr sedang mengunduh dua model pengenalan suaranya. Anda bisa mendikte begitu model pertama siap.",
+      "description": "Trigo Whispr sedang mengunduh modelnya. Anda bisa mulai mendikte begitu model pertama siap.",
       "roles": {
         "dictation": "Dikte langsung",
-        "meetings": "Rapat dan file yang diimpor"
+        "meetings": "Rapat dan file yang diimpor",
+        "speakers": "Deteksi pembicara"
       },
       "pending": "Menunggu",
       "failed": "Gagal",
@@ -727,6 +728,23 @@
           "delete_after_transcription": "Delete after transcription"
         }
       },
+      "speaker_detection_enabled": {
+        "label": "Deteksi pembicara",
+        "description": "Membedakan orang-orang dalam rapat dan file yang diimpor (hingga 4) di komputer ini. Klik label pembicara untuk memberinya nama."
+      },
+      "speakerDetection": {
+        "title": "Deteksi pembicara",
+        "description": "Berlaku untuk rapat dan halaman Transkripsi.",
+        "model": "Model deteksi pembicara",
+        "modelReady": "Sudah diunduh ({{size}} MB). Digunakan setelah setiap transkripsi.",
+        "modelMissing": "Unduh untuk mendeteksi pembicara. Tanpanya, transkrip tetap memakai label saat ini.",
+        "download": "Unduh ({{size}} MB)",
+        "downloading": "Mengunduh… {{percent}}%",
+        "cancel": "Batal",
+        "delete": "Hapus",
+        "downloadFailed": "Gagal mengunduh model deteksi pembicara",
+        "deleteFailed": "Tidak dapat menghapus model deteksi pembicara"
+      },
       "privacy": "Everything stays on this computer: audio and transcripts are never sent anywhere. Recording people may require their consent: always let the participants know."
     }
   },
@@ -1075,5 +1093,11 @@
         "description": "How long a copy of the audio is kept for playback and new transcriptions. The transcripts are always kept."
       }
     }
+  },
+  "speakers": {
+    "person": "Pembicara {{n}}",
+    "rename": "Ganti nama {{name}}",
+    "nameLabel": "Nama pembicara",
+    "renameError": "Tidak dapat mengganti nama pembicara"
   }
 }

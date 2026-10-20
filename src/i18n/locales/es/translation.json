@@ -105,17 +105,18 @@
     },
     "setup": {
       "title": "Configurando Trigo Whispr",
-      "description": "Trigo Whispr está descargando sus dos modelos de reconocimiento de voz. Podrás dictar en cuanto el primero esté listo.",
+      "description": "Trigo Whispr está descargando sus modelos. Podrás dictar en cuanto el primero esté listo.",
       "roles": {
         "dictation": "Dictado en directo",
-        "meetings": "Reuniones y archivos importados"
+        "meetings": "Reuniones y archivos importados",
+        "speakers": "Detección de hablantes"
       },
       "pending": "En espera",
       "failed": "Error",
       "downloadedOf": "{{downloaded}} de {{total}}",
       "start": "Empezar a dictar",
       "waitingForDictation": "El dictado estará disponible cuando {{name}} esté instalado.",
-      "continuesInBackground": "El otro modelo se sigue descargando en segundo plano.",
+      "continuesInBackground": "Los demás modelos siguen descargándose en segundo plano.",
       "retry": "Reintentar",
       "backgroundFailed": "No se pudo instalar {{name}}",
       "errors": {
@@ -727,6 +728,23 @@
           "delete_after_transcription": "Delete after transcription"
         }
       },
+      "speaker_detection_enabled": {
+        "label": "Detectar hablantes",
+        "description": "Distingue a las personas en las reuniones y los archivos importados (hasta 4), en este equipo. Haz clic en la etiqueta de un hablante para ponerle nombre."
+      },
+      "speakerDetection": {
+        "title": "Detección de hablantes",
+        "description": "Se aplica a las reuniones y a la página Transcripciones.",
+        "model": "Modelo de detección de hablantes",
+        "modelReady": "Descargado ({{size}} MB). Se usa después de cada transcripción.",
+        "modelMissing": "Descárgalo para detectar hablantes. Sin él, las transcripciones mantienen sus etiquetas actuales.",
+        "download": "Descargar ({{size}} MB)",
+        "downloading": "Descargando… {{percent}} %",
+        "cancel": "Cancelar",
+        "delete": "Eliminar",
+        "downloadFailed": "Error al descargar el modelo de detección de hablantes",
+        "deleteFailed": "No se pudo eliminar el modelo de detección de hablantes"
+      },
       "privacy": "Everything stays on this computer: audio and transcripts are never sent anywhere. Recording people may require their consent: always let the participants know."
     }
   },
@@ -1075,5 +1093,11 @@
         "description": "How long a copy of the audio is kept for playback and new transcriptions. The transcripts are always kept."
       }
     }
+  },
+  "speakers": {
+    "person": "Hablante {{n}}",
+    "rename": "Renombrar a {{name}}",
+    "nameLabel": "Nombre del hablante",
+    "renameError": "No se pudo renombrar al hablante"
   }
 }

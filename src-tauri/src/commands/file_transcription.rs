@@ -114,6 +114,19 @@ pub async fn retry_file_transcription(
     blocking(&manager, move |m| m.retry(&id, &options)).await
 }
 
+/// Names a person the speaker detection found in a transcript; an empty
+/// name goes back to "Speaker N".
+#[tauri::command]
+#[specta::specta]
+pub async fn rename_file_transcription_speaker(
+    manager: State<'_, Arc<FileTranscriptionManager>>,
+    id: String,
+    speaker_id: u32,
+    name: String,
+) -> Result<(), String> {
+    blocking(&manager, move |m| m.rename_speaker(&id, speaker_id, &name)).await
+}
+
 /// Stops a transcription, or takes it out of the queue. Returns false if it
 /// was neither queued nor running (or is already being saved).
 #[tauri::command]

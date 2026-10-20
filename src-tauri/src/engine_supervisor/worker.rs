@@ -16,12 +16,21 @@ use std::path::Path;
 use std::sync::mpsc;
 use std::thread;
 use transcribe_cpp::{
-    Backend, BackendMask, DeviceType, Feature, Model, ModelOptions, Session, Stream,
+    Backend, BackendMask, Capabilities, DeviceType, DiarizeExtension, DiarizeOptions,
+    DiarizeSession, DiarizeSessionOptions, Feature, Model, ModelOptions, Role, Session,
+    SortformerDiarizeOptions, SortformerPreset, Stream, TimestampKind,
 };
 
 /// Prefix on worker log lines so the parent can tell them apart from raw
 /// native output (e.g. a `GGML_ASSERT` message right before an abort).
 pub(super) const LOG_LINE_PREFIX: &str = "\u{1}";
+
+/// What a loaded model serves: transcription, or diarization (who spoke
+/// when).
+enum Loaded {
+    Asr(Session),
+    Diarize(DiarizeSession),
+}
 
 /// A request as handed from the stdin reader to the main loop.
 struct Incoming {
@@ -79,10 +88,10 @@ pub fn run() -> i32 {
     );
 
     let mut output = protocol_out;
-    let mut session: Option<(Session, LoadedInfo)> = None;
+    let mut session: Option<(Loaded, LoadedInfo)> = None;
 
     while let Ok(Incoming { request, pcm }) = requests.recv() {
-        let finished_run = matches!(request, Request::Run { .. });
+        let finished_run = matches!(request, Request::Run { .. } | Request::Diarize { .. });
         let response = match request {
             Request::Hello { list_devices } => match &init_error {
                 Some(message) => Response::Error(message.clone()),
@@ -113,7 +122,8 @@ pub fn run() -> i32 {
                 }
             }
             Request::Run { options } => match session.as_mut() {
-                Some((session, info)) => {
+                Some((Loaded::Diarize(_), _)) => not_asr(),
+                Some((Loaded::Asr(session), info)) => {
                     inject_fault("run", info.on_gpu);
                     match session.run(&pcm, &options) {
                         Ok(transcript) => Response::Transcript(transcript),
@@ -123,7 +133,8 @@ pub fn run() -> i32 {
                 None => not_loaded(),
             },
             Request::StreamBegin { run, stream } => match session.as_mut() {
-                Some((session, info)) => match session.stream(&run, &stream) {
+                Some((Loaded::Diarize(_), _)) => not_asr(),
+                Some((Loaded::Asr(session), info)) => match session.stream(&run, &stream) {
                     Ok(stream) => {
                         if write_message(&mut output, &Response::Ok, None).is_err() {
                             return 1;
@@ -138,6 +149,16 @@ pub fn run() -> i32 {
                     }
                     Err(e) => Response::Error(e.to_string()),
                 },
+                None => not_loaded(),
+            },
+            Request::Diarize { wav } => match session.as_mut() {
+                Some((Loaded::Diarize(diarizer), info)) => {
+                    inject_fault("run", info.on_gpu);
+                    diarize(diarizer, &wav)
+                }
+                Some((Loaded::Asr(_), _)) => {
+                    Response::Error("the loaded model is not a diarization model".to_string())
+                }
                 None => not_loaded(),
             },
             Request::Feed | Request::Finalize { .. } | Request::StreamReset => {
@@ -252,11 +273,39 @@ fn not_loaded() -> Response {
     Response::Error("no model loaded".to_string())
 }
 
+fn not_asr() -> Response {
+    Response::Error("the loaded model is a diarization model".to_string())
+}
+
+/// Runs the diarizer on a whole WAV, at its offline operating point (the
+/// most accurate: it looks ~30 s ahead).
+fn diarize(diarizer: &mut DiarizeSession, wav: &Path) -> Response {
+    let pcm = match crate::meeting::track::read_track(wav) {
+        Ok(pcm) => pcm,
+        Err(e) => return Response::Error(format!("{e:#}")),
+    };
+    let options = DiarizeOptions {
+        family: Some(DiarizeExtension::Sortformer(SortformerDiarizeOptions {
+            preset: Some(SortformerPreset::VeryHighLatency),
+        })),
+    };
+    match diarizer.run(&pcm, &options) {
+        Ok(turns) => Response::Speakers(turns),
+        Err(e) => Response::Error(e.to_string()),
+    }
+}
+
+/// Threads for a diarization run: half the cores, so a dictation running
+/// meanwhile in the transcription worker keeps the rest.
+fn diarize_threads() -> i32 {
+    thread::available_parallelism().map_or(1, |n| (n.get() / 2).max(1)) as i32
+}
+
 fn load(
     path: &Path,
     backend: Backend,
     selector: DeviceSelector,
-) -> Result<(Session, LoadedInfo), String> {
+) -> Result<(Loaded, LoadedInfo), String> {
     let device = match selector {
         DeviceSelector::Auto => None,
         DeviceSelector::Key(key) => {
@@ -292,11 +341,33 @@ fn load(
     inject_fault("load", backend != Backend::Cpu);
     let model = Model::load_with(path, &ModelOptions { backend, device })
         .map_err(|e| format!("Failed to load model: {e}"))?;
-    let session = model
-        .session()
-        .map_err(|e| format!("Failed to create session: {e}"))?;
+    let roles = model.roles();
+    let diarizer = roles.contains(Role::Diarize) && !roles.contains(Role::Asr);
+    let loaded = if diarizer {
+        let options = DiarizeSessionOptions {
+            n_threads: diarize_threads(),
+        };
+        Loaded::Diarize(
+            model
+                .diarize_session_with(&options)
+                .map_err(|e| format!("Failed to create diarization session: {e}"))?,
+        )
+    } else {
+        Loaded::Asr(
+            model
+                .session()
+                .map_err(|e| format!("Failed to create session: {e}"))?,
+        )
+    };
     let bound = model.device().ok().map(|d| DeviceInfo::from_device(&d));
     let backend_name = model.backend();
+    let capabilities = if diarizer {
+        no_capabilities()
+    } else {
+        model
+            .capabilities()
+            .map_err(|e| format!("Failed to read model capabilities: {e}"))?
+    };
     let info = LoadedInfo {
         arch: model.arch(),
         variant: model.variant(),
@@ -309,14 +380,28 @@ fn load(
             .as_ref()
             .map(|d| d.label().to_string())
             .unwrap_or_else(|| "unknown".to_string()),
-        capabilities: model
-            .capabilities()
-            .map_err(|e| format!("Failed to read model capabilities: {e}"))?,
+        capabilities,
         supports_initial_prompt: model.supports(Feature::InitialPrompt),
         supports_long_form: model.supports(Feature::LongForm),
         supports_vocabulary: model.supports(Feature::Vocabulary),
+        diarizer,
     };
-    Ok((session, info))
+    Ok((loaded, info))
+}
+
+/// A diarization model transcribes nothing.
+fn no_capabilities() -> Capabilities {
+    Capabilities {
+        native_sample_rate: 16_000,
+        languages: Vec::new(),
+        translate_target_languages: Vec::new(),
+        max_timestamp_kind: TimestampKind::None,
+        supports_language_detect: false,
+        supports_translate: false,
+        supports_streaming: false,
+        supports_spec_decode: false,
+        max_audio_ms: 0,
+    }
 }
 
 /// Debug-build fault injection for exercising crash/hang recovery:

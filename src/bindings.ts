@@ -728,6 +728,36 @@ async getLongFormModel() : Promise<Result<string, string>> {
 }
 },
 /**
+ * The speaker detection model (#30): downloaded on request, apart from the
+ * transcription models.
+ */
+async getDiarizationModelStatus() : Promise<DiarizationModelStatus> {
+    return await TAURI_INVOKE("get_diarization_model_status");
+},
+/**
+ * Downloads the speaker detection model; progress and the outcome come as
+ * `DiarizationModelProgress` and `DiarizationModelChanged` events.
+ */
+async downloadDiarizationModel() : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("download_diarization_model") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async cancelDiarizationModelDownload() : Promise<void> {
+    await TAURI_INVOKE("cancel_diarization_model_download");
+},
+async deleteDiarizationModel() : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("delete_diarization_model") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * Chooses the model for meetings and imported files. It is loaded when one
  * is next transcribed, not now: dictation keeps its model loaded meanwhile.
  */
@@ -1073,6 +1103,18 @@ async renameMeeting(id: string, title: string) : Promise<Result<null, string>> {
     else return { status: "error", error: e  as any };
 }
 },
+/**
+ * Names a person the speaker detection found in a meeting; an empty name
+ * goes back to "Speaker N".
+ */
+async renameMeetingSpeaker(id: string, speakerId: number, name: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("rename_meeting_speaker", { id, speakerId, name }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async deleteMeeting(id: string) : Promise<Result<null, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("delete_meeting", { id }) };
@@ -1126,6 +1168,9 @@ async changeMeetingConsentReminderSetting(enabled: boolean) : Promise<void> {
 },
 async changeMeetingDetectionEnabledSetting(enabled: boolean) : Promise<void> {
     await TAURI_INVOKE("change_meeting_detection_enabled_setting", { enabled });
+},
+async changeSpeakerDetectionEnabledSetting(enabled: boolean) : Promise<void> {
+    await TAURI_INVOKE("change_speaker_detection_enabled_setting", { enabled });
 },
 /**
  * Per-app overrides of the detection catalog's defaults.
@@ -1249,6 +1294,18 @@ async retryFileTranscription(id: string, options: FileImportOptions) : Promise<R
 }
 },
 /**
+ * Names a person the speaker detection found in a transcript; an empty
+ * name goes back to "Speaker N".
+ */
+async renameFileTranscriptionSpeaker(id: string, speakerId: number, name: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("rename_file_transcription_speaker", { id, speakerId, name }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * Stops a transcription, or takes it out of the queue. Returns false if it
  * was neither queued nor running (or is already being saved).
  */
@@ -1288,8 +1345,10 @@ async updateFileTranscriptionAudioRetention(retention: MeetingAudioRetention) : 
 }
 },
 /**
- * Stub implementation for non-macOS platforms
- * Always returns false since laptop detection is macOS-specific
+ * Checks if the Mac is a laptop by detecting battery presence
+ * 
+ * This uses pmset to check for battery information.
+ * Returns true if a battery is detected (laptop), false otherwise (desktop)
  */
 async isLaptop() : Promise<Result<boolean, string>> {
     try {
@@ -1305,6 +1364,8 @@ async isLaptop() : Promise<Result<boolean, string>> {
 
 
 export const events = __makeEvents__<{
+diarizationModelChanged: DiarizationModelChanged,
+diarizationModelProgress: DiarizationModelProgress,
 fileTranscriptionProgress: FileTranscriptionProgress,
 fileTranscriptionsUpdated: FileTranscriptionsUpdated,
 filesImported: FilesImported,
@@ -1318,6 +1379,8 @@ meetingsUpdated: MeetingsUpdated,
 streamPhaseEvent: StreamPhaseEvent,
 streamTextEvent: StreamTextEvent
 }>({
+diarizationModelChanged: "diarization-model-changed",
+diarizationModelProgress: "diarization-model-progress",
 fileTranscriptionProgress: "file-transcription-progress",
 fileTranscriptionsUpdated: "file-transcriptions-updated",
 filesImported: "files-imported",
@@ -1367,7 +1430,12 @@ shortcut_activation?: ShortcutActivation;
  * Hold-or-toggle only: a press held at least this long is push-to-talk,
  * anything shorter is a tap that locks recording on.
  */
-hold_threshold_ms?: number; audio_feedback?: boolean; audio_feedback_volume?: number; sound_theme?: SoundTheme; start_hidden?: boolean; autostart_enabled?: boolean; update_checks_enabled?: boolean; show_whats_new_on_update?: boolean; 
+hold_threshold_ms?: number; audio_feedback?: boolean; audio_feedback_volume?: number; sound_theme?: SoundTheme; start_hidden?: boolean; autostart_enabled?: boolean; update_checks_enabled?: boolean; 
+/**
+ * Retired: the What's New window is no longer shown after updates (only
+ * previewed from the debug page). Kept so older stores still deserialize.
+ */
+show_whats_new_on_update?: boolean; 
 /**
  * The app version whose What's New the user has already seen. Fresh installs
  * default to the current version (nothing is "new" to them). Existing users
@@ -1400,7 +1468,12 @@ selected_channel?: number | null; clamshell_microphone?: string | null; selected
  * How long the decoded audio of imported files is kept (same choices
  * as for meetings).
  */
-file_transcription_audio_retention?: MeetingAudioRetention; paste_method?: PasteMethod; clipboard_handling?: ClipboardHandling; auto_submit?: boolean; auto_submit_key?: AutoSubmitKey; post_process_enabled?: boolean; post_process_provider_id?: string; post_process_providers?: PostProcessProvider[]; post_process_api_keys?: SecretMap; post_process_models?: Partial<{ [key in string]: string }>; post_process_prompts?: LLMPrompt[]; post_process_selected_prompt_id?: string | null; mute_while_recording?: boolean; append_trailing_space?: boolean; app_language?: string; theme?: Theme; experimental_enabled?: boolean; lazy_stream_close?: boolean; keyboard_implementation?: KeyboardImplementation; show_tray_icon?: boolean; paste_delay_ms?: number; paste_delay_after_ms?: number; 
+file_transcription_audio_retention?: MeetingAudioRetention; paste_method?: PasteMethod; clipboard_handling?: ClipboardHandling; auto_submit?: boolean; auto_submit_key?: AutoSubmitKey; post_process_enabled?: boolean; post_process_provider_id?: string; post_process_providers?: PostProcessProvider[]; post_process_api_keys?: SecretMap; post_process_models?: Partial<{ [key in string]: string }>; post_process_prompts?: LLMPrompt[]; post_process_selected_prompt_id?: string | null; mute_while_recording?: boolean; append_trailing_space?: boolean; app_language?: string; theme?: Theme; 
+/**
+ * Retired: the experimental group is no longer shown and nothing reads this.
+ * Kept so older stores still deserialize.
+ */
+experimental_enabled?: boolean; lazy_stream_close?: boolean; keyboard_implementation?: KeyboardImplementation; show_tray_icon?: boolean; paste_delay_ms?: number; paste_delay_after_ms?: number; 
 /**
  * Debug-gated ("beta") receipt-sequenced paste: restore the clipboard only
  * after the target app actually reads the transcript, instead of after a
@@ -1408,8 +1481,8 @@ file_transcription_audio_retention?: MeetingAudioRetention; paste_method?: Paste
  */
 reliable_paste?: boolean; typing_tool?: TypingTool; external_script_path?: string | null; filler_word_removal_enabled?: boolean; custom_filler_words?: string[] | null; 
 /**
- * Fresh installs default from the OS locale; existing stores are migrated
- * in `apply_settings_migrations`.
+ * No longer exposed in the UI: always `AsTranscribed`, enforced by
+ * `apply_settings_migrations`. Kept so older stores still deserialize.
  */
 chinese_script?: ChineseScript; transcribe_accelerator?: TranscribeAcceleratorSetting; 
 /**
@@ -1452,6 +1525,11 @@ meeting_consent_reminder?: boolean;
  * Offer to record when a known meeting app starts using the microphone.
  */
 meeting_detection_enabled?: boolean; 
+/**
+ * Tell the people in meetings and imported files apart (#30), once the
+ * speaker detection model is downloaded.
+ */
+speaker_detection_enabled?: boolean; 
 /**
  * Per-app overrides of the catalog's `default_enabled`, keyed by catalog
  * id (`meeting::detection::catalog`).
@@ -1539,7 +1617,11 @@ export type DefaultModelRole = "dictation" |
 /**
  * Meetings and imported files.
  */
-"meetings"
+"meetings" | 
+/**
+ * Speaker detection in meetings and imported files.
+ */
+"speakers"
 export type DefaultModelState = 
 /**
  * On disk (models dir or HF cache).
@@ -1555,6 +1637,19 @@ export type DefaultModelsStatus = { models: DefaultModelStatus[];
  * Whether an install pass is under way.
  */
 running: boolean }
+/**
+ * Emitted when the diarization model is downloaded, deleted, or its
+ * download starts, stops or fails (`error`).
+ */
+export type DiarizationModelChanged = { status: DiarizationModelStatus; error: string | null }
+/**
+ * Emitted while the diarization model downloads.
+ */
+export type DiarizationModelProgress = { downloaded: number; total: number }
+/**
+ * Where the diarization model stands.
+ */
+export type DiarizationModelStatus = { downloaded: boolean; downloading: boolean; size_bytes: number }
 /**
  * How the files of one import are to be transcribed.
  */
@@ -1605,7 +1700,11 @@ post_process: boolean; post_processed_text: string | null;
  * Whether the decoded audio (`audio.wav`) is kept in the folder.
  */
 has_audio: boolean }
-export type FileTranscriptionDetail = { transcription: FileTranscription; segments: FileTranscriptionSegment[] }
+export type FileTranscriptionDetail = { transcription: FileTranscription; segments: FileTranscriptionSegment[]; 
+/**
+ * The names the user gave the people, by `speaker_id`.
+ */
+speaker_names: SpeakerName[] }
 /**
  * Why a transcription failed, for the UI to explain in the user's language.
  */
@@ -1639,7 +1738,11 @@ progress: number | null;
  * Estimated time left, once a chunk is transcribed.
  */
 eta_ms: number | null }
-export type FileTranscriptionSegment = { idx: number; start_ms: number; end_ms: number; text: string }
+export type FileTranscriptionSegment = { idx: number; start_ms: number; end_ms: number; text: string; 
+/**
+ * The person, numbered from 1, when the diarizer told speakers apart.
+ */
+speaker_id: number | null }
 export type FileTranscriptionStage = "decoding" | "transcribing"
 export type FileTranscriptionStatus = 
 /**
@@ -1729,7 +1832,11 @@ export type MeetingCaptureTestReport = {
  * Temporary directory holding `mic.wav` / `system.wav`.
  */
 out_dir: string; output: CaptureOutput }
-export type MeetingDetail = { meeting: Meeting; segments: MeetingSegment[] }
+export type MeetingDetail = { meeting: Meeting; segments: MeetingSegment[]; 
+/**
+ * The names the user gave the people, by `speaker_id`.
+ */
+speaker_names: SpeakerName[] }
 /**
  * A catalog app, as listed in the settings.
  */
@@ -1783,7 +1890,12 @@ export type MeetingPromptResponse =
  * Close the confirmation.
  */
 { kind: "dismiss" }
-export type MeetingSegment = { idx: number; speaker: Speaker; start_ms: number; end_ms: number; text: string }
+export type MeetingSegment = { idx: number; speaker: Speaker; 
+/**
+ * The person, numbered from 1, when the diarizer told the people on
+ * the call (or in the room) apart. Absent from older transcripts.
+ */
+speaker_id?: number | null; start_ms: number; end_ms: number; text: string }
 export type MeetingSource = { kind: "manual" } | { kind: "detected"; app_id: string; app_name: string }
 export type MeetingSourceKind = "manual" | "detected"
 /**
@@ -1984,6 +2096,10 @@ export type Speaker =
  * everyone in the room, so it is not labelled as the user.
  */
 "mic_only"
+/**
+ * The name the user gave a person of a transcript.
+ */
+export type SpeakerName = { speaker_id: number; name: string }
 /**
  * Phase of the streaming overlay card, emitted to drive its UI state.
  */

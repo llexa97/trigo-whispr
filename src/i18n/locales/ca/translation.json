@@ -105,17 +105,18 @@
     },
     "setup": {
       "title": "Configurant Trigo Whispr",
-      "description": "Trigo Whispr està baixant els seus dos models de reconeixement de veu. Podràs dictar tan bon punt el primer estigui llest.",
+      "description": "Trigo Whispr està baixant els seus models. Podreu dictar tan bon punt el primer estigui a punt.",
       "roles": {
         "dictation": "Dictat en directe",
-        "meetings": "Reunions i fitxers importats"
+        "meetings": "Reunions i fitxers importats",
+        "speakers": "Detecció de parlants"
       },
       "pending": "En espera",
       "failed": "Error",
       "downloadedOf": "{{downloaded}} de {{total}}",
       "start": "Comença a dictar",
       "waitingForDictation": "El dictat estarà disponible quan {{name}} estigui instal·lat.",
-      "continuesInBackground": "L'altre model es continua baixant en segon pla.",
+      "continuesInBackground": "Els altres models es continuen baixant en segon pla.",
       "retry": "Torna-ho a provar",
       "backgroundFailed": "No s'ha pogut instal·lar {{name}}",
       "errors": {
@@ -727,6 +728,23 @@
           "delete_after_transcription": "Delete after transcription"
         }
       },
+      "speaker_detection_enabled": {
+        "label": "Detecta els parlants",
+        "description": "Distingeix les persones a les reunions i als fitxers importats (fins a 4), en aquest ordinador. Feu clic a l’etiqueta d’un parlant per posar-li nom."
+      },
+      "speakerDetection": {
+        "title": "Detecció de parlants",
+        "description": "S’aplica a les reunions i a la pàgina Transcripcions.",
+        "model": "Model de detecció de parlants",
+        "modelReady": "Baixat ({{size}} MB). S’utilitza després de cada transcripció.",
+        "modelMissing": "Baixeu-lo per detectar parlants. Sense ell, les transcripcions mantenen les etiquetes actuals.",
+        "download": "Baixa ({{size}} MB)",
+        "downloading": "S’està baixant… {{percent}} %",
+        "cancel": "Cancel·la",
+        "delete": "Suprimeix",
+        "downloadFailed": "No s’ha pogut baixar el model de detecció de parlants",
+        "deleteFailed": "No s’ha pogut suprimir el model de detecció de parlants"
+      },
       "privacy": "Everything stays on this computer: audio and transcripts are never sent anywhere. Recording people may require their consent: always let the participants know."
     }
   },
@@ -1075,5 +1093,11 @@
         "description": "How long a copy of the audio is kept for playback and new transcriptions. The transcripts are always kept."
       }
     }
+  },
+  "speakers": {
+    "person": "Parlant {{n}}",
+    "rename": "Canvia el nom de {{name}}",
+    "nameLabel": "Nom del parlant",
+    "renameError": "No s’ha pogut canviar el nom del parlant"
   }
 }

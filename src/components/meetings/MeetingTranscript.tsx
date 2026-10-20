@@ -1,6 +1,8 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import type { MeetingSegment, Speaker } from "@/bindings";
+import type { MeetingSegment, Speaker, SpeakerName } from "@/bindings";
+import { SpeakerChip } from "../speakers/SpeakerChip";
+import { personClasses, personLabel, personName } from "../speakers/speakers";
 import { formatTimestamp, speakerLabel } from "./format";
 
 const SPEAKER_CLASSES: Record<Speaker, string> = {
@@ -11,6 +13,10 @@ const SPEAKER_CLASSES: Record<Speaker, string> = {
 
 interface MeetingTranscriptProps {
   segments: MeetingSegment[];
+  /** Names the user gave the people speaker detection found. */
+  speakerNames?: SpeakerName[];
+  /** Renames a person speaker detection found (empty: default label). */
+  onRenameSpeaker?: (speakerId: number, name: string) => void;
   /** Playback position, to highlight the segment being played. */
   currentMs: number | null;
   /** Called with a segment start when its timestamp is clicked. */
@@ -19,6 +25,8 @@ interface MeetingTranscriptProps {
 
 export const MeetingTranscript: React.FC<MeetingTranscriptProps> = ({
   segments,
+  speakerNames = [],
+  onRenameSpeaker,
   currentMs,
   onSeek,
 }) => {
@@ -54,11 +62,23 @@ export const MeetingTranscript: React.FC<MeetingTranscriptProps> = ({
                 {`[${time}]`}
               </span>
             )}
-            <span
-              className={`text-xs font-medium px-1.5 py-0.5 rounded shrink-0 ${SPEAKER_CLASSES[segment.speaker]}`}
-            >
-              {speakerLabel(t, segment.speaker)}
-            </span>
+            {segment.speaker_id != null ? (
+              <SpeakerChip
+                label={personLabel(t, segment.speaker_id, speakerNames)}
+                name={personName(segment.speaker_id, speakerNames)}
+                className={personClasses(segment.speaker_id)}
+                onRename={
+                  onRenameSpeaker
+                    ? (name) => onRenameSpeaker(segment.speaker_id!, name)
+                    : undefined
+                }
+              />
+            ) : (
+              <SpeakerChip
+                label={speakerLabel(t, segment.speaker)}
+                className={SPEAKER_CLASSES[segment.speaker]}
+              />
+            )}
             <p className="text-sm text-text/90 select-text whitespace-pre-wrap break-words">
               {segment.text}
             </p>

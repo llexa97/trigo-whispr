@@ -105,17 +105,18 @@
     },
     "setup": {
       "title": "Configurando o Trigo Whispr",
-      "description": "O Trigo Whispr está baixando seus dois modelos de reconhecimento de fala. Você pode ditar assim que o primeiro estiver pronto.",
+      "description": "O Trigo Whispr está a transferir os seus modelos. Pode começar a ditar assim que o primeiro estiver pronto.",
       "roles": {
         "dictation": "Ditado ao vivo",
-        "meetings": "Reuniões e arquivos importados"
+        "meetings": "Reuniões e arquivos importados",
+        "speakers": "Deteção de oradores"
       },
       "pending": "Aguardando",
       "failed": "Falhou",
       "downloadedOf": "{{downloaded}} de {{total}}",
       "start": "Começar a ditar",
       "waitingForDictation": "O ditado estará disponível quando {{name}} for instalado.",
-      "continuesInBackground": "O outro modelo continua sendo baixado em segundo plano.",
+      "continuesInBackground": "Os outros modelos continuam a ser transferidos em segundo plano.",
       "retry": "Tentar novamente",
       "backgroundFailed": "Não foi possível instalar {{name}}",
       "errors": {
@@ -727,6 +728,23 @@
           "delete_after_transcription": "Delete after transcription"
         }
       },
+      "speaker_detection_enabled": {
+        "label": "Detetar oradores",
+        "description": "Distingue as pessoas nas reuniões e nos ficheiros importados (até 4), neste computador. Clique na etiqueta de um orador para lhe dar um nome."
+      },
+      "speakerDetection": {
+        "title": "Deteção de oradores",
+        "description": "Aplica-se às reuniões e à página Transcrições.",
+        "model": "Modelo de deteção de oradores",
+        "modelReady": "Transferido ({{size}} MB). Usado após cada transcrição.",
+        "modelMissing": "Transfira-o para detetar oradores. Sem ele, as transcrições mantêm as etiquetas atuais.",
+        "download": "Transferir ({{size}} MB)",
+        "downloading": "A transferir… {{percent}}%",
+        "cancel": "Cancelar",
+        "delete": "Eliminar",
+        "downloadFailed": "Falha ao transferir o modelo de deteção de oradores",
+        "deleteFailed": "Não foi possível eliminar o modelo de deteção de oradores"
+      },
       "privacy": "Everything stays on this computer: audio and transcripts are never sent anywhere. Recording people may require their consent: always let the participants know."
     }
   },
@@ -1075,5 +1093,11 @@
         "description": "How long a copy of the audio is kept for playback and new transcriptions. The transcripts are always kept."
       }
     }
+  },
+  "speakers": {
+    "person": "Orador {{n}}",
+    "rename": "Renomear {{name}}",
+    "nameLabel": "Nome do orador",
+    "renameError": "Não foi possível renomear o orador"
   }
 }

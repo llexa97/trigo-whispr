@@ -10,8 +10,8 @@ use serde::{Deserialize, Serialize};
 use std::io::{self, Read, Write};
 use std::path::PathBuf;
 use transcribe_cpp::{
-    Backend, Capabilities, DeviceType, RunOptions, StreamOptions, StreamText, StreamUpdate,
-    Transcript,
+    Backend, Capabilities, DeviceType, RunOptions, SpeakerSegment, StreamOptions, StreamText,
+    StreamUpdate, Transcript,
 };
 
 /// Refuse frames larger than this: a garbage length must not turn into a
@@ -50,6 +50,12 @@ pub enum Request {
         want_language: bool,
     },
     StreamReset,
+    /// Diarize a 16 kHz mono WAV with the loaded diarization model. The
+    /// worker reads the file itself: a long meeting track is too large to
+    /// send as one frame.
+    Diarize {
+        wav: PathBuf,
+    },
 }
 
 /// How the worker should pick the device for a [`Request::Load`]. Device
@@ -73,6 +79,8 @@ pub enum Response {
     },
     Loaded(LoadedInfo),
     Transcript(Transcript),
+    /// Who spoke when, for a [`Request::Diarize`].
+    Speakers(Vec<SpeakerSegment>),
     Fed {
         update: StreamUpdate,
         /// Present only when the committed or tentative text changed.
@@ -157,6 +165,10 @@ pub struct LoadedInfo {
     /// run (whisper today); other models' long audio is chunked by Trigo Whispr.
     pub supports_long_form: bool,
     pub supports_vocabulary: bool,
+    /// A diarization model (who spoke when), not a transcription model: it
+    /// serves [`Request::Diarize`] only, and its `capabilities` are empty.
+    #[serde(default)]
+    pub diarizer: bool,
 }
 
 /// Encode one frame. Refuses a section the reader would refuse, so an

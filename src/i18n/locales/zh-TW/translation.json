@@ -105,17 +105,18 @@
     },
     "setup": {
       "title": "正在設定 Trigo Whispr",
-      "description": "Trigo Whispr 正在下載兩個語音辨識模型。第一個模型就緒後即可開始聽寫。",
+      "description": "Trigo Whispr 正在下載其模型。第一個模型就緒後即可開始聽寫。",
       "roles": {
         "dictation": "即時聽寫",
-        "meetings": "會議與匯入的檔案"
+        "meetings": "會議與匯入的檔案",
+        "speakers": "發言者辨識"
       },
       "pending": "等待中",
       "failed": "失敗",
       "downloadedOf": "{{downloaded}} / {{total}}",
       "start": "開始聽寫",
       "waitingForDictation": "{{name}} 安裝完成後即可使用聽寫。",
-      "continuesInBackground": "另一個模型將在背景繼續下載。",
+      "continuesInBackground": "其他模型會在背景繼續下載。",
       "retry": "重試",
       "backgroundFailed": "無法安裝 {{name}}",
       "errors": {
@@ -727,6 +728,23 @@
           "delete_after_transcription": "Delete after transcription"
         }
       },
+      "speaker_detection_enabled": {
+        "label": "辨識發言者",
+        "description": "在這台電腦上區分會議與匯入檔案中的人(最多 4 人)。點選發言者標籤即可為其命名。"
+      },
+      "speakerDetection": {
+        "title": "發言者辨識",
+        "description": "適用於會議與轉錄頁面。",
+        "model": "發言者辨識模型",
+        "modelReady": "已下載({{size}} MB)。在每次轉錄後使用。",
+        "modelMissing": "下載後即可辨識發言者。沒有它時,轉錄稿保留目前的標籤。",
+        "download": "下載({{size}} MB)",
+        "downloading": "正在下載… {{percent}}%",
+        "cancel": "取消",
+        "delete": "刪除",
+        "downloadFailed": "發言者辨識模型下載失敗",
+        "deleteFailed": "無法刪除發言者辨識模型"
+      },
       "privacy": "Everything stays on this computer: audio and transcripts are never sent anywhere. Recording people may require their consent: always let the participants know."
     }
   },
@@ -1075,5 +1093,11 @@
         "description": "How long a copy of the audio is kept for playback and new transcriptions. The transcripts are always kept."
       }
     }
+  },
+  "speakers": {
+    "person": "發言者 {{n}}",
+    "rename": "重新命名 {{name}}",
+    "nameLabel": "發言者名稱",
+    "renameError": "無法重新命名發言者"
   }
 }

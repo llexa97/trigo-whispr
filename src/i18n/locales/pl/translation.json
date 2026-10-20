@@ -105,17 +105,18 @@
     },
     "setup": {
       "title": "Konfigurowanie Trigo Whispr",
-      "description": "Trigo Whispr pobiera swoje dwa modele rozpoznawania mowy. Możesz dyktować, gdy tylko pierwszy będzie gotowy.",
+      "description": "Trigo Whispr pobiera swoje modele. Możesz dyktować, gdy tylko pierwszy będzie gotowy.",
       "roles": {
         "dictation": "Dyktowanie na żywo",
-        "meetings": "Spotkania i zaimportowane pliki"
+        "meetings": "Spotkania i zaimportowane pliki",
+        "speakers": "Wykrywanie mówców"
       },
       "pending": "Oczekiwanie",
       "failed": "Niepowodzenie",
       "downloadedOf": "{{downloaded}} z {{total}}",
       "start": "Zacznij dyktować",
       "waitingForDictation": "Dyktowanie będzie dostępne po zainstalowaniu {{name}}.",
-      "continuesInBackground": "Drugi model nadal pobiera się w tle.",
+      "continuesInBackground": "Pozostałe modele pobierają się dalej w tle.",
       "retry": "Spróbuj ponownie",
       "backgroundFailed": "Nie udało się zainstalować {{name}}",
       "errors": {
@@ -727,6 +728,23 @@
           "delete_after_transcription": "Delete after transcription"
         }
       },
+      "speaker_detection_enabled": {
+        "label": "Wykrywaj mówców",
+        "description": "Rozróżnia osoby na spotkaniach i w importowanych plikach (do 4), na tym komputerze. Kliknij etykietę mówcy, aby nadać mu nazwę."
+      },
+      "speakerDetection": {
+        "title": "Wykrywanie mówców",
+        "description": "Dotyczy spotkań i strony Transkrypcje.",
+        "model": "Model wykrywania mówców",
+        "modelReady": "Pobrano ({{size}} MB). Używany po każdej transkrypcji.",
+        "modelMissing": "Pobierz go, aby wykrywać mówców. Bez niego transkrypcje zachowują obecne etykiety.",
+        "download": "Pobierz ({{size}} MB)",
+        "downloading": "Pobieranie… {{percent}}%",
+        "cancel": "Anuluj",
+        "delete": "Usuń",
+        "downloadFailed": "Nie udało się pobrać modelu wykrywania mówców",
+        "deleteFailed": "Nie udało się usunąć modelu wykrywania mówców"
+      },
       "privacy": "Everything stays on this computer: audio and transcripts are never sent anywhere. Recording people may require their consent: always let the participants know."
     }
   },
@@ -1075,5 +1093,11 @@
         "description": "How long a copy of the audio is kept for playback and new transcriptions. The transcripts are always kept."
       }
     }
+  },
+  "speakers": {
+    "person": "Mówca {{n}}",
+    "rename": "Zmień nazwę: {{name}}",
+    "nameLabel": "Nazwa mówcy",
+    "renameError": "Nie udało się zmienić nazwy mówcy"
   }
 }

@@ -13,8 +13,11 @@ use serde::{Deserialize, Serialize};
 use specta::Type;
 use std::path::Path;
 
-static MIGRATIONS: &[M] = &[M::up(
-    "CREATE TABLE file_transcriptions (
+use crate::diarization::SpeakerName;
+
+static MIGRATIONS: &[M] = &[
+    M::up(
+        "CREATE TABLE file_transcriptions (
         id TEXT PRIMARY KEY,
         file_name TEXT NOT NULL,
         source_path TEXT NOT NULL,
@@ -41,7 +44,20 @@ static MIGRATIONS: &[M] = &[M::up(
         PRIMARY KEY (transcription_id, idx)
     );
     CREATE INDEX idx_file_transcriptions_created_at ON file_transcriptions(created_at);",
-)];
+    ),
+    // Speaker diarization (#30): the person a segment is from, and the
+    // names the user gave them.
+    M::up(
+        "ALTER TABLE file_transcription_segments ADD COLUMN speaker_id INTEGER;
+        CREATE TABLE file_transcription_speaker_names (
+            transcription_id TEXT NOT NULL
+                REFERENCES file_transcriptions(id) ON DELETE CASCADE,
+            speaker_id INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            PRIMARY KEY (transcription_id, speaker_id)
+        );",
+    ),
+];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Type)]
 #[serde(rename_all = "snake_case")]
@@ -165,12 +181,16 @@ pub struct FileTranscriptionSegment {
     pub start_ms: i64,
     pub end_ms: i64,
     pub text: String,
+    /// The person, numbered from 1, when the diarizer told speakers apart.
+    pub speaker_id: Option<u32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct FileTranscriptionDetail {
     pub transcription: FileTranscription,
     pub segments: Vec<FileTranscriptionSegment>,
+    /// The names the user gave the people, by `speaker_id`.
+    pub speaker_names: Vec<SpeakerName>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
@@ -367,7 +387,7 @@ pub fn list_with_audio(conn: &Connection) -> Result<Vec<FileTranscription>> {
 
 pub fn segments(conn: &Connection, id: &str) -> Result<Vec<FileTranscriptionSegment>> {
     let mut stmt = conn.prepare(
-        "SELECT idx, start_ms, end_ms, text FROM file_transcription_segments
+        "SELECT idx, start_ms, end_ms, text, speaker_id FROM file_transcription_segments
          WHERE transcription_id = ?1 ORDER BY idx",
     )?;
     let rows = stmt
@@ -377,10 +397,47 @@ pub fn segments(conn: &Connection, id: &str) -> Result<Vec<FileTranscriptionSegm
                 start_ms: row.get(1)?,
                 end_ms: row.get(2)?,
                 text: row.get(3)?,
+                speaker_id: row.get(4)?,
             })
         })?
         .collect::<rusqlite::Result<Vec<_>>>()?;
     Ok(rows)
+}
+
+pub fn speaker_names(conn: &Connection, id: &str) -> Result<Vec<SpeakerName>> {
+    let mut stmt = conn.prepare(
+        "SELECT speaker_id, name FROM file_transcription_speaker_names
+         WHERE transcription_id = ?1 ORDER BY speaker_id",
+    )?;
+    let rows = stmt
+        .query_map(params![id], |row| {
+            Ok(SpeakerName {
+                speaker_id: row.get(0)?,
+                name: row.get(1)?,
+            })
+        })?
+        .collect::<rusqlite::Result<Vec<_>>>()?;
+    Ok(rows)
+}
+
+/// Names a person of a transcript; an empty name goes back to the default
+/// label.
+pub fn set_speaker_name(conn: &Connection, id: &str, speaker_id: u32, name: &str) -> Result<()> {
+    if name.is_empty() {
+        conn.execute(
+            "DELETE FROM file_transcription_speaker_names
+             WHERE transcription_id = ?1 AND speaker_id = ?2",
+            params![id, speaker_id],
+        )?;
+    } else {
+        conn.execute(
+            "INSERT INTO file_transcription_speaker_names (transcription_id, speaker_id, name)
+             VALUES (?1, ?2, ?3)
+             ON CONFLICT (transcription_id, speaker_id) DO UPDATE SET name = excluded.name",
+            params![id, speaker_id, name],
+        )?;
+    }
+    Ok(())
 }
 
 /// What a finished transcription saves, in one transaction.
@@ -398,13 +455,26 @@ pub fn save_result(conn: &mut Connection, id: &str, result: &TranscriptResult<'_
         "DELETE FROM file_transcription_segments WHERE transcription_id = ?1",
         params![id],
     )?;
+    // A new transcript numbers its people afresh.
+    tx.execute(
+        "DELETE FROM file_transcription_speaker_names WHERE transcription_id = ?1",
+        params![id],
+    )?;
     {
         let mut stmt = tx.prepare(
-            "INSERT INTO file_transcription_segments (transcription_id, idx, start_ms, end_ms, text)
-             VALUES (?1, ?2, ?3, ?4, ?5)",
+            "INSERT INTO file_transcription_segments
+                (transcription_id, idx, start_ms, end_ms, text, speaker_id)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
         )?;
         for s in result.segments {
-            stmt.execute(params![id, s.idx, s.start_ms, s.end_ms, s.text])?;
+            stmt.execute(params![
+                id,
+                s.idx,
+                s.start_ms,
+                s.end_ms,
+                s.text,
+                s.speaker_id
+            ])?;
         }
     }
     tx.execute(
@@ -514,6 +584,7 @@ pub(crate) mod tests {
             start_ms: idx * 1_000,
             end_ms: idx * 1_000 + 900,
             text: text.into(),
+            speaker_id: None,
         }
     }
 
@@ -569,10 +640,31 @@ pub(crate) mod tests {
                 completed_at: 42,
             }
         }
-        save_result(&mut conn, "a", &result(&[seg(0, "un"), seg(1, "deux")])).unwrap();
+        let first = [
+            seg(0, "un"),
+            FileTranscriptionSegment {
+                speaker_id: Some(2),
+                ..seg(1, "deux")
+            },
+        ];
+        save_result(&mut conn, "a", &result(&first)).unwrap();
+        assert_eq!(segments(&conn, "a").unwrap(), first.to_vec());
+        set_speaker_name(&conn, "a", 2, "Alice").unwrap();
+        set_speaker_name(&conn, "a", 1, "Bob").unwrap();
+        set_speaker_name(&conn, "a", 1, "").unwrap();
+        assert_eq!(
+            speaker_names(&conn, "a").unwrap(),
+            vec![SpeakerName {
+                speaker_id: 2,
+                name: "Alice".into()
+            }]
+        );
+
+        // A new transcript forgets the names of the old one's people.
         let second = [seg(0, "trois")];
         save_result(&mut conn, "a", &result(&second)).unwrap();
         assert_eq!(segments(&conn, "a").unwrap(), second.to_vec());
+        assert!(speaker_names(&conn, "a").unwrap().is_empty());
         let t = get(&conn, "a").unwrap().unwrap();
         assert_eq!(t.model_id.as_deref(), Some("whisper"));
         assert_eq!(t.detected_language.as_deref(), Some("fr"));

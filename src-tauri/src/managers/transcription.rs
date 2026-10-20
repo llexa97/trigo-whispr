@@ -15,6 +15,7 @@ use crate::settings::{
 };
 use anyhow::Result;
 use chunked::ChunkedDecode;
+use diarize::Diarizer;
 use live::LiveSession;
 use log::{debug, error, info, warn};
 use policy::{batch_decode, live_decode, BatchDecode, ModelTraits};
@@ -31,6 +32,7 @@ use transcribe_cpp::{Backend, RunOptions, Task, Transcript};
 use users::EngineUsers;
 
 mod chunked;
+mod diarize;
 pub mod file;
 mod live;
 pub mod meeting;
@@ -274,6 +276,8 @@ pub struct TranscriptionManager {
     /// Bumped each time a dictation stops a background chunk to load its own
     /// model: that chunk is decoded again, without counting as a failed try.
     preemptions: Arc<AtomicU64>,
+    /// The speaker diarization engine, beside this one.
+    diarizer: Diarizer,
 }
 
 /// What a model is loaded for: dictation and long transcriptions each have
@@ -305,6 +309,7 @@ impl TranscriptionManager {
             active_stream_worker: Arc::new(AtomicU64::new(0)),
             users: Arc::new(Mutex::new(EngineUsers::default())),
             preemptions: Arc::new(AtomicU64::new(0)),
+            diarizer: Diarizer::new(),
         };
 
         // Start the idle watcher

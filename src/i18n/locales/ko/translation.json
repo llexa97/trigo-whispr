@@ -105,17 +105,18 @@
     },
     "setup": {
       "title": "Trigo Whispr 설정 중",
-      "description": "Trigo Whispr가 두 개의 음성 인식 모델을 다운로드하고 있습니다. 첫 번째 모델이 준비되면 바로 받아쓰기를 시작할 수 있습니다.",
+      "description": "Trigo Whispr가 모델을 다운로드하고 있습니다. 첫 번째 모델이 준비되는 즉시 받아쓰기를 시작할 수 있습니다.",
       "roles": {
         "dictation": "실시간 받아쓰기",
-        "meetings": "회의 및 가져온 파일"
+        "meetings": "회의 및 가져온 파일",
+        "speakers": "화자 구분"
       },
       "pending": "대기 중",
       "failed": "실패",
       "downloadedOf": "{{downloaded}} / {{total}}",
       "start": "받아쓰기 시작",
       "waitingForDictation": "{{name}} 설치 후 받아쓰기를 사용할 수 있습니다.",
-      "continuesInBackground": "다른 모델은 백그라운드에서 계속 다운로드됩니다.",
+      "continuesInBackground": "나머지 모델은 백그라운드에서 계속 다운로드됩니다.",
       "retry": "다시 시도",
       "backgroundFailed": "{{name}}을(를) 설치할 수 없습니다",
       "errors": {
@@ -727,6 +728,23 @@
           "delete_after_transcription": "Delete after transcription"
         }
       },
+      "speaker_detection_enabled": {
+        "label": "화자 구분",
+        "description": "이 컴퓨터에서 회의와 가져온 파일의 사람들(최대 4명)을 구분합니다. 화자 라벨을 클릭하면 이름을 지정할 수 있습니다."
+      },
+      "speakerDetection": {
+        "title": "화자 구분",
+        "description": "회의와 전사 페이지에 적용됩니다.",
+        "model": "화자 구분 모델",
+        "modelReady": "다운로드됨({{size}}MB). 각 전사 후에 사용됩니다.",
+        "modelMissing": "화자를 구분하려면 다운로드하세요. 없으면 전사본은 현재 라벨을 유지합니다.",
+        "download": "다운로드({{size}}MB)",
+        "downloading": "다운로드 중… {{percent}}%",
+        "cancel": "취소",
+        "delete": "삭제",
+        "downloadFailed": "화자 구분 모델을 다운로드하지 못했습니다",
+        "deleteFailed": "화자 구분 모델을 삭제할 수 없습니다"
+      },
       "privacy": "Everything stays on this computer: audio and transcripts are never sent anywhere. Recording people may require their consent: always let the participants know."
     }
   },
@@ -1075,5 +1093,11 @@
         "description": "How long a copy of the audio is kept for playback and new transcriptions. The transcripts are always kept."
       }
     }
+  },
+  "speakers": {
+    "person": "화자 {{n}}",
+    "rename": "{{name}} 이름 바꾸기",
+    "nameLabel": "화자 이름",
+    "renameError": "화자 이름을 바꿀 수 없습니다"
   }
 }

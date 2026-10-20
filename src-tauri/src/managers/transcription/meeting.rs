@@ -33,8 +33,8 @@ use crate::meeting::capture::{MIC_FILE_NAME, SYSTEM_FILE_NAME};
 use crate::meeting::crosstalk::CrosstalkOptions;
 use crate::meeting::track::{decode_track, track_samples, SpeechGate, TrackHooks};
 use crate::meeting::transcript::{
-    merge_tracks, renumber, write_transcript_files, MeetingInfo, MeetingSegment, TrackTranscript,
-    TranscriptFile,
+    merge_tracks_with_speakers, renumber, write_transcript_files, MeetingInfo, MeetingSegment,
+    TrackTranscript, TrackTurns, TranscriptFile,
 };
 use crate::settings::{get_settings, AppSettings};
 
@@ -205,10 +205,39 @@ impl TranscriptionManager {
             done: 0,
             on_progress: &mut |done| on_progress(done, total),
         };
-        let mic = mic.map(|path| run.track(&path, &settings)).transpose()?;
-        let system = system.map(|path| run.track(&path, &settings)).transpose()?;
+        let mic_track = mic
+            .as_ref()
+            .map(|path| run.track(path, &settings))
+            .transpose()?;
+        let system_track = system
+            .as_ref()
+            .map(|path| run.track(path, &settings))
+            .transpose()?;
 
-        let merged = merge_tracks(mic.as_ref(), system.as_ref(), &CrosstalkOptions::default());
+        // The people on the call are on the system track; without one, the
+        // mic holds everyone in the room.
+        let diarized = match system.as_ref().or(mic.as_ref()) {
+            Some(path) => self.diarize(path, cancelled)?,
+            None => None,
+        };
+        let turns = if system.is_some() {
+            TrackTurns {
+                mic: None,
+                system: diarized.as_deref(),
+            }
+        } else {
+            TrackTurns {
+                mic: diarized.as_deref(),
+                system: None,
+            }
+        };
+        let (mic, system) = (mic_track, system_track);
+        let merged = merge_tracks_with_speakers(
+            mic.as_ref(),
+            system.as_ref(),
+            &CrosstalkOptions::default(),
+            turns,
+        );
         let detected = [&mic, &system]
             .into_iter()
             .flatten()

@@ -11,8 +11,11 @@ use serde::{Deserialize, Serialize};
 use specta::Type;
 use std::path::Path;
 
-static MIGRATIONS: &[M] = &[M::up(
-    "CREATE TABLE meetings (
+use crate::diarization::SpeakerName;
+
+static MIGRATIONS: &[M] = &[
+    M::up(
+        "CREATE TABLE meetings (
         id TEXT PRIMARY KEY,
         title TEXT NOT NULL,
         folder TEXT NOT NULL,
@@ -38,7 +41,19 @@ static MIGRATIONS: &[M] = &[M::up(
         PRIMARY KEY (meeting_id, idx)
     );
     CREATE INDEX idx_meetings_started_at ON meetings(started_at);",
-)];
+    ),
+    // Speaker diarization (#30): the person a segment is from, among the
+    // track's, and the names the user gave them.
+    M::up(
+        "ALTER TABLE meeting_segments ADD COLUMN speaker_id INTEGER;
+        CREATE TABLE meeting_speaker_names (
+            meeting_id TEXT NOT NULL REFERENCES meetings(id) ON DELETE CASCADE,
+            speaker_id INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            PRIMARY KEY (meeting_id, speaker_id)
+        );",
+    ),
+];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Type)]
 #[serde(rename_all = "snake_case")]
@@ -150,6 +165,10 @@ pub struct Meeting {
 pub struct MeetingSegment {
     pub idx: i64,
     pub speaker: Speaker,
+    /// The person, numbered from 1, when the diarizer told the people on
+    /// the call (or in the room) apart. Absent from older transcripts.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub speaker_id: Option<u32>,
     pub start_ms: i64,
     pub end_ms: i64,
     pub text: String,
@@ -159,6 +178,8 @@ pub struct MeetingSegment {
 pub struct MeetingDetail {
     pub meeting: Meeting,
     pub segments: Vec<MeetingSegment>,
+    /// The names the user gave the people, by `speaker_id`.
+    pub speaker_names: Vec<SpeakerName>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
@@ -326,7 +347,7 @@ pub fn list_by_status(conn: &Connection, statuses: &[MeetingStatus]) -> Result<V
 
 pub fn segments(conn: &Connection, id: &str) -> Result<Vec<MeetingSegment>> {
     let mut stmt = conn.prepare(
-        "SELECT idx, speaker, start_ms, end_ms, text FROM meeting_segments
+        "SELECT idx, speaker, start_ms, end_ms, text, speaker_id FROM meeting_segments
          WHERE meeting_id = ?1 ORDER BY idx",
     )?;
     let rows = stmt
@@ -335,6 +356,7 @@ pub fn segments(conn: &Connection, id: &str) -> Result<Vec<MeetingSegment>> {
             Ok(MeetingSegment {
                 idx: row.get(0)?,
                 speaker: Speaker::parse(&speaker).unwrap_or(Speaker::Others),
+                speaker_id: row.get(5)?,
                 start_ms: row.get(2)?,
                 end_ms: row.get(3)?,
                 text: row.get(4)?,
@@ -354,10 +376,16 @@ pub fn replace_segments(
         "DELETE FROM meeting_segments WHERE meeting_id = ?1",
         params![id],
     )?;
+    // A new transcript numbers its people afresh.
+    tx.execute(
+        "DELETE FROM meeting_speaker_names WHERE meeting_id = ?1",
+        params![id],
+    )?;
     {
         let mut stmt = tx.prepare(
-            "INSERT INTO meeting_segments (meeting_id, idx, speaker, start_ms, end_ms, text)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+            "INSERT INTO meeting_segments
+                (meeting_id, idx, speaker, start_ms, end_ms, text, speaker_id)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
         )?;
         for s in segments {
             stmt.execute(params![
@@ -366,11 +394,47 @@ pub fn replace_segments(
                 s.speaker.as_str(),
                 s.start_ms,
                 s.end_ms,
-                s.text
+                s.text,
+                s.speaker_id
             ])?;
         }
     }
     tx.commit()?;
+    Ok(())
+}
+
+pub fn speaker_names(conn: &Connection, id: &str) -> Result<Vec<SpeakerName>> {
+    let mut stmt = conn.prepare(
+        "SELECT speaker_id, name FROM meeting_speaker_names
+         WHERE meeting_id = ?1 ORDER BY speaker_id",
+    )?;
+    let rows = stmt
+        .query_map(params![id], |row| {
+            Ok(SpeakerName {
+                speaker_id: row.get(0)?,
+                name: row.get(1)?,
+            })
+        })?
+        .collect::<rusqlite::Result<Vec<_>>>()?;
+    Ok(rows)
+}
+
+/// Names a person of a meeting; an empty name goes back to the default
+/// label.
+pub fn set_speaker_name(conn: &Connection, id: &str, speaker_id: u32, name: &str) -> Result<()> {
+    if name.is_empty() {
+        conn.execute(
+            "DELETE FROM meeting_speaker_names WHERE meeting_id = ?1 AND speaker_id = ?2",
+            params![id, speaker_id],
+        )?;
+    } else {
+        conn.execute(
+            "INSERT INTO meeting_speaker_names (meeting_id, speaker_id, name)
+             VALUES (?1, ?2, ?3)
+             ON CONFLICT (meeting_id, speaker_id) DO UPDATE SET name = excluded.name",
+            params![id, speaker_id, name],
+        )?;
+    }
     Ok(())
 }
 
@@ -509,6 +573,7 @@ pub(crate) mod tests {
         let seg = MeetingSegment {
             idx: 0,
             speaker: Speaker::Me,
+            speaker_id: None,
             start_ms: 0,
             end_ms: 500,
             text: "bonjour".into(),
@@ -523,6 +588,37 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn speakers_are_kept_and_named_until_a_new_transcript() {
+        let mut conn = memory_db();
+        insert(&conn, &sample("a", 0, MeetingStatus::Done)).unwrap();
+        let seg = MeetingSegment {
+            idx: 0,
+            speaker: Speaker::Others,
+            speaker_id: Some(2),
+            start_ms: 0,
+            end_ms: 500,
+            text: "bonjour".into(),
+        };
+        replace_segments(&mut conn, "a", std::slice::from_ref(&seg)).unwrap();
+        assert_eq!(segments(&conn, "a").unwrap(), vec![seg.clone()]);
+
+        set_speaker_name(&conn, "a", 2, "Alice").unwrap();
+        set_speaker_name(&conn, "a", 2, "Alice B.").unwrap();
+        set_speaker_name(&conn, "a", 1, "Bob").unwrap();
+        set_speaker_name(&conn, "a", 1, "").unwrap();
+        assert_eq!(
+            speaker_names(&conn, "a").unwrap(),
+            vec![SpeakerName {
+                speaker_id: 2,
+                name: "Alice B.".into()
+            }]
+        );
+
+        replace_segments(&mut conn, "a", &[seg]).unwrap();
+        assert!(speaker_names(&conn, "a").unwrap().is_empty());
+    }
+
+    #[test]
     fn search_matches_title_and_segments() {
         let mut conn = memory_db();
         let mut a = sample("a", 0, MeetingStatus::Done);
@@ -533,6 +629,7 @@ pub(crate) mod tests {
         let seg = |idx, speaker, text: &str| MeetingSegment {
             idx,
             speaker,
+            speaker_id: None,
             start_ms: 0,
             end_ms: 500,
             text: text.into(),
