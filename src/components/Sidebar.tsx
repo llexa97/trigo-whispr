@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { type } from "@tauri-apps/plugin-os";
 import TrigoWhisprTextLogo from "./icons/TrigoWhisprTextLogo";
-import TrigoWhisprHand from "./icons/TrigoWhisprHand";
+import TrigoMark from "./icons/TrigoMark";
 import { useSettings } from "../hooks/useSettings";
 import {
   GeneralSettings,
@@ -49,7 +49,7 @@ interface SectionConfig {
 export const SECTIONS_CONFIG = {
   general: {
     labelKey: "sidebar.general",
-    icon: TrigoWhisprHand,
+    icon: TrigoMark,
     component: GeneralSettings,
     enabled: () => true,
   },
@@ -132,7 +132,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               key={section.id}
               className={`flex gap-2 items-center p-2 w-full rounded-lg cursor-pointer transition-colors ${
                 isActive
-                  ? "bg-logo-primary/80"
+                  ? "bg-background-ui text-white"
                   : "hover:bg-mid-gray/20 hover:opacity-100 opacity-85"
               }`}
               onClick={() => onSectionChange(section.id)}

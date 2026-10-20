@@ -181,7 +181,7 @@ export const MeetingAudioPlayer = forwardRef<
         aria-label={t("meetings.player.seek")}
         className="flex-1 h-1 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-logo-primary"
         style={{
-          background: `linear-gradient(to right, #FAA2CA 0%, #FAA2CA ${percent}%, rgba(128, 128, 128, 0.2) ${percent}%, rgba(128, 128, 128, 0.2) 100%)`,
+          background: `linear-gradient(to right, var(--color-logo-primary) 0%, var(--color-logo-primary) ${percent}%, rgba(128, 128, 128, 0.2) ${percent}%, rgba(128, 128, 128, 0.2) 100%)`,
         }}
       />
       <span className="text-xs text-text/60 tabular-nums min-w-[40px]">
