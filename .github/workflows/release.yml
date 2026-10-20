@@ -65,11 +65,22 @@ jobs:
     permissions:
       contents: write
     needs: create-release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: "macos-26"
+            target: "aarch64-apple-darwin"
+            args: "--target aarch64-apple-darwin"
+          - platform: "windows-latest"
+            target: "x86_64-pc-windows-msvc"
+            args: ""
     uses: ./.github/workflows/build.yml
     with:
-      platform: "windows-latest"
-      target: "x86_64-pc-windows-msvc"
-      # No Azure certificate or updater signing key is required.
+      platform: ${{ matrix.platform }}
+      target: ${{ matrix.target }}
+      build-args: ${{ matrix.args }}
+      # No Apple/Azure certificate or updater signing key is required.
       sign-binaries: false
       asset-prefix: "trigo-whispr"
       upload-artifacts: false
@@ -85,7 +96,7 @@ jobs:
     needs: [create-release, publish-tauri]
     runs-on: ubuntu-latest
     steps:
-      - name: Publish completed Windows release
+      - name: Publish completed Windows and macOS release
         uses: actions/github-script@v9
         with:
           script: |
@@ -97,6 +108,9 @@ jobs:
             });
             if (!assets.some(asset => /\.(exe|msi)$/i.test(asset.name) && asset.size > 0)) {
               throw new Error('No Windows installer was uploaded; keeping the release as a draft.');
+            }
+            if (!assets.some(asset => /\.dmg$/i.test(asset.name) && asset.size > 0)) {
+              throw new Error('No macOS installer was uploaded; keeping the release as a draft.');
             }
             await github.rest.repos.updateRelease({
               owner: context.repo.owner,
