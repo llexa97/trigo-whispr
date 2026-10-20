@@ -255,12 +255,7 @@
         "app": "App",
         "output": "Utmatning",
         "transcription": "Transkription",
-        "history": "Historik",
-        "experimental": "Experimentellt"
-      },
-      "experimentalToggle": {
-        "label": "Experimentella funktioner",
-        "description": "Aktivera experimentella funktioner som fortfarande är under utveckling."
+        "history": "Historik"
       },
       "lazyStreamClose": {
         "label": "Håll mikrofonen öppen mellan transkriptioner",
@@ -390,15 +385,6 @@
       "fillerWordRemoval": {
         "title": "Ta bort utfyllnadsord",
         "description": "Tar bort vanliga tvekljud från transkriberingar. Stäng av för att behålla dem."
-      },
-      "chineseScript": {
-        "title": "Kinesisk skrift",
-        "description": "Skriver mandarin- och kantonesiska transkriptioner med förenklade eller traditionella tecken. Andra språk lämnas oförändrade.",
-        "options": {
-          "asTranscribed": "Som transkriberat",
-          "simplified": "Förenklad",
-          "traditional": "Traditionell"
-        }
       }
     },
     "postProcessing": {
@@ -641,35 +627,9 @@
     },
     "about": {
       "title": "Om",
-      "version": {
-        "title": "Version",
-        "description": "Nuvarande version av Trigo Whispr"
-      },
       "appDataDirectory": {
         "title": "Mapp för appdata",
         "description": "Plats där Trigo Whispr lagrar sina data"
-      },
-      "sourceCode": {
-        "title": "Källkod",
-        "description": "Visa källkod och bidra",
-        "button": "Visa på GitHub"
-      },
-      "supportDevelopment": {
-        "title": "Stöd utvecklingen",
-        "description": "Hjälp oss att fortsätta bygga Trigo Whispr",
-        "button": "Donera"
-      },
-      "acknowledgments": {
-        "title": "Tack till",
-        "ggml": {
-          "title": "ggml",
-          "description": "Högpresterande inferens av OpenAI:s Whisper-modell för automatisk taligenkänning",
-          "details": "Trigo Whispr använder ggml för snabb, lokal tal-till-text-behandling. Tack till det fantastiska arbete som utförts av Georgi Gerganov med medarbetare."
-        }
-      },
-      "whatsNewUpdates": {
-        "label": "Visa nyheter",
-        "description": "Visa versionsinformation efter Trigo Whispr-uppdateringar"
       }
     },
     "meetings": {

@@ -225,12 +225,7 @@
         "app": "التطبيق",
         "output": "الإخراج",
         "transcription": "التفريغ الصوتي",
-        "history": "السجل",
-        "experimental": "تجريبي"
-      },
-      "experimentalToggle": {
-        "label": "الميزات التجريبية",
-        "description": ".تمكين الميزات التجريبية التي لا تزال قيد التطوير"
+        "history": "السجل"
       },
       "lazyStreamClose": {
         "label": "إبقاء الميكروفون مفتوحًا بين عمليات النسخ",
@@ -360,15 +355,6 @@
       "fillerWordRemoval": {
         "title": "إزالة كلمات الحشو",
         "description": "يزيل كلمات التردد الشائعة من النصوص. عطّل هذا الخيار للاحتفاظ بها."
-      },
-      "chineseScript": {
-        "title": "الكتابة الصينية",
-        "description": "يكتب نصوص الماندرين والكانتونية بالأحرف المبسطة أو التقليدية. لا تتغير اللغات الأخرى.",
-        "options": {
-          "asTranscribed": "كما نُسخ",
-          "simplified": "مبسطة",
-          "traditional": "تقليدية"
-        }
       }
     },
     "postProcessing": {
@@ -611,35 +597,9 @@
     },
     "about": {
       "title": "حول",
-      "version": {
-        "title": "الإصدار",
-        "description": "الإصدار الحالي من Trigo Whispr"
-      },
       "appDataDirectory": {
         "title": "مجلد بيانات التطبيق",
         "description": "الموقع الذي يخزن فيه Trigo Whispr بياناته"
-      },
-      "sourceCode": {
-        "title": "كود المصدر",
-        "description": "عرض كود المصدر والمساهمة",
-        "button": "عرض على GitHub"
-      },
-      "supportDevelopment": {
-        "title": "دعم التطوير",
-        "description": "ساعدنا في مواصلة بناء Trigo Whispr",
-        "button": "تبرع"
-      },
-      "acknowledgments": {
-        "title": "شكر وتقدير",
-        "ggml": {
-          "title": "ggml",
-          "description": "استنتاج عالي الأداء لنموذج التعرف التلقائي على الكلام Whisper من OpenAI",
-          "details": ".يستخدم Trigo Whispr برنامج ggml لمعالجة سريعة ومحلية لتحويل الكلام إلى نص. شكراً للعمل الرائع الذي قام به Georgi Gerganov والمساهمون"
-        }
-      },
-      "whatsNewUpdates": {
-        "label": "إظهار الجديد",
-        "description": "إظهار ملاحظات الإصدار بعد تحديثات Trigo Whispr"
       }
     },
     "modelSettings": {

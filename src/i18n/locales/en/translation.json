@@ -255,12 +255,7 @@
         "app": "App",
         "output": "Output",
         "transcription": "Transcription",
-        "history": "History",
-        "experimental": "Experimental"
-      },
-      "experimentalToggle": {
-        "label": "Experimental Features",
-        "description": "Enable experimental features that are still in development."
+        "history": "History"
       },
       "lazyStreamClose": {
         "label": "Keep Mic Open Between Transcriptions",
@@ -390,15 +385,6 @@
       "fillerWordRemoval": {
         "title": "Remove Filler Words",
         "description": "Removes common hesitation words from transcriptions. Turn off to keep them."
-      },
-      "chineseScript": {
-        "title": "Chinese Script",
-        "description": "Writes Mandarin and Cantonese transcriptions in Simplified or Traditional characters. Other languages are left unchanged.",
-        "options": {
-          "asTranscribed": "As Transcribed",
-          "simplified": "Simplified",
-          "traditional": "Traditional"
-        }
       }
     },
     "postProcessing": {
@@ -641,35 +627,9 @@
     },
     "about": {
       "title": "About",
-      "version": {
-        "title": "Version",
-        "description": "Current version of Trigo Whispr"
-      },
-      "whatsNewUpdates": {
-        "label": "Show What's New",
-        "description": "Show release notes after Trigo Whispr updates"
-      },
       "appDataDirectory": {
         "title": "App Data Directory",
         "description": "Location where Trigo Whispr stores its data"
-      },
-      "sourceCode": {
-        "title": "Source Code",
-        "description": "View source code and contribute",
-        "button": "View on GitHub"
-      },
-      "supportDevelopment": {
-        "title": "Support Development",
-        "description": "Help us continue building Trigo Whispr",
-        "button": "Donate"
-      },
-      "acknowledgments": {
-        "title": "Acknowledgments",
-        "ggml": {
-          "title": "ggml",
-          "description": "High-performance tensor library for on-device machine learning inference",
-          "details": "Trigo Whispr's local speech-to-text is built on transcribe.cpp and ggml. Thanks to the amazing work by Georgi Gerganov and contributors."
-        }
       }
     },
     "meetings": {

@@ -255,12 +255,7 @@
         "app": "Aplikacja",
         "output": "Wyjście",
         "transcription": "Transkrypcja",
-        "history": "Historia",
-        "experimental": "Eksperymentalne"
-      },
-      "experimentalToggle": {
-        "label": "Funkcje Eksperymentalne",
-        "description": "Włącz funkcje eksperymentalne, które są jeszcze w fazie rozwoju."
+        "history": "Historia"
       },
       "lazyStreamClose": {
         "label": "Pozostaw mikrofon otwarty między transkrypcjami",
@@ -390,15 +385,6 @@
       "fillerWordRemoval": {
         "title": "Usuń wyrazy wypełniające",
         "description": "Usuwa typowe słowa wyrażające wahanie z transkrypcji. Wyłącz, aby je zachować."
-      },
-      "chineseScript": {
-        "title": "Pismo chińskie",
-        "description": "Zapisuje transkrypcje w języku mandaryńskim i kantońskim znakami uproszczonymi lub tradycyjnymi. Inne języki pozostają bez zmian.",
-        "options": {
-          "asTranscribed": "Jak w transkrypcji",
-          "simplified": "Uproszczone",
-          "traditional": "Tradycyjne"
-        }
       }
     },
     "postProcessing": {
@@ -641,35 +627,9 @@
     },
     "about": {
       "title": "O programie",
-      "version": {
-        "title": "Wersja",
-        "description": "Aktualna wersja Trigo Whispr"
-      },
       "appDataDirectory": {
         "title": "Katalog danych aplikacji",
         "description": "Miejsce, gdzie Trigo Whispr przechowuje swoje dane"
-      },
-      "sourceCode": {
-        "title": "Kod źródłowy",
-        "description": "Zobacz kod źródłowy i współtwórz",
-        "button": "Zobacz na GitHub"
-      },
-      "supportDevelopment": {
-        "title": "Wspieraj rozwój",
-        "description": "Pomóż nam dalej rozwijać Trigo Whispr",
-        "button": "Wesprzyj"
-      },
-      "acknowledgments": {
-        "title": "Podziękowania",
-        "ggml": {
-          "title": "ggml",
-          "description": "Wydajne wykonywanie modelu rozpoznawania mowy Whisper od OpenAI",
-          "details": "Trigo Whispr używa ggml do szybkiego, lokalnego przetwarzania mowy na tekst. Dzięki niesamowitej pracy Georgi Gerganova i współtwórców."
-        }
-      },
-      "whatsNewUpdates": {
-        "label": "Pokaż nowości",
-        "description": "Pokazuj informacje o wydaniu po aktualizacjach Trigo Whispr"
       }
     },
     "meetings": {

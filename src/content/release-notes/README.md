@@ -6,9 +6,8 @@ Add user-facing release notes as Markdown files named by app version:
 src/content/release-notes/0.8.4.md
 ```
 
-The update modal shows the highest bundled release note newer than the
-persisted `whats_new_last_seen_version` and not newer than the running app
-version.
+The What's New modal no longer opens after an update; it can only be previewed
+from the Debug settings page, which shows the latest bundled release note.
 
 Keep these files focused on headline user-facing changes. Release notes support
 paragraphs, headings, lists, links, code, quotes, separators, hard line breaks,

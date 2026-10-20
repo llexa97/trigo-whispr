@@ -255,12 +255,7 @@
         "app": "Aplikasi",
         "output": "Keluaran",
         "transcription": "Transkripsi",
-        "history": "Riwayat",
-        "experimental": "Eksperimental"
-      },
-      "experimentalToggle": {
-        "label": "Fitur Eksperimental",
-        "description": "Aktifkan fitur eksperimental yang masih dalam pengembangan."
+        "history": "Riwayat"
       },
       "lazyStreamClose": {
         "label": "Biarkan Mikrofon Tetap Aktif di Antara Transkripsi",
@@ -390,15 +385,6 @@
       "fillerWordRemoval": {
         "title": "Hapus Kata Pengisi",
         "description": "Menghapus kata pengisi umum dari transkripsi. Nonaktifkan untuk mempertahankannya."
-      },
-      "chineseScript": {
-        "title": "Aksara Tionghoa",
-        "description": "Menulis transkripsi Mandarin dan Kanton dengan aksara Sederhana atau Tradisional. Bahasa lain tidak diubah.",
-        "options": {
-          "asTranscribed": "Sesuai transkripsi",
-          "simplified": "Sederhana",
-          "traditional": "Tradisional"
-        }
       }
     },
     "postProcessing": {
@@ -641,35 +627,9 @@
     },
     "about": {
       "title": "Tentang",
-      "version": {
-        "title": "Versi",
-        "description": "Versi Trigo Whispr saat ini"
-      },
-      "whatsNewUpdates": {
-        "label": "Tampilkan Yang Baru",
-        "description": "Tampilkan catatan rilis setelah Trigo Whispr diperbarui"
-      },
       "appDataDirectory": {
         "title": "Direktori Data Aplikasi",
         "description": "Lokasi Trigo Whispr menyimpan datanya"
-      },
-      "sourceCode": {
-        "title": "Kode Sumber",
-        "description": "Lihat kode sumber dan berkontribusi",
-        "button": "Lihat di GitHub"
-      },
-      "supportDevelopment": {
-        "title": "Dukung Pengembangan",
-        "description": "Bantu kami terus mengembangkan Trigo Whispr",
-        "button": "Donasi"
-      },
-      "acknowledgments": {
-        "title": "Ucapan Terima Kasih",
-        "ggml": {
-          "title": "ggml",
-          "description": "Pustaka tensor berkinerja tinggi untuk inferensi pembelajaran mesin di perangkat",
-          "details": "Fitur ucapan-ke-teks lokal Trigo Whispr dibangun menggunakan transcribe.cpp dan ggml. Terima kasih kepada Georgi Gerganov dan para kontributor atas karya luar biasa mereka."
-        }
       }
     },
     "meetings": {

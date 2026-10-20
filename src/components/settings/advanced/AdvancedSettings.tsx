@@ -15,21 +15,12 @@ import { PostProcessingToggle } from "../PostProcessingToggle";
 import { AppendTrailingSpace } from "../AppendTrailingSpace";
 import { HistoryLimit } from "../HistoryLimit";
 import { RecordingRetentionPeriodSelector } from "../RecordingRetentionPeriod";
-import { ExperimentalToggle } from "../ExperimentalToggle";
-import { useSettings } from "../../../hooks/useSettings";
-import { KeyboardImplementationSelector } from "../debug/KeyboardImplementationSelector";
 import { VoiceActivityDetection } from "../VoiceActivityDetection";
 import { LongFormChunking } from "../LongFormChunking";
-import { AccelerationSelector } from "../AccelerationSelector";
-import { LazyStreamClose } from "../LazyStreamClose";
 import { FillerWordRemoval } from "../FillerWordRemoval";
-import { ChineseScriptSetting } from "../ChineseScript";
-import { VadBackendSelector } from "../VadBackendSelector";
 
 export const AdvancedSettings: React.FC = () => {
   const { t } = useTranslation();
-  const { getSetting } = useSettings();
-  const experimentalEnabled = getSetting("experimental_enabled") || false;
 
   return (
     <div className="max-w-3xl w-full mx-auto space-y-6">
@@ -39,7 +30,6 @@ export const AdvancedSettings: React.FC = () => {
         <ShowTrayIcon descriptionMode="tooltip" grouped={true} />
         <ShowOverlay descriptionMode="tooltip" grouped={true} />
         <ModelUnloadTimeoutSetting descriptionMode="tooltip" grouped={true} />
-        <ExperimentalToggle descriptionMode="tooltip" grouped={true} />
       </SettingsGroup>
 
       <SettingsGroup title={t("settings.advanced.groups.output")}>
@@ -53,9 +43,9 @@ export const AdvancedSettings: React.FC = () => {
         <VoiceActivityDetection descriptionMode="tooltip" grouped={true} />
         <LongFormChunking descriptionMode="tooltip" grouped={true} />
         <FillerWordRemoval descriptionMode="tooltip" grouped={true} />
-        <ChineseScriptSetting descriptionMode="tooltip" grouped={true} />
         <CustomWords descriptionMode="tooltip" grouped />
         <AppendTrailingSpace descriptionMode="tooltip" grouped={true} />
+        <PostProcessingToggle descriptionMode="tooltip" grouped={true} />
       </SettingsGroup>
 
       <SettingsGroup title={t("settings.advanced.groups.history")}>
@@ -65,19 +55,6 @@ export const AdvancedSettings: React.FC = () => {
           grouped={true}
         />
       </SettingsGroup>
-
-      {experimentalEnabled && (
-        <SettingsGroup title={t("settings.advanced.groups.experimental")}>
-          <PostProcessingToggle descriptionMode="tooltip" grouped={true} />
-          <KeyboardImplementationSelector
-            descriptionMode="tooltip"
-            grouped={true}
-          />
-          <AccelerationSelector descriptionMode="tooltip" grouped={true} />
-          <LazyStreamClose descriptionMode="tooltip" grouped={true} />
-          <VadBackendSelector descriptionMode="tooltip" grouped={true} />
-        </SettingsGroup>
-      )}
     </div>
   );
 };

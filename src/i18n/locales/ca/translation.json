@@ -255,12 +255,7 @@
         "app": "Aplicació",
         "output": "Sortida",
         "transcription": "Transcripció",
-        "history": "Historial",
-        "experimental": "Experimental"
-      },
-      "experimentalToggle": {
-        "label": "Funcions experimentals",
-        "description": "Activa les funcions experimentals que encara estan en desenvolupament."
+        "history": "Historial"
       },
       "lazyStreamClose": {
         "label": "Mantén el micròfon obert entre transcripcions",
@@ -390,15 +385,6 @@
       "fillerWordRemoval": {
         "title": "Elimina les falques",
         "description": "Elimina les expressions de vacil·lació habituals de les transcripcions. Desactiveu aquesta opció per conservar-les."
-      },
-      "chineseScript": {
-        "title": "Escriptura xinesa",
-        "description": "Escriu les transcripcions en mandarí i cantonès amb caràcters simplificats o tradicionals. Els altres idiomes no es modifiquen.",
-        "options": {
-          "asTranscribed": "Tal com s'ha transcrit",
-          "simplified": "Simplificat",
-          "traditional": "Tradicional"
-        }
       }
     },
     "postProcessing": {
@@ -641,35 +627,9 @@
     },
     "about": {
       "title": "Quant a",
-      "version": {
-        "title": "Versió",
-        "description": "Versió actual del Trigo Whispr"
-      },
-      "whatsNewUpdates": {
-        "label": "Mostra les novetats",
-        "description": "Mostra les notes de la versió després d'actualitzar el Trigo Whispr"
-      },
       "appDataDirectory": {
         "title": "Directori de dades de l'aplicació",
         "description": "Ubicació on el Trigo Whispr desa les dades"
-      },
-      "sourceCode": {
-        "title": "Codi font",
-        "description": "Consulta el codi font i col·laboreu-hi",
-        "button": "Mostra al GitHub"
-      },
-      "supportDevelopment": {
-        "title": "Dona suport al desenvolupament",
-        "description": "Ajudeu-nos a continuar desenvolupant el Trigo Whispr",
-        "button": "Feu una donació"
-      },
-      "acknowledgments": {
-        "title": "Agraïments",
-        "ggml": {
-          "title": "ggml",
-          "description": "Biblioteca de tensors d'alt rendiment per a la inferència d'aprenentatge automàtic al dispositiu",
-          "details": "La transcripció local de veu a text del Trigo Whispr es basa en el transcribe.cpp i el ggml. Gràcies a la gran feina de Georgi Gerganov i dels col·laboradors."
-        }
       }
     },
     "meetings": {

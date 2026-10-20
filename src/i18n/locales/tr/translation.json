@@ -255,12 +255,7 @@
         "app": "Uygulama",
         "output": "Çıktı",
         "transcription": "Transkripsiyon",
-        "history": "Geçmiş",
-        "experimental": "Deneysel"
-      },
-      "experimentalToggle": {
-        "label": "Deneysel Özellikler",
-        "description": "Hala geliştirme aşamasında olan deneysel özellikleri etkinleştir."
+        "history": "Geçmiş"
       },
       "lazyStreamClose": {
         "label": "Transkripsiyonlar Arasında Mikrofonu Açık Tut",
@@ -390,15 +385,6 @@
       "fillerWordRemoval": {
         "title": "Dolgu Sözcüklerini Kaldır",
         "description": "Transkripsiyonlardaki yaygın duraksama sözcüklerini kaldırır. Bunları korumak için kapatın."
-      },
-      "chineseScript": {
-        "title": "Çince yazı",
-        "description": "Mandarin ve Kantonca transkripsiyonları Basitleştirilmiş veya Geleneksel karakterlerle yazar. Diğer diller değiştirilmez.",
-        "options": {
-          "asTranscribed": "Transkripsiyondaki gibi",
-          "simplified": "Basitleştirilmiş",
-          "traditional": "Geleneksel"
-        }
       }
     },
     "postProcessing": {
@@ -641,35 +627,9 @@
     },
     "about": {
       "title": "Hakkında",
-      "version": {
-        "title": "Sürüm",
-        "description": "Trigo Whispr'nin mevcut sürümü"
-      },
       "appDataDirectory": {
         "title": "Uygulama Veri Dizini",
         "description": "Trigo Whispr'nin verilerini sakladığı konum"
-      },
-      "sourceCode": {
-        "title": "Kaynak Kodu",
-        "description": "Kaynak kodunu görüntüle ve katkıda bulun",
-        "button": "GitHub'da Görüntüle"
-      },
-      "supportDevelopment": {
-        "title": "Geliştirmeyi Destekle",
-        "description": "Trigo Whispr'i geliştirmeye devam etmemize yardımcı olun",
-        "button": "Bağış Yap"
-      },
-      "acknowledgments": {
-        "title": "Teşekkürler",
-        "ggml": {
-          "title": "ggml",
-          "description": "Cihaz üzerinde makine öğrenmesi çıkarımı için yüksek performanslı tensör kütüphanesi",
-          "details": "Trigo Whispr'nin yerel konuşmadan metne dönüştürme özelliği transcribe.cpp ve ggml üzerine kuruludur. Georgi Gerganov'a ve katkıda bulunanlara harika çalışmaları için teşekkür ederiz."
-        }
-      },
-      "whatsNewUpdates": {
-        "label": "Yenilikleri Göster",
-        "description": "Trigo Whispr güncellemelerinden sonra sürüm notlarını göster"
       }
     },
     "meetings": {

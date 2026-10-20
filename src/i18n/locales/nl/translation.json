@@ -255,12 +255,7 @@
         "app": "App",
         "output": "Uitvoer",
         "transcription": "Transcriptie",
-        "history": "Geschiedenis",
-        "experimental": "Experimenteel"
-      },
-      "experimentalToggle": {
-        "label": "Experimentele functies",
-        "description": "Schakel experimentele functies in die nog in ontwikkeling zijn."
+        "history": "Geschiedenis"
       },
       "lazyStreamClose": {
         "label": "Microfoon openhouden tussen transcripties",
@@ -390,15 +385,6 @@
       "fillerWordRemoval": {
         "title": "Opvulwoorden verwijderen",
         "description": "Verwijdert veelvoorkomende aarzelwoorden uit transcripties. Schakel dit uit om ze te behouden."
-      },
-      "chineseScript": {
-        "title": "Chinees schrift",
-        "description": "Schrijft Mandarijn- en Kantonese transcripties in vereenvoudigde of traditionele karakters. Andere talen blijven ongewijzigd.",
-        "options": {
-          "asTranscribed": "Zoals getranscribeerd",
-          "simplified": "Vereenvoudigd",
-          "traditional": "Traditioneel"
-        }
       }
     },
     "postProcessing": {
@@ -641,35 +627,9 @@
     },
     "about": {
       "title": "Over Trigo Whispr",
-      "version": {
-        "title": "Versie",
-        "description": "Huidige versie van Trigo Whispr"
-      },
-      "whatsNewUpdates": {
-        "label": "Toon 'Wat is er nieuw'",
-        "description": "Release-notes tonen nadat Trigo Whispr is bijgewerkt"
-      },
       "appDataDirectory": {
         "title": "App-datamap",
         "description": "Locatie waar Trigo Whispr de gegevens opslaat"
-      },
-      "sourceCode": {
-        "title": "Broncode",
-        "description": "Bekijk de broncode en draag bij",
-        "button": "Bekijk op GitHub"
-      },
-      "supportDevelopment": {
-        "title": "Ontwikkeling ondersteunen",
-        "description": "Help ons om te blijven bouwen aan Trigo Whispr",
-        "button": "Doneren"
-      },
-      "acknowledgments": {
-        "title": "Dankbetuigingen",
-        "ggml": {
-          "title": "ggml",
-          "description": "Krachtige tensorbibliotheek voor lokale AI-verwerking",
-          "details": "Trigo Whispr's lokale spraak-naar-tekst is gebouwd op transcribe.cpp en ggml. Met dank aan het geweldige werk van Georgi Gerganov en alle bijdragers."
-        }
       }
     },
     "meetings": {
