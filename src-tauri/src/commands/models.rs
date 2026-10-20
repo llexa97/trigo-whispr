@@ -87,9 +87,10 @@ pub async fn delete_model(
     transcription_manager: State<'_, Arc<TranscriptionManager>>,
     model_id: String,
 ) -> Result<(), String> {
-    // If deleting the active model, unload it and clear the setting
+    // If deleting an assigned or loaded model, unload it and clear the setting
     let settings = get_settings(&app_handle);
-    if settings.selected_model == model_id {
+    let loaded = transcription_manager.get_current_model().as_deref() == Some(model_id.as_str());
+    if settings.selected_model == model_id || settings.long_form_model == model_id || loaded {
         // Waits for the worker to exit (behind any transcription in progress)
         // before the file is deleted, so keep it off the async workers.
         let tm = Arc::clone(&transcription_manager);
@@ -99,7 +100,12 @@ pub async fn delete_model(
             .map_err(|e| format!("Failed to unload model: {}", e))?;
 
         let mut settings = get_settings(&app_handle);
-        settings.selected_model = String::new();
+        if settings.selected_model == model_id {
+            settings.selected_model = String::new();
+        }
+        if settings.long_form_model == model_id {
+            settings.long_form_model = String::new();
+        }
         write_settings(&app_handle, settings);
     }
 
@@ -198,6 +204,38 @@ pub async fn set_active_model(
 pub async fn get_current_model(app_handle: AppHandle) -> Result<String, String> {
     let settings = get_settings(&app_handle);
     Ok(settings.selected_model)
+}
+
+/// The model meetings and imported files are transcribed with, as resolved
+/// now (the default or the dictation model when none is chosen).
+#[tauri::command]
+#[specta::specta]
+pub async fn get_long_form_model(
+    app_handle: AppHandle,
+    model_manager: State<'_, Arc<ModelManager>>,
+) -> Result<String, String> {
+    Ok(model_manager.long_form_model_id(&get_settings(&app_handle)))
+}
+
+/// Chooses the model for meetings and imported files. It is loaded when one
+/// is next transcribed, not now: dictation keeps its model loaded meanwhile.
+#[tauri::command]
+#[specta::specta]
+pub async fn set_long_form_model(
+    app_handle: AppHandle,
+    model_manager: State<'_, Arc<ModelManager>>,
+    model_id: String,
+) -> Result<(), String> {
+    let model_info = model_manager
+        .get_model_info(&model_id)
+        .ok_or_else(|| format!("Model not found: {}", model_id))?;
+    if !model_info.is_downloaded {
+        return Err(format!("Model not downloaded: {}", model_id));
+    }
+    let mut settings = get_settings(&app_handle);
+    settings.long_form_model = model_id;
+    write_settings(&app_handle, settings);
+    Ok(())
 }
 
 #[tauri::command]

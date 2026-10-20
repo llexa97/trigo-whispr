@@ -22,11 +22,11 @@ use transcribe_cpp::Transcript;
 
 use super::queue::{JobQueue, RunningJob};
 use super::{
-    effective_language_for_model, post_process_transcription_text, run_setup, RunSetup,
+    effective_language_for_model, post_process_transcription_text, run_setup, ModelUsage, RunSetup,
     TranscriptionManager,
 };
 use crate::audio_toolkit::chunking::Chunker;
-use crate::engine_supervisor::{CancelMark, EngineError};
+use crate::engine_supervisor::{CancelMark, EngineError, LoadedInfo};
 use crate::managers::audio::{create_detector, AudioRecordingManager};
 use crate::managers::meeting::store::MeetingStatus;
 use crate::meeting::capture::{MIC_FILE_NAME, SYSTEM_FILE_NAME};
@@ -125,21 +125,44 @@ impl TranscriptionManager {
                 .is_some_and(|audio| audio.is_recording())
     }
 
-    /// Loads the selected model if none is, waiting for a load under way.
-    pub(super) fn ensure_model_loaded(&self) -> Result<()> {
-        self.initiate_model_load();
-        let mut is_loading = self.is_loading.lock().unwrap();
-        while *is_loading {
-            is_loading = self.loading_condvar.wait(is_loading).unwrap();
+    /// Waits until no dictation uses the engine, or fails if `cancelled`.
+    pub(super) fn wait_for_dictation(&self, cancelled: &AtomicBool) -> Result<()> {
+        loop {
+            if cancelled.load(Ordering::Acquire) {
+                return Err(EngineError::Cancelled.into());
+            }
+            if !self.dictation_busy() {
+                return Ok(());
+            }
+            thread::sleep(DICTATION_POLL);
         }
-        drop(is_loading);
-        if !self.is_model_loaded() {
-            bail!("Model failed to load. Please check your model settings.");
-        }
-        Ok(())
     }
 
-    /// Transcribes one meeting with the selected model and language, never
+    /// Loads the long transcriptions' model for a meeting or an imported
+    /// file, once no dictation needs the engine: its model and the loaded
+    /// engine.
+    pub(super) fn load_long_form_model(
+        &self,
+        cancelled: &AtomicBool,
+    ) -> Result<(String, LoadedInfo)> {
+        let model_id = self.model_for(ModelUsage::LongForm);
+        loop {
+            self.wait_for_dictation(cancelled)?;
+            self.ensure_model_loaded(&model_id, ModelUsage::LongForm)?;
+            // A dictation that started meanwhile may have replaced it.
+            if !self.dictation_busy() && self.has_loaded(&model_id) {
+                break;
+            }
+        }
+        let info = self
+            .engine
+            .loaded()
+            .ok_or_else(|| anyhow!("Model is not loaded for transcription."))?;
+        Ok((model_id, info))
+    }
+
+    /// Transcribes one meeting with the long transcriptions' model and the
+    /// selected language, never
     /// translated. `on_progress` gets the samples done so far, out of
     /// `total`, after each chunk.
     fn transcribe_meeting(
@@ -159,18 +182,11 @@ impl TranscriptionManager {
         }
 
         let _active = BackgroundActive::new(self);
-        self.ensure_model_loaded()?;
+        let (model_id, info) = self.load_long_form_model(cancelled)?;
         let mut settings = get_settings(&self.app_handle);
         settings.translate_to_english = false;
-        let model_id = self
-            .get_current_model()
-            .unwrap_or_else(|| settings.selected_model.clone());
         let language =
             effective_language_for_model(&settings, self.model_manager.as_ref(), &model_id);
-        let info = self
-            .engine
-            .loaded()
-            .ok_or_else(|| anyhow!("Model is not loaded for transcription."))?;
         let setup = run_setup(&info, &settings, &language);
         info!(
             "Transcribing meeting '{}' with '{}' ({:.0}s of audio)",
@@ -185,6 +201,7 @@ impl TranscriptionManager {
             model_id: &model_id,
             cancelled,
             mark: self.engine.cancel_mark(),
+            preemptions: self.preemption_count(),
             done: 0,
             on_progress: &mut |done| on_progress(done, total),
         };
@@ -239,6 +256,8 @@ pub(super) struct BackgroundRun<'a> {
     pub cancelled: &'a AtomicBool,
     /// Engine cancels after this stop the chunk being decoded.
     pub mark: CancelMark,
+    /// [`TranscriptionManager::preemption_count`] when `mark` was taken.
+    pub preemptions: u64,
     /// Samples done, over every track.
     pub done: u64,
     pub on_progress: &'a mut dyn FnMut(u64),
@@ -264,13 +283,27 @@ impl TrackHooks for BackgroundRun<'_> {
         Ok(())
     }
 
+    /// Waits for any dictation, then reloads this run's model if a
+    /// dictation replaced it with its own.
     fn before_chunk(&mut self) -> Result<()> {
         loop {
-            self.check_cancelled()?;
-            if !self.tm.dictation_busy() {
+            self.tm.wait_for_dictation(self.cancelled)?;
+            // Taken before the model check: a dictation that loads its model
+            // after it also cancels this chunk, so the chunk is never decoded
+            // with the dictation's model.
+            let preemptions = self.tm.preemption_count();
+            let mark = self.tm.engine.cancel_mark();
+            if self.tm.has_loaded(self.model_id) {
+                self.preemptions = preemptions;
+                self.mark = mark;
                 return Ok(());
             }
-            thread::sleep(DICTATION_POLL);
+            info!(
+                "Reloading '{}' to resume the background transcription",
+                self.model_id
+            );
+            self.tm
+                .ensure_model_loaded(self.model_id, ModelUsage::LongForm)?;
         }
     }
 
@@ -291,6 +324,16 @@ impl TrackHooks for BackgroundRun<'_> {
                     return Ok(transcript);
                 }
                 Err(EngineError::Cancelled)
+                    if !self.cancelled.load(Ordering::Acquire)
+                        && self.tm.preemption_count() != self.preemptions =>
+                {
+                    // A dictation took the engine for its own model: decode
+                    // the chunk again once it is done, however often that
+                    // happens.
+                    info!("Background chunk interrupted by a dictation; decoding it again");
+                    self.before_chunk()?;
+                }
+                Err(EngineError::Cancelled)
                     if !self.cancelled.load(Ordering::Acquire) && attempt < MAX_CHUNK_ATTEMPTS =>
                 {
                     // Someone else's cancel (a dictation's): decode the chunk
@@ -298,7 +341,6 @@ impl TrackHooks for BackgroundRun<'_> {
                     info!("Background chunk stopped by another cancel; decoding it again");
                     attempt += 1;
                     self.before_chunk()?;
-                    self.mark = self.tm.engine.cancel_mark();
                 }
                 Err(EngineError::Cancelled) => return Err(EngineError::Cancelled.into()),
                 Err(e) => bail!("transcribe-cpp transcription failed: {e}"),

@@ -443,8 +443,14 @@ pub struct AppSettings {
     /// see the current release's notes — see `apply_settings_migrations`.
     #[serde(default = "default_whats_new_last_seen_version")]
     pub whats_new_last_seen_version: String,
+    /// The dictation model (live shortcut).
     #[serde(default = "default_model")]
     pub selected_model: String,
+    /// The model for long transcriptions: meetings and imported files. Empty
+    /// means the default ([`DEFAULT_LONG_FORM_MODEL`] once downloaded, else
+    /// the dictation model); see `ModelManager::long_form_model_id`.
+    #[serde(default = "default_model")]
+    pub long_form_model: String,
     #[serde(default)]
     pub onboarding_completed: bool,
     #[serde(default = "default_always_on_microphone")]
@@ -611,6 +617,16 @@ pub struct WindowPosition {
 fn default_model() -> String {
     "".to_string()
 }
+
+/// The default dictation model: fast, and good enough for short utterances.
+pub const DEFAULT_DICTATION_MODEL: &str =
+    "handy-computer/parakeet-tdt-0.6b-v3-gguf/parakeet-tdt-0.6b-v3-Q8_0.gguf";
+/// The default model for meetings and imported files: slower than Parakeet,
+/// but it applies a forced language and holds up on long recordings.
+pub const DEFAULT_LONG_FORM_MODEL: &str =
+    "handy-computer/whisper-large-v3-turbo-gguf/whisper-large-v3-turbo-Q8_0.gguf";
+/// Any quantization of Whisper Large v3 Turbo.
+const LONG_FORM_MODEL_REPO: &str = "handy-computer/whisper-large-v3-turbo-gguf/";
 
 const CURRENT_SETTINGS_SCHEMA_VERSION: u32 = 2;
 
@@ -1090,6 +1106,7 @@ pub fn get_default_settings() -> AppSettings {
         show_whats_new_on_update: default_show_whats_new_on_update(),
         whats_new_last_seen_version: default_whats_new_last_seen_version(),
         selected_model: "".to_string(),
+        long_form_model: "".to_string(),
         onboarding_completed: false,
         always_on_microphone: false,
         selected_microphone: None,
@@ -1289,6 +1306,19 @@ fn apply_settings_migrations(
     // files on disk should still see onboarding.
     if settings_value.get("onboarding_completed").is_none() {
         settings.onboarding_completed = !settings.selected_model.is_empty();
+        updated = true;
+    }
+
+    // One-time model assignment migration: meetings and imported files used
+    // the one selected model, so they keep it. A user dictating with Whisper
+    // Large v3 Turbo moves to the default dictation model (Parakeet v3), which
+    // ignores a forced language but is much faster; if it is not downloaded,
+    // the model manager falls back to a downloaded one.
+    if settings_value.get("long_form_model").is_none() {
+        settings.long_form_model = settings.selected_model.clone();
+        if settings.selected_model.starts_with(LONG_FORM_MODEL_REPO) {
+            settings.selected_model = DEFAULT_DICTATION_MODEL.to_string();
+        }
         updated = true;
     }
 
@@ -1800,6 +1830,46 @@ mod tests {
         assert_eq!(settings.shortcut_activation, ShortcutActivation::PushToTalk);
     }
 
+    fn migrated_models(selected_model: &str) -> AppSettings {
+        let raw = serde_json::json!({ "selected_model": selected_model });
+        let mut settings: AppSettings = serde_json::from_value(raw.clone()).unwrap();
+        assert!(apply_settings_migrations(&mut settings, &raw));
+        settings
+    }
+
+    #[test]
+    fn model_migration_keeps_the_old_model_for_meetings_and_files() {
+        let settings = migrated_models("whisper-small");
+        assert_eq!(settings.selected_model, "whisper-small");
+        assert_eq!(settings.long_form_model, "whisper-small");
+    }
+
+    #[test]
+    fn model_migration_moves_whisper_turbo_dictation_to_parakeet() {
+        let settings = migrated_models(DEFAULT_LONG_FORM_MODEL);
+        assert_eq!(settings.selected_model, DEFAULT_DICTATION_MODEL);
+        assert_eq!(settings.long_form_model, DEFAULT_LONG_FORM_MODEL);
+
+        let other_quant =
+            "handy-computer/whisper-large-v3-turbo-gguf/whisper-large-v3-turbo-Q5_K_M.gguf";
+        let settings = migrated_models(other_quant);
+        assert_eq!(settings.selected_model, DEFAULT_DICTATION_MODEL);
+        assert_eq!(settings.long_form_model, other_quant);
+    }
+
+    #[test]
+    fn model_migration_runs_once() {
+        let mut settings = get_default_settings();
+        settings.selected_model = DEFAULT_LONG_FORM_MODEL.to_string();
+        let raw = serde_json::json!({
+            "selected_model": DEFAULT_LONG_FORM_MODEL,
+            "long_form_model": "",
+        });
+        apply_settings_migrations(&mut settings, &raw);
+        assert_eq!(settings.selected_model, DEFAULT_LONG_FORM_MODEL);
+        assert_eq!(settings.long_form_model, "");
+    }
+
     #[test]
     fn shortcut_activation_migration_maps_push_to_talk_false() {
         let mut settings = get_default_settings();
@@ -1912,6 +1982,7 @@ mod tests {
             "whats_new_last_seen_version": default_whats_new_last_seen_version(),
             "overlay_style": "live",
             "chinese_script": "as_transcribed",
+            "long_form_model": "",
             "transcribe_accelerator": "gpu",
             "transcribe_gpu_device": settings.transcribe_gpu_device
         });

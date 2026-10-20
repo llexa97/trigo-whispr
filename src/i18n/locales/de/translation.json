@@ -139,6 +139,19 @@
     "modelSettings": {
       "title": "{{model}}-Einstellungen"
     },
+    "modelAssignment": {
+      "title": "Models",
+      "none": "No model",
+      "saveFailed": "Could not change the model",
+      "dictation": {
+        "title": "Dictation",
+        "description": "Model used by the shortcut. A fast model such as Parakeet v3 keeps dictation instant."
+      },
+      "longForm": {
+        "title": "Meetings and files",
+        "description": "Model used to transcribe meetings and imported files. Whisper Large v3 Turbo is slower but applies the chosen language and holds up on long recordings."
+      }
+    },
     "models": {
       "title": "Transkriptionsmodelle",
       "description": "Wähle ein Transkriptionsmodell aus oder lade zusätzliche Modelle herunter. Verschiedene Modelle bieten unterschiedliche Genauigkeits- und Geschwindigkeitsstufen.",
@@ -1027,6 +1040,7 @@
       "duration": "Duration",
       "model": "Model",
       "language": "Language",
+      "languageAuto": "Detected automatically",
       "audio": "Audio",
       "audioKept": "Kept",
       "audioNotKept": "Not kept",
