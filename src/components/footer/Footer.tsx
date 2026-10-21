@@ -3,6 +3,7 @@ import { getVersion } from "@tauri-apps/api/app";
 
 import ModelSelector from "../model-selector";
 import UpdateChecker from "../update-checker";
+import logo from "@/assets/axel-tech-logo.png";
 
 const Footer: React.FC = () => {
   const [version, setVersion] = useState("");
@@ -34,6 +35,11 @@ const Footer: React.FC = () => {
           <span>•</span>
           {/* eslint-disable-next-line i18next/no-literal-string */}
           <span>v{version}</span>
+          <img
+            src={logo}
+            alt="Axel Tech"
+            className="h-4 w-auto ms-2 opacity-70 dark:invert"
+          />
         </div>
       </div>
     </div>
